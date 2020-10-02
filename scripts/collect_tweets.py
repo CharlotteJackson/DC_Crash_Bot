@@ -21,6 +21,7 @@ api = twitter.Api(consumer_key=CONSUMER_KEY,
                   access_token_secret=ACCESS_TOKEN_SECRET, tweet_mode='extended', sleep_on_rate_limit=True)
 
 
+#TODO collect more than 100 tweets
 def make_twitter_json_output(user):
         tweet_json = api.GetUserTimeline(screen_name=user,count=100)
         tweet_data = []
@@ -29,14 +30,12 @@ def make_twitter_json_output(user):
         with open("data/"+user+'.json', 'w') as outfile:
             json.dump(tweet_data, outfile)
 
-
-
+#TODO: allow you to pass in what handle to collect
 def main():
 
     logging.info("Starting twitter collection")
 
     #enter user here
-
     user = "AlertDCio"
     make_twitter_json_output(user)
 
