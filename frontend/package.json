@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "google-map-react": "^2.1.8",
     "next": "9.5.5",
     "postcss-flexbugs-fixes": "^4.2.1",
     "postcss-preset-env": "^6.7.0",
