@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Container from '../components/container';
 import Layout from '../components/layout';
 import About from '../components/about';
+import Live from '../components/live';
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       </Head>
       <Container>
         <About />
+        <Live />
       </Container>
     </Layout>
   );

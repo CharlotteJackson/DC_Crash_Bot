@@ -18,7 +18,7 @@ const SocialIcon = ({ href, children }) => (
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-300 py-12">
+    <footer className="bg-gray-300 py-12 mt-16 lg:mt-32">
       <Container>
         <div className="flex justify-around">
           <div className="flex flex-col items-center">
