@@ -31,6 +31,13 @@ def get_address_from_json(alert_dc_json):
 
         logging.info(tweet["full_text"])
         address = tweet["full_text"]
+        tweeted_at = tweet["created_at"]
+
+        # user attrs
+        user_profile_pic = tweet["user"]["profile_image_url_https"]
+        user_screen_name = tweet["user"]["screen_name"]
+
+        #get user meteadata
 
         try:
             geo_loc_instance = GeoLoc(GOOGLE_API_KEY)
@@ -40,12 +47,15 @@ def get_address_from_json(alert_dc_json):
             continue
 
         tweet_lat_obj["tweet"] = tweet["full_text"]
+        tweet_lat_obj["user_pic"] = user_profile_pic
+        tweet_lat_obj["user_name"] = user_screen_name
+        tweet_lat_obj["tweeted_at"] = tweeted_at
         tweet_lat_obj["google_geo"] = lat_long
 
         tweet_lat_long.append(tweet_lat_obj)
 
-        with open("../data/AlertDCio_google_geo.json", "w") as outfile:
-            json.dump(tweet_lat_long, outfile)
+    with open("../data/AlertDCio_google_geo.json", "w") as outfile:
+        json.dump(tweet_lat_long, outfile)
 
 
 # TODO: allow you to pass in what handle to collect
