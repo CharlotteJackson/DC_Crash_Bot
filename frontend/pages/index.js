@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Container from '../components/container';
 import Layout from '../components/layout';
 import About from '../components/about';
 import Live from '../components/live';
@@ -11,10 +10,10 @@ export default function Home() {
         <title>Walk Safe DC</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Container>
+      <div className="container mx-auto px-5">
         <About />
         <Live />
-      </Container>
+      </div>
     </Layout>
   );
 }
