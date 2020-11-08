@@ -37,7 +37,7 @@ async function fullDataProcess(e) {
     try {
         loc = parsedLoc.results[0].geometry.location;
     } catch (Err) {
-        console.log(Err)
+        console.log('Bad location : ' + JSON.stringify(Err))
         return
     }
     var sampleTweet = { tweet: e.full_text, google_geo: loc, id: e.id + "" };
