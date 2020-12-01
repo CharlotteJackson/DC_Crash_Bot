@@ -12,8 +12,10 @@ s3 = boto3.client('s3'
 s3_resource = boto3.resource('s3'
     ,aws_access_key_id=AWS_Credentials['aws_access_key_id']
     ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
-bucket_name = 'dc-crash-bot-test'
+bucket_name = AWS_Credentials['s3_bucket']
+region=AWS_Credentials['region']
 home = os.path.expanduser('~')
+folder='source-data/dc-open-data/'
 
 datasets = ['crashes_w_detail','census_blocks','address_points','all311', 'vision_zero']
 geodfs = {}
@@ -24,12 +26,9 @@ print(current_files)
 for dataset in datasets:
     filename = os.path.join(home,dataset+'.geojson')
     if dataset not in current_files:
-        s3.download_file(bucket_name, dataset+'.geojson', filename)
+        s3.download_file(bucket_name, folder+dataset+'.geojson', filename)
     gdf=gpd.read_file(filename)
     geodfs[dataset] = gdf 
-    print(dataset)
-    for column in gdf.columns:
-        print(column)
 
 # process crashes
 census_blocks_crashes = gpd.sjoin(geodfs['crashes_w_detail'], geodfs['census_blocks'], how="left", op='intersects')
@@ -73,7 +72,7 @@ final = gpd.sjoin(geo_info, census_blocks_addr, how="left", op='intersects')
 print("Total rows: ", len(final))
 # export to csv 
 filename = os.path.join(home,'census_block_level_final.csv')
-final.to_csv(filename, index=False, header=False)
+final.to_csv(filename, index=False, header=False, line_terminator='\n')
 data = open(filename, 'rb')
 s3_resource.Bucket(bucket_name).put_object(Key='census_block_level_final.csv', Body=data)
 # export to geojson  
@@ -81,11 +80,3 @@ filename = os.path.join(home,'census_block_level_final.geojson')
 final.to_file(filename, driver='GeoJSON')
 data = open(filename, 'rb')
 s3_resource.Bucket(bucket_name).put_object(Key='census_block_level_final.geojson', Body=data)
-
-# put in table in Raw schema in PostGIS 
-# create_s3_uri_query = 'SELECT aws_commons.create_s3_uri(\'{}\', \'{}.csv\',\'us-east-1\') AS s3_uri;'.format(bucket_name, key)
-# print(create_s3_uri_query)
-# s3_uri = engine.execute(create_s3_uri_query)
-# import_table_query = '''SELECT aws_s3.table_import_from_s3(\'{}\', \'\', \'(format csv)\', :\'s3_uri\',aws_commons.create_aws_credentials(\'{}\', \'{}\',''));
-#     '''.format(key, AWS_Credentials['aws_access_key_id'], AWS_Credentials['aws_secret_access_key'])
-# print(import_table_query)
