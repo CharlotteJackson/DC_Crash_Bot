@@ -54,22 +54,22 @@ resources = {
     }
     ,"roadway_blocks": {
         'url':'https://opendata.arcgis.com/datasets/6fcba8618ae744949630da3ea12d90eb_163.geojson'
-        ,'prefix':'source-data/dc-open-data'
+        ,'prefix':'source-data/dc-open-data/'
         ,'metadata':{'target_schema':'source_data', 'dataset_info':'https://opendata.dc.gov/datasets/roadway-block'}
     }
     ,"roadway_subblocks": {
         'url':'https://opendata.arcgis.com/datasets/df571ab7fea446e396bf2862d0ab6833_162.geojson'
-        ,'prefix':'source-data/dc-open-data'
+        ,'prefix':'source-data/dc-open-data/'
         ,'metadata':{'target_schema':'source_data', 'dataset_info':'https://opendata.dc.gov/datasets/roadway-subblock'}
     }
     ,"roadway_blockface": {
         'url':'https://opendata.arcgis.com/datasets/47945b50c4f245b58850e81d297e90b9_164.geojson'
-        ,'prefix':'source-data/dc-open-data'
+        ,'prefix':'source-data/dc-open-data/'
         ,'metadata':{'target_schema':'source_data', 'dataset_info':'https://opendata.dc.gov/datasets/roadway-blockface'}
     }
     ,"roadway_intersection_approach": {
         'url':'https://opendata.arcgis.com/datasets/a779d051865f461eb2a1f50f10940ec4_161.geojson'
-        ,'prefix':'source-data/dc-open-data'
+        ,'prefix':'source-data/dc-open-data/'
         ,'metadata':{'target_schema':'source_data', 'dataset_info':'https://opendata.dc.gov/datasets/roadway-intersection-approach'}
     }
 }
