@@ -46,5 +46,3 @@ if __name__ == "__main__":
     tables = [r.lower() for (r,) in list(engine.execute(query).fetchall())]
     for table in tables:
         print(table)
-    test=engine.execute('SELECT aws_commons.create_s3_uri(\'dc-crash-bot-test\', \'census_block_level_final.csv\',\'us-east-1\') AS s3_uri').fetchall()
-    print(test)

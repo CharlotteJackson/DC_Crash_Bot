@@ -6,8 +6,8 @@ engine = create_postgres_engine("AWS_PostGIS", "postgres", "DEV")
 def generate_table(engine, target_schema:str, target_table:str,mode:str):
     
     schema_query = """
-        CREATE SCHEMA IF NOT EXISTS {};
-        GRANT ALL PRIVILEGES ON {} TO PUBLIC;
+        CREATE SCHEMA IF NOT EXISTS {0};
+        GRANT ALL PRIVILEGES ON SCHEMA {0} TO PUBLIC;
     """.format(target_schema)
 
     drop_table_query = """
@@ -117,9 +117,9 @@ def get_table_definition(target_table:str):
             ,ORGANIZATIONACRONYM VARCHAR NULL
             ,SERVICECALLCOUNT VARCHAR NULL
             ,ADDDATE VARCHAR NULL
-            ,RESOLUTIONDATE VARCHAR NULL
-            ,SERVICEDUEDATE VARCHAR NULL
-            ,SERVICEORDERDATE VARCHAR NULL
+            ,RESOLUTIONDATE TIMESTAMP NULL
+            ,SERVICEDUEDATE TIMESTAMP NULL
+            ,SERVICEORDERDATE TIMESTAMP NULL
             ,INSPECTIONFLAG VARCHAR NULL
             ,INSPECTIONDATE VARCHAR NULL
             ,INSPECTORNAME VARCHAR NULL
