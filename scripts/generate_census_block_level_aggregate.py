@@ -15,20 +15,21 @@ s3_resource = boto3.resource('s3'
 bucket_name = AWS_Credentials['s3_bucket']
 region=AWS_Credentials['region']
 home = os.path.expanduser('~')
-folder='source-data/dc-open-data/'
+source_datasets={'source-data/dc-open-data/':['census_blocks','address_points','all311', 'vision_zero'], 'analysis_data/':['dc_crashes_w_details']}
+destination_folder='analysis_data/'
 
-datasets = ['crashes_w_detail','census_blocks','address_points','all311', 'vision_zero']
-geodfs = {}
+# check if i already have the datasets downloaded
 current_files = [os.path.splitext(f)[0] for f in os.listdir(home) if os.path.splitext(f)[1] == '.geojson']
-print(current_files)
 
 # load datasets into memory and put them in a dict of gdf's
-for dataset in datasets:
-    filename = os.path.join(home,dataset+'.geojson')
-    if dataset not in current_files:
-        s3.download_file(bucket_name, folder+dataset+'.geojson', filename)
-    gdf=gpd.read_file(filename)
-    geodfs[dataset] = gdf 
+geodfs = {}
+for key in source_datasets.keys():
+    for dataset in source_datasets[key]:
+        filename = os.path.join(home,dataset+'.geojson')
+        if dataset not in current_files:
+            s3.download_file(bucket_name, key+dataset+'.geojson', filename)
+        gdf=gpd.read_file(filename)
+        geodfs[dataset] = gdf 
 
 # process crashes
 census_blocks_crashes = gpd.sjoin(geodfs['crashes_w_detail'], geodfs['census_blocks'], how="left", op='intersects')
@@ -69,14 +70,16 @@ geo_info = crashes_311_vz.merge(geodfs['census_blocks'], how = 'inner', left_on 
 geo_info = geo_info.set_geometry('geometry')
 census_blocks_addr = geodfs['address_points'].dissolve(by='CENSUS_BLOCK', aggfunc='first')
 final = gpd.sjoin(geo_info, census_blocks_addr, how="left", op='intersects')
+for column in final.columns():
+    print(column)
 print("Total rows: ", len(final))
 # export to csv 
 filename = os.path.join(home,'census_block_level_final.csv')
 final.to_csv(filename, index=False, header=False, line_terminator='\n')
 data = open(filename, 'rb')
-s3_resource.Bucket(bucket_name).put_object(Key='census_block_level_final.csv', Body=data)
+s3_resource.Bucket(bucket_name).put_object(Key=destination_folder+'census_block_level_final.csv', Body=data)
 # export to geojson  
 filename = os.path.join(home,'census_block_level_final.geojson')
 final.to_file(filename, driver='GeoJSON')
 data = open(filename, 'rb')
-s3_resource.Bucket(bucket_name).put_object(Key='census_block_level_final.geojson', Body=data)
+s3_resource.Bucket(bucket_name).put_object(Key=destination_folder+'census_block_level_final.geojson', Body=data)

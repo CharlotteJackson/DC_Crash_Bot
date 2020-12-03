@@ -28,7 +28,7 @@ psql_path=subprocess.check_output(['which', 'psql']).strip().decode('utf-8')
 sys.path.append(psql_path)
 
 # set which S3 folder(s) to load data for
-folders_to_load = ['source-data/dc-open-data/']
+folders_to_load = ['source-data/dc-open-data/','analysis-data/']
 
 for folder in folders_to_load:
     # grab list of all csv files in target folder
