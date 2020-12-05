@@ -50,10 +50,10 @@ AS (
     SELECT 
         B.OBJECTID AS CENSUS_BLOCK_ID 
         ,COUNT(DISTINCT a.OBJECTID) AS TOTAL_VISION_ZERO_REQUESTS
-        ,EXTRACT (YEAR FROM a.REQUESTDATE) AS YEAR
+        ,DATE_PART('year', cast(a.REQUESTDATE as TIMESTAMP)) AS YEAR
     FROM source_data.vision_zero a
     INNER JOIN source_data.census_blocks b ON ST_Intersects(a.geometry, b.geometry)
-    GROUP BY b.OBJECTID, EXTRACT (YEAR FROM a.REQUESTDATE) 
+    GROUP BY b.OBJECTID, DATE_PART('year', cast(a.REQUESTDATE as TIMESTAMP))
 ) WITH DATA;
 """
 
@@ -63,10 +63,10 @@ AS (
     SELECT 
         B.OBJECTID AS CENSUS_BLOCK_ID 
         ,COUNT(DISTINCT a.OBJECTID) AS TOTAL_TSA_311_REQUESTS
-        ,EXTRACT (YEAR FROM a.REQUESTDATE) AS YEAR
+        ,DATE_PART('year', cast(a.adddate as TIMESTAMP)) AS YEAR
     FROM source_data.all311 a
     INNER JOIN source_data.census_blocks b ON ST_Intersects(a.geometry, b.geometry)
-    GROUP BY b.OBJECTID, EXTRACT (YEAR FROM a.REQUESTDATE) 
+    GROUP BY b.OBJECTID, DATE_PART('year', cast(a.adddate as TIMESTAMP))
 ) WITH DATA;
 """
 
@@ -95,8 +95,8 @@ CREATE TABLE {0}.{1} AS
 GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
 """.format(target_schema, target_table)
 
-engine.execute(roll_up_crashes_by_census_block_query)
 engine.execute(roll_up_vz_by_census_block_query)
 engine.execute(roll_up_311_by_census_block_query)
+engine.execute(roll_up_crashes_by_census_block_query)
 engine.execute(join_query)
 engine.execute(final_query)        

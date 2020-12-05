@@ -1,4 +1,3 @@
-
 /********************************
 QUESTIONS: 
     Which neighborhoods in DC have the highest rates of children under 12 hit by cars while walking? 
@@ -7,6 +6,8 @@ QUESTIONS:
 Datasets used to find the answer: 
     source_data.address_points: Detailed information on every address in DC, including ward, neighborhood, ANC district, etc
     analysis_data.dc_crashes_w_details: Data on car crashes from Open Data DC, with some columns added for easier analysis
+	source_data.all311: Open Data DC dataset on all Traffic Safety Assessment Requests submitted to 311 since 2015 
+	source_data.vision_zero: Open Data DC dataset on all Vision Zero requests submitted
 PostGIS functions used to find the answer:
     ST_ConcaveHull
     ST_Collect
@@ -55,6 +56,11 @@ INNER JOIN nabe_boundaries b ON ST_Intersects(b.geometry, a.geometry)
 
 SELECT * FROM all311_w_neighborhood WHERE nabe = 'Randle Heights';
 --Yes, there have been 265 traffic safety assessment requests in this neighborhood since 2015
+
+--How does this number of requests compare to other neighborhoods?
+SELECT nabe, count(*) FROM all311_w_neighborhood
+GROUP BY nabe order by count(*) DESC 
+--It's the 7th highest neighborhood for all time TSA requests.
 
 --How about Vision Zero requests submitted for this neighborhood?
 CREATE TEMP TABLE vision_zero_w_neighborhood  ON COMMIT PRESERVE ROWS AS (
