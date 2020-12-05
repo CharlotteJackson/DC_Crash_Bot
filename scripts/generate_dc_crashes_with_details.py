@@ -1,91 +1,153 @@
-import geopandas as gpd
-import pandas as pd
-import boto3
-import os
-from pathlib import Path
+import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
 
-AWS_Credentials = get_connection_strings("AWS_DEV")
-s3 = boto3.client('s3'
-    ,aws_access_key_id=AWS_Credentials['aws_access_key_id']
-    ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
-s3_resource = boto3.resource('s3'
-    ,aws_access_key_id=AWS_Credentials['aws_access_key_id']
-    ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
-bucket_name = AWS_Credentials['s3_bucket']
-region=AWS_Credentials['region']
-home = os.path.expanduser('~')
-source_datasets={'source-data/dc-open-data/':['crashes_raw', 'crash_details']}
-destination_folder='analysis-data/'
-destination_dataset = 'dc_crashes_w_details'
+dbname='postgres'
+env="DEV"
+engine = create_postgres_engine(destination="AWS_PostGIS", target_db=dbname, env=env)
+db_credentials = get_connection_strings("AWS_PostGIS")
 
-# load current files
-current_files = [os.path.splitext(f)[0] for f in os.listdir(home) if os.path.splitext(f)[1] == '.geojson']
+target_schema = 'analysis_data'
+target_table='dc_crashes_w_details'
 
-# load datasets into memory and put them in a dict of gdf's
-geodfs = {}
-for key in source_datasets.keys():
-    for dataset in source_datasets[key]:
-        filename = os.path.join(home,dataset+'.geojson')
-        if dataset not in current_files:
-            s3.download_file(bucket_name, key+dataset+'.geojson', filename)
-        gdf=gpd.read_file(filename)
-        geodfs[dataset] = gdf 
+add_columns_query ="""
+CREATE TEMP TABLE tmp_crash_details ON COMMIT PRESERVE ROWS 
+AS (
+    SELECT *
+        ,CASE WHEN PERSONTYPE = 'Driver' AND AGE >=80 THEN 1 ELSE 0 END AS DRIVERS_OVER_80
+        ,CASE WHEN PERSONTYPE = 'Driver' AND AGE <=25 THEN 1 ELSE 0 END AS DRIVERS_UNDER_25
+        ,CASE WHEN PERSONTYPE = 'Pedestrian' AND AGE >=70 THEN 1 ELSE 0 END AS PEDS_OVER_70
+        ,CASE WHEN PERSONTYPE = 'Pedestrian' AND AGE <=12 THEN 1 ELSE 0 END AS PEDS_UNDER_12
+        ,CASE WHEN PERSONTYPE = 'Bicyclist' AND AGE >=70 THEN 1 ELSE 0 END AS BIKERS_OVER_70
+        ,CASE WHEN PERSONTYPE = 'Bicyclist' AND AGE <=12 THEN 1 ELSE 0 END AS BIKERS_UNDER_12
+        ,CASE WHEN PERSONTYPE = 'Driver' AND LICENSEPLATESTATE <> 'DC' THEN 1 ELSE 0 END AS OOS_VEHICLES
+        ,CASE WHEN PERSONTYPE = 'Driver' AND INVEHICLETYPE = 'Passenger Car/automobile' THEN 1 ELSE 0 END AS NUM_CARS
+        ,CASE WHEN PERSONTYPE = 'Driver' AND INVEHICLETYPE in ('Suv (sport Utility Vehicle)', 'Pickup Truck') THEN 1 ELSE 0 END AS NUM_SUVS_OR_TRUCKS
 
-# process crash details
-crash_details=geodfs['crash_details']
-# first create variables that will be aggregated
-# driver over 80/driver under 25 
-crash_details['DRIVERS_OVER_80']= crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Driver' and x.AGE>=80 else 0, axis = 1)
-crash_details['DRIVERS_UNDER_25']= crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Driver'  and x.AGE<=25 else 0, axis = 1)
-# ped under 12/ped over 70 
-crash_details['PEDS_OVER_70']= crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Pedestrian' and x.AGE>=70 else 0, axis = 1)
-crash_details['PEDS_UNDER_12']= crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Pedestrian' and x.AGE<=12 else 0, axis = 1)
-# biker under 12/biker over 70
-crash_details['BIKERS_OVER_70']= crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Bicyclist' and x.AGE>=70 else 0, axis = 1)
-crash_details['BIKERS_UNDER_12']= crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Bicyclist' and x.AGE<=12 else 0, axis = 1)
-# out of state driver
-crash_details['OOS_VEHICLES']= crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Driver' and x.LICENSEPLATESTATE != 'DC' else 0, axis = 1)
-# vehicle type 
-crash_details['CARS']=crash_details.apply(lambda x: 1 if x.INVEHICLETYPE=='Passenger Car/automobile' and x.PERSONTYPE=='Driver' else 0, axis = 1)
-crash_details['SUVS_OR_TRUCKS']=crash_details.apply(lambda x: 1 if (x.INVEHICLETYPE=='Suv (sport Utility Vehicle)'or x.  INVEHICLETYPE== 'Pickup Truck')and x.PERSONTYPE=='Driver' else 0, axis = 1)
+        ,CASE WHEN PERSONTYPE = 'Pedestrian' AND FATAL='Y' THEN 1 ELSE 0 END AS PED_FATALITIES
+        ,CASE WHEN PERSONTYPE = 'Bicyclist' AND FATAL='Y'THEN 1 ELSE 0 END AS BICYCLE_FATALITIES
+        ,CASE WHEN PERSONTYPE in ('Driver','Passenger') AND FATAL='Y' THEN 1 ELSE 0 END AS VEHICLE_FATALITIES
 
-# injuries 
-crash_details['PED_INJURIES']=crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Pedestrian' and (x.MAJORINJURY == 'Y' or x.MINORINJURY =='Y') else 0,axis = 1)
-crash_details['BICYCLE_INJURIES']=crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Bicyclist' and (x.MAJORINJURY == 'Y' or x.MINORINJURY =='Y') else 0,axis = 1)
-crash_details['VEHICLE_INJURIES']=crash_details.apply(lambda x: 1 if (x.PERSONTYPE=='Driver' or x.PERSONTYPE == 'Passenger')and (x.MAJORINJURY == 'Y' or x.MINORINJURY =='Y') else 0,axis = 1)
-# tickets issued? 
-crash_details['DRIVER_TICKETS']=crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Driver' and x.TICKETISSUED == 'Y' else 0,axis = 1)
-crash_details['BICYCLE_TICKETS']=crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Bicyclist' and x.TICKETISSUED == 'Y' else 0, axis = 1)
-crash_details['PED_TICKETS']=crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Pedestrian' and x.TICKETISSUED == 'Y' else 0, axis = 1)
-# speeding? 
-crash_details['DRIVERS_SPEEDING']=crash_details.apply(lambda x: 1 if x.PERSONTYPE=='Driver' and x.SPEEDING == 'Y' else 0, axis = 1)
-# total injuries
-crash_details['TOTAL_INJURIES']=crash_details['VEHICLE_INJURIES']+crash_details['BICYCLE_INJURIES']+crash_details['PED_INJURIES']          
+        ,CASE WHEN PERSONTYPE = 'Pedestrian' AND (MAJORINJURY='Y' OR MINORINJURY ='Y')THEN 1 ELSE 0 END AS PED_INJURIES
+        ,CASE WHEN PERSONTYPE = 'Bicyclist' AND (MAJORINJURY='Y' OR MINORINJURY ='Y') THEN 1 ELSE 0 END AS BICYCLE_INJURIES
+        ,CASE WHEN PERSONTYPE in ('Driver','Passenger') AND (MAJORINJURY='Y' OR MINORINJURY ='Y') THEN 1 ELSE 0 END AS VEHICLE_INJURIES
+        ,CASE WHEN PERSONTYPE = 'Driver' AND TICKETISSUED ='Y' THEN 1 ELSE 0 END AS DRIVER_TICKETS
+        ,CASE WHEN PERSONTYPE = 'Bicyclist' AND TICKETISSUED ='Y' THEN 1 ELSE 0 END AS BICYCLE_TICKETS
+        ,CASE WHEN PERSONTYPE = 'Pedestrian' AND TICKETISSUED ='Y'  THEN 1 ELSE 0 END AS PED_TICKETS
+        ,CASE WHEN (MAJORINJURY='Y' OR MINORINJURY ='Y') THEN 1 ELSE 0 END AS TOTAL_INJURIES
 
-# roll up by crash id
-# make list fields out of the person type, vehicle type, and license plate state fields
-crash_details_agg = (crash_details.groupby(['CRIMEID']).agg({
-                    'PED_INJURIES': 'sum', 'BICYCLE_INJURIES': 'sum','VEHICLE_INJURIES': 'sum','TOTAL_INJURIES': 'sum', 'OOS_VEHICLES': 'sum', 'DRIVERS_UNDER_25': 'sum', 'DRIVERS_OVER_80': 'sum'
-                    , 'PEDS_OVER_70':'sum', 'PEDS_UNDER_12': 'sum', 'BIKERS_OVER_70': 'sum', 'BIKERS_UNDER_12':'sum', 'OOS_VEHICLES': 'sum','CARS' : 'sum', 'SUVS_OR_TRUCKS' : 'sum', 'DRIVER_TICKETS': 'sum'
-                   ,'BICYCLE_TICKETS': 'sum', 'PED_TICKETS':'sum', 'DRIVERS_SPEEDING': 'sum','PERSONTYPE': lambda x: list(x), 'INVEHICLETYPE':  lambda x: list(x), 
-                   'LICENSEPLATESTATE': lambda x: list(x)
-                    }).reset_index())
+        ,CASE WHEN PERSONTYPE = 'Driver' THEN 1 ELSE 0 END AS TOTAL_VEHICLES
+        ,CASE WHEN PERSONTYPE = 'Pedestrian' THEN 1 ELSE 0 END AS TOTAL_PEDESTRIANS
+        ,CASE WHEN PERSONTYPE = 'Bicyclist' THEN 1 ELSE 0 END AS TOTAL_BICYCLISTS
+    FROM source_data.crash_details
+)WITH DATA;
+"""
+group_by_query = """
+CREATE TEMP TABLE tmp_crash_details_agg ON COMMIT PRESERVE ROWS 
+AS (
+    SELECT 
+        CRIMEID
+        ,SUM(DRIVERS_OVER_80) AS DRIVERS_OVER_80
+        ,SUM(DRIVERS_UNDER_25) AS DRIVERS_UNDER_25
+        ,SUM(PEDS_OVER_70) AS PEDS_OVER_70
+        ,SUM(PEDS_UNDER_12) AS PEDS_UNDER_12
+        ,SUM(BIKERS_OVER_70) AS BIKERS_OVER_70
+        ,SUM(OOS_VEHICLES) AS OOS_VEHICLES
+        ,SUM(NUM_CARS) AS NUM_CARS
+        ,SUM(NUM_SUVS_OR_TRUCKS) AS NUM_SUVS_OR_TRUCKS
+        ,SUM(PED_INJURIES) AS PEDESTRIAN_INJURIES
+        ,SUM(BICYCLE_INJURIES) AS BICYCLE_INJURIES
+        ,SUM(VEHICLE_INJURIES) AS VEHICLE_INJURIES
+        ,SUM(PED_FATALITIES) AS PEDESTRIAN_FATALITIES
+        ,SUM(BICYCLE_FATALITIES) AS BICYCLE_FATALITIES
+        ,SUM(VEHICLE_FATALITIES) AS VEHICLE_FATALITIES
+        ,SUM(DRIVER_TICKETS) AS DRIVER_TICKETS
+        ,SUM(BICYCLE_TICKETS) AS BICYCLE_TICKETS
+        ,SUM(PED_TICKETS) AS PED_TICKETS
+        ,SUM(TOTAL_INJURIES) AS TOTAL_INJURIES
+        ,SUM(TOTAL_VEHICLES) AS TOTAL_VEHICLES
+        ,SUM(TOTAL_PEDESTRIANS) AS TOTAL_PEDESTRIANS
+        ,SUM(TOTAL_BICYCLISTS) AS TOTAL_BICYCLISTS
+        ,ARRAY_AGG(PERSONTYPE) AS PERSONTYPE_ARRAY
+        ,ARRAY_AGG(INVEHICLETYPE) AS INVEHICLETYPE_ARRAY
+        ,ARRAY_AGG(LICENSEPLATESTATE) AS LICENSEPLATESTATE_ARRAY
+    FROM tmp_crash_details
+    GROUP BY CRIMEID
+) WITH DATA;
+"""
 
-crashes_raw =geodfs['crashes_raw']
-dc_crashes_w_details =  crashes_raw.merge(crash_details_agg, how = 'left', on='CRIMEID')
-for column in dc_crashes_w_details.columns:
-    print(column)
+join_query = """
+CREATE TEMP TABLE tmp_crashes_join ON COMMIT PRESERVE ROWS 
+AS (
+    SELECT 
+        a.OBJECTID
+            ,a.CRIMEID
+            ,a.REPORTDATE
+            ,a.FROMDATE
+            ,a.TODATE 
+            ,a.ADDRESS
+            ,CASE WHEN b.CRIMEID IS NULL OR b.BICYCLE_INJURIES < (a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
+                THEN (a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
+                ELSE b.BICYCLE_INJURIES END AS BICYCLE_INJURIES
+            ,CASE WHEN b.CRIMEID IS NULL OR b.VEHICLE_INJURIES < (a.MAJORINJURIES_DRIVER+a.MINORINJURIES_DRIVER+a.UNKNOWNINJURIES_DRIVER+a.MAJORINJURIESPASSENGER+a.MINORINJURIESPASSENGER+a.UNKNOWNINJURIESPASSENGER)
+                THEN (a.MAJORINJURIES_DRIVER+a.MINORINJURIES_DRIVER+a.UNKNOWNINJURIES_DRIVER+a.MAJORINJURIESPASSENGER+a.MINORINJURIESPASSENGER+a.UNKNOWNINJURIESPASSENGER)
+                ELSE b.VEHICLE_INJURIES END AS VEHICLE_INJURIES
+            ,CASE WHEN b.CRIMEID IS NULL OR b.PEDESTRIAN_INJURIES < (a.MAJORINJURIES_PEDESTRIAN+ a.MINORINJURIES_PEDESTRIAN + a.UNKNOWNINJURIES_PEDESTRIAN)
+                THEN (a.MAJORINJURIES_PEDESTRIAN + a.MINORINJURIES_PEDESTRIAN + a.UNKNOWNINJURIES_PEDESTRIAN)
+                ELSE b.PEDESTRIAN_INJURIES END AS PEDESTRIAN_INJURIES
+            ,CASE WHEN b.CRIMEID IS NULL OR b.TOTAL_INJURIES < (a.MAJORINJURIES_PEDESTRIAN+ a.MINORINJURIES_PEDESTRIAN + a.UNKNOWNINJURIES_PEDESTRIAN
+                                                                +a.MAJORINJURIES_DRIVER+a.MINORINJURIES_DRIVER+a.UNKNOWNINJURIES_DRIVER+a.MAJORINJURIESPASSENGER+a.MINORINJURIESPASSENGER+a.UNKNOWNINJURIESPASSENGER
+                                                                +a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
+                   THEN (a.MAJORINJURIES_PEDESTRIAN+ a.MINORINJURIES_PEDESTRIAN + a.UNKNOWNINJURIES_PEDESTRIAN
+                                                                +a.MAJORINJURIES_DRIVER+a.MINORINJURIES_DRIVER+a.UNKNOWNINJURIES_DRIVER+a.MAJORINJURIESPASSENGER+a.MINORINJURIESPASSENGER+a.UNKNOWNINJURIESPASSENGER
+                                                                +a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
+                ELSE b.TOTAL_INJURIES end as TOTAL_INJURIES 
+            ,CASE WHEN b.CRIMEID IS NULL OR b.BICYCLE_FATALITIES < a.FATAL_BICYCLIST
+                THEN a.FATAL_BICYCLIST 
+                ELSE b.BICYCLE_FATALITIES END AS BICYCLE_FATALITIES
+            ,CASE WHEN b.CRIMEID IS NULL OR b.PEDESTRIAN_FATALITIES < a.FATAL_PEDESTRIAN
+                THEN a.FATAL_PEDESTRIAN 
+                ELSE b.PEDESTRIAN_FATALITIES END AS PEDESTRIAN_FATALITIES
+            ,CASE WHEN b.CRIMEID IS NULL OR b.VEHICLE_FATALITIES < (a.FATAL_DRIVER+a.FATALPASSENGER)
+                THEN (a.FATAL_DRIVER+a.FATALPASSENGER) 
+                ELSE b.VEHICLE_FATALITIES END AS VEHICLE_FATALITIES
+            ,CASE WHEN b.CRIMEID IS NULL or b.TOTAL_VEHICLES < a.TOTAL_VEHICLES THEN a.TOTAL_VEHICLES ELSE b.TOTAL_VEHICLES END AS TOTAL_VEHICLES 
+            ,CASE WHEN b.CRIMEID IS NULL or b.TOTAL_BICYCLISTS < a.TOTAL_BICYCLES THEN a.TOTAL_BICYCLES ELSE b.TOTAL_BICYCLISTS END AS TOTAL_BICYCLISTS 
+            ,CASE WHEN b.CRIMEID IS NULL or b.TOTAL_PEDESTRIANS < a.TOTAL_PEDESTRIANS THEN a.TOTAL_PEDESTRIANS ELSE b.TOTAL_PEDESTRIANS END AS TOTAL_PEDESTRIANS 
+            ,b.DRIVERS_OVER_80
+            ,b.DRIVERS_UNDER_25
+            ,b.PEDS_OVER_70
+            ,b.PEDS_UNDER_12
+            ,b.BIKERS_OVER_70
+            ,b.OOS_VEHICLES
+            ,b.NUM_CARS
+            ,b.NUM_SUVS_OR_TRUCKS
+            ,b.DRIVER_TICKETS
+            ,b.BICYCLE_TICKETS
+            ,b.PED_TICKETS
+            ,b.PERSONTYPE_ARRAY
+            ,b.INVEHICLETYPE_ARRAY
+            ,b.LICENSEPLATESTATE_ARRAY
+            ,a.INTAPPROACHDIRECTION
+            ,a.LOCATIONERROR 
+            ,a.LASTUPDATEDATE
+            ,a.BLOCKKEY
+            ,a.SUBBLOCKKEY
+            ,a.geometry
 
+    FROM source_data.crashes_raw a
+    LEFT JOIN tmp_crash_details_agg b on a.CRIMEID = b.CRIMEID
+) WITH DATA;
+"""
+final_query="""
+DROP TABLE IF EXISTS {0}.{1};
 
-# download dataset to local hard drive, and then upload it to the S3 bucket
-# in csv format
-filename = Path(os.path.expanduser('~'), destination_dataset+'.csv')
-gdf.to_csv(filename, index=False, header=False, line_terminator='\n')
-data = open(filename, 'rb')
-s3_resource.Bucket(bucket_name).put_object(Key=destination_folder+destination_dataset+'.csv', Body=data)
-# in geojson format
-filename = Path(os.path.expanduser('~'), destination_dataset+'.geojson')
-gdf.to_file(filename, driver='GeoJSON')
-data = open(filename, 'rb')
-s3_resource.Bucket(bucket_name).put_object(Key=destination_folder+destination_dataset+'.geojson', Body=data)
+CREATE TABLE {0}.{1} AS 
+    SELECT * FROM tmp_crashes_join;
+
+GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
+""".format(target_schema, target_table)
+
+engine.execute(add_columns_query)
+engine.execute(group_by_query)
+engine.execute(join_query)
+engine.execute(final_query)
