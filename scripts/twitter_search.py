@@ -57,6 +57,9 @@ search_terms_list =[
     ,'bike hit -filter:retweets'
     ,'cyclist hit -filter:retweets'
     ,'in crosswalk -filter:retweets'
+    ,'rear ended -filter:retweets'
+    ,'struck by car -filter:retweets'
+    ,'fender bender -filter:retweets'
 ]
 
 statuses_only =[]
