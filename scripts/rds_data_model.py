@@ -1,8 +1,6 @@
 from connect_to_rds import create_postgres_engine
 import sqlalchemy
 
-engine = create_postgres_engine("AWS_PostGIS", "postgres", "DEV")
-
 def generate_table(engine, target_schema:str, target_table:str,mode:str):
     
     schema_query = """
