@@ -68,7 +68,7 @@ datasets_scripts = {
         """
         
     ,'census_block_level_crashes':"""
-        SELECT * FROM tmp.tmp_final_census_block_level_join
+        SELECT * FROM tmp.tmp_final_census_block_join
         """
 }
 
