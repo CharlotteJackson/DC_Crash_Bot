@@ -1,21 +1,25 @@
 # DC_Crash_Bot
 
-DC Crash Bot aims to combine the 311/vision zero safety requests made by DC citizens with data on crashes/enforcement/traffic calming to highlight how responsive (or non-responsive) DDOT is to the concerns of DC residents
+DC Crash Bot has two goals:
+
+1) Combine the city's open crash data with data on 311 and Vision Zero safety requests from residents to highlight the government's response (or lack thereof) to citizen concerns about the impact of traffic violence in their neighborhood
+2) The open crashes dataset is only a start. We want to build on it by incorporating other sources, such as the Pulsepoint app for first responders, crash databases maintained by third parties, and Twitter, to get a fuller picture of the damage. 
 
 
 ### Why Start this project
 
-TODO:
-
+DC's current Vision Zero program [is failing](https://mpdc.dc.gov/page/traffic-fatalities), and the incompleteness of the open crash data is [a known problem](https://www.washingtonpost.com/opinions/local-opinions/ignorance-is-not-bliss-for-the-safety-of-dc-bicyclists-and-pedestrians/2020/02/27/c9180e74-5276-11ea-b119-4faabac6674f_story.html) with serious consequences for city residents. 
 https://usa.streetsblog.org/2020/09/29/why-your-city-doesnt-map-its-worst-car-crashes/
 
 
 # Resources 
 
-A potential Twitter account to scrape: https://twitter.com/AlertDCio
+The Pulsepoint API: https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6
+Open Data DC: https://opendata.dc.gov
 Geopandas: https://geopandas.org/index.html
+PostGIS: https://postgis.net
+Postgresql JSON Type: https://www.postgresql.org/docs/9.4/datatype-json.html
 A sample project: https://github.com/sunlightpolicy/sql4housing/tree/master/chicago_example
-Postgresql extension: https://postgis.net
 
 ### Link to our map
 
@@ -23,4 +27,29 @@ TODO:
 
 ### How to contribute
  
-TODO:
+Our PostGIS database currently has Open Data DC datasets on 311/Vision Zero requests, crashes, crash details, census blocks, address points, and all roadway centerlines-related data. We also have a small sample dataset scraped from the Pulsepoint website, with more to come soon.  **If you're interested in doing any reporting, analytics, or visualization with this data, all you need to do is 1) download pgAdmin; 2) message me for a login.** 
+
+We need people with interests or skills in front-end, machine learning/NLP, data engineering, and geographic data. If that sounds like you, join us at an upcoming [Code for DC Meetup](https://www.meetup.com/Code-for-DC/)! 
+
+### Sample query
+
+```SQL
+--Which DC neighborhood has submitted the most Traffic Safety Assessment requests since 2015? 
+CREATE TABLE Neighborhoods  AS (
+SELECT 
+    assessment_nbhd AS Neighborhood,
+	ST_ConcaveHull(ST_Collect(d.geometry), 0.99) AS geometry
+FROM source_data.address_points 
+GROUP BY assessment_nbhd
+)
+
+CREATE TABLE all311_w_neighborhood AS (
+SELECT b.Neighborhood, a.*
+FROM source_data.all311 a
+INNER JOIN Neighborhoods b ON ST_Intersects(b.geometry, a.geometry)
+) 
+
+SELECT Neighborhood, count(*) FROM all311_w_neighborhood
+GROUP BY Neighborhood order by count(*) DESC 
+
+```
