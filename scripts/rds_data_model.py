@@ -34,7 +34,18 @@ def generate_table(engine, target_schema:str, target_table:str,mode:str):
 def get_table_definition(target_table:str):
 
     data_model_dict = {
-        'vision_zero': """
+        'pulsepoint':"""
+        Status_At_Load VARCHAR NULL
+        ,Incident_ID VARCHAR NULL
+        ,CALL_RECEIVED_DATETIME TIMESTAMP NULL
+        ,Latitude NUMERIC NULL
+        ,Longitude NUMERIC NULL
+        ,FullDisplayAddress VARCHAR NULL
+        ,Incident_Type VARCHAR NULL
+        ,Unit VARCHAR NULL
+        ,Unit_Status_Transport VARCHAR NULL
+        """
+        ,'vision_zero': """
             OBJECTID VARCHAR NULL
             ,GLOBALID   VARCHAR NULL 
             ,REQUESTID VARCHAR NULL
