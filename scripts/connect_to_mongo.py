@@ -35,11 +35,11 @@ def get_connection_strings(destination: str):
 # open connection to MongoDB
 def MongoDB_Client(destination: str, env:str, dbName = None):
 
-    credentials = get_connection_strings(destination)
+    credentials = get_connection_strings(destination)[env]
 
-    credentials[env]['UID'] = urllib.parse.quote(credentials[env]['UID'])
-    credentials[env]['PWD'] = urllib.parse.quote(credentials[env]['PWD'])
-    credentials[env]['URL'] = urllib.parse.quote(credentials[env]['mydbcluster'])
+    credentials['UID'] = urllib.parse.quote(credentials['UID'])
+    credentials['PWD'] = urllib.parse.quote(credentials['PWD'])
+    credentials['URL'] = urllib.parse.quote(credentials['mydbcluster'])
 
     client = pymongo.MongoClient("mongodb://{}:{}@{}.us-east-1.docdb.amazonaws.com:27017/?ssl=true&ssl_ca_certs=rds-combined-ca-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false".format(credentials['UID'], credentials['PWD'],credentials['mydbcluster'])
     )

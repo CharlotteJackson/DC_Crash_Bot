@@ -28,7 +28,7 @@ psql_path=subprocess.check_output(['which', 'psql']).strip().decode('utf-8')
 sys.path.append(psql_path)
 
 # set which S3 folder(s) to load data for
-folders_to_load = ['source-data/dc-open-data/','analysis-data/']
+folders_to_load = ['source-data/pulsepoint/']
 
 for folder in folders_to_load:
     # grab list of all csv files in target folder
@@ -36,7 +36,7 @@ for folder in folders_to_load:
     print(files_to_load)
 
     # set table import parameters that are the same for every file
-    copy_parameters = '\'(format csv)\''
+    copy_parameters = '\'(FORMAT csv, HEADER true, ESCAPE \'\'\\\'\')\''
     columns_to_copy = '\'\''
     aws_credentials_param = '\'{}\', \'{}\',\'\''.format(AWS_Credentials['aws_access_key_id'],AWS_Credentials['aws_secret_access_key'])
 
@@ -52,8 +52,10 @@ for folder in folders_to_load:
 
         # create import statement
         import_table_query = 'SELECT aws_s3.table_import_from_s3({}, {},{}, aws_commons.create_s3_uri({}) ,aws_commons.create_aws_credentials({}));'.format(destination_table, columns_to_copy, copy_parameters, create_s3_uri_param, aws_credentials_param)
+        print(import_table_query)   
         # create arg to pass to os.system
         os_system_arg='PGPASSWORD={} psql --host={} --port={} --username={} --dbname={}  --no-password --command=\"{}\"'.format(db_pwd,db_host, db_port, db_uid, dbname, import_table_query)
+        print(os_system_arg)
         # execute
         os.system(os_system_arg)
 
