@@ -4,3 +4,4 @@ sqlalchemy
 twitter
 requests
 geopandas
+cryptography
