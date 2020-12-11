@@ -1,11 +1,6 @@
 pandas
 boto3
-json
-datetime
-os
-pathlib
 sqlalchemy
 twitter
-logging
 requests
 geopandas
