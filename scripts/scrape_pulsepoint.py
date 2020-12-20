@@ -29,9 +29,9 @@ def main():
     data = pulse.get_data()
 
     # dump it to file and upload to AWS so we have the raw data for every pull
-    with open('data.json', 'w+') as outfile:
+    with open('pulsepoint_data.json', 'w+') as outfile:
         json.dump(data, outfile, indent=4)
-    upload = open('data.json', 'rb')
+    upload = open('pulsepoint_data.json', 'rb')
     s3_resource.Bucket(bucket_name).put_object(Key=prefix+dataset+current_time+'.json', Body=upload, Metadata =metadata)
 
 if __name__ == "__main__":
