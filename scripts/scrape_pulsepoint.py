@@ -10,6 +10,7 @@ from connect_to_rds import get_connection_strings
 import json
 from pulse import get_data
 import datetime
+from datetime import timezone
 
 # set up S3 connection
 AWS_Credentials = get_connection_strings("AWS_DEV")
@@ -21,12 +22,14 @@ region=AWS_Credentials['region']
 prefix = 'source-data/pulsepoint/unparsed/'
 metadata = {'target_schema':'tmp', "dataset_info":"https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6"}
 dataset = 'pulsepoint'
-current_time = datetime.datetime.now().strftime("%Y:%m:%d:%H:%M:%S")
+current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00")
 
 
 def main():
 
     data = pulse.get_data()
+
+    data['scrape_datetime']=current_time
 
     # dump it to file and upload to AWS so we have the raw data for every pull
     with open('pulsepoint_data.json', 'w+') as outfile:

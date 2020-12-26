@@ -7,6 +7,7 @@ from rds_data_model import generate_table
 import subprocess
 import sys
 import argparse
+import urllib
 
 def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:str, mode:str):
 
@@ -30,13 +31,12 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
     sys.path.append(psql_path)
 
     # grab list of all files in target folder that have a target table
-    files_to_load = [(obj.key, obj.Object().metadata['target_schema'],obj.Object().metadata['target_table']) for obj in bucket.objects.filter(Prefix=folder_to_load, Delimiter='/') if 'target_table' in obj.Object().metadata.keys() if format in obj.key]
-    print(files_to_load)
+    # url encode the file key so the ones with semicolons don't throw an error
+    files_to_load = [(urllib.parse.quote(obj.key), obj.Object().metadata['target_schema'],obj.Object().metadata['target_table']) for obj in bucket.objects.filter(Prefix=folder_to_load, Delimiter='/') if 'target_table' in obj.Object().metadata.keys() if format in obj.key]
     # generate distinct list of target tables so they're all only dropped and recreated/truncated one time
     target_tables = [(target_schema, target_table) for (file_name, target_schema, target_table) in files_to_load]
     target_tables_distinct = set(target_tables)
     target_tables=list(target_tables_distinct)
-    print(target_tables)
 
     # drop and recreate and/or truncate each target table
     for (target_schema, target_table) in target_tables:
@@ -54,16 +54,14 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
 
         # create import statement
         import_table_query = 'SELECT aws_s3.table_import_from_s3({}, {},{}, aws_commons.create_s3_uri({}) ,aws_commons.create_aws_credentials({}));'.format(destination_table, columns_to_copy, copy_parameters, create_s3_uri_param, aws_credentials_param)
-        print(import_table_query)   
         # create arg to pass to os.system
         os_system_arg='PGPASSWORD={} psql --host={} --port={} --username={} --dbname={}  --no-password --command=\"{}\"'.format(db_pwd,db_host, db_port, db_uid, dbname, import_table_query)
-        print(os_system_arg)
         # execute
         os.system(os_system_arg)
 
         
 # set up ability to call with lists from the command line as follows:
-# python get_all_dc_open_data.py --datasets crashes_raw crash_details vision_zero all311 --formats csv geojson --mode replace
+# python s3_to_postgis.py --folders source-data/dc-open-data/crashes_raw/ source-data/dc-open-data/crash_details/ source-data/dc-open-data/vision_zero/ --format csv --mode replace --header true
 CLI=argparse.ArgumentParser()
 CLI.add_argument(
 "--folders",  
@@ -89,7 +87,6 @@ default='replace' # default is to append new records instead of dropping and rel
 
 # parse the command line
 args = CLI.parse_args()
-print(args)
 folders_to_load = args.folders
 format = args.format
 header = args.header

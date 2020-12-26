@@ -6,6 +6,7 @@ from pathlib import Path
 from connect_to_rds import get_connection_strings
 import argparse 
 import datetime
+from datetime import timezone
 import requests
 import json
 import sys
@@ -32,7 +33,8 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
             ,'prefix' :'source-data/dc-open-data/crashes_raw/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'crashes_raw',"dataset_info":"https://opendata.dc.gov/datasets/crashes-in-dc"}
             ,'append':{'endpoint': 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Public_Safety_WebMercator/MapServer/24/query?'
-                , 'filters': {'where':'REPORTDATE >= CURRENT_TIMESTAMP - INTERVAL \'1\' DAY','outFields':'*','outSR':'4326','returnGeometry':'true','f':'geojson'}}
+                , 'filters': {'where':'REPORTDATE >= CURRENT_TIMESTAMP - INTERVAL \'7\' DAY','outFields':'*','outSR':'4326','returnGeometry':'true','f':'geojson'}
+                ,'metadata' :{'target_schema':'tmp', 'target_table': 'crashes_raw',"dataset_info":"https://opendata.dc.gov/datasets/crashes-in-dc"}}
         }
         ,'crash_details' : {
             'url': ['https://opendata.arcgis.com/datasets/70248b73c20f46b0a5ee895fc91d6222_25.geojson']
@@ -127,7 +129,7 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
 
     if mode == 'append':
 
-        current_time = datetime.datetime.now().strftime("%Y:%m:%d:%H:%M:%S")
+        current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00")
         # if mode is append and dataset is not appendable, skip it
         if 'append' not in resources[dataset].keys():
             print('dataset {} not appendable'.format(dataset))
@@ -143,6 +145,13 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
         # 'offset' is apparently a reserved word in Postgres, so rename any columns with that label
         if 'OFFSET' in gdf.columns:
             gdf.rename(columns={"OFFSET": "_OFFSET"})
+        # convert the date fields from miliseconds to datetime
+        if 'REPORTDATE'in gdf.columns:
+            gdf['REPORTDATE']=gdf['REPORTDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00"))
+        if 'FROMDATE'in gdf.columns:
+            gdf['FROMDATE']=gdf['FROMDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00"))
+        if 'TODATE'in gdf.columns:
+            gdf['TODATE']=gdf['TODATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00"))
         # set S3 dataset name
         s3_dataset_name = dataset+current_time
         # download each dataset to local hard drive, and then upload it to the S3 bucket
@@ -150,13 +159,13 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
             filename = Path(os.path.expanduser('~'), dataset+'.csv')
             gdf.to_csv(filename, index=False, header=True, line_terminator='\n')
             data = open(filename, 'rb')
-            s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.csv', Body=data, Metadata =resources[dataset]['metadata'])
+            s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.csv', Body=data, Metadata =resources[dataset]['append']['metadata'])
         # in geojson format
         if 'geojson' in formats:
             filename = Path(os.path.expanduser('~'), dataset+'.geojson')
             gdf.to_file(filename, driver='GeoJSON')
             data = open(filename, 'rb')
-            s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.geojson', Body=data, Metadata =resources[dataset]['metadata'])
+            s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.geojson', Body=data, Metadata =resources[dataset]['append']['metadata'])
 
 
 # set up ability to call with lists from the command line as follows:
