@@ -83,32 +83,33 @@ def parse_pulsepoint(file_name:str, api_response:dict):
 
     # parse into dataframe
     for status_type in record_status_types:
-        records_to_load = api_response['incidents'][status_type]
-        if records_to_load is not None:
-            for record in records_to_load:
-                col_names['Status_At_Scrape'].append(status_type)
-                col_names['Scrape_Datetime'].append(scrape_datetime)
-                col_names['Incident_ID'].append(record['ID'])
-                try:
-                    col_names['Call_Received_Datetime'].append(record['CallReceivedDateTime'])
-                except KeyError:
-                    col_names['Call_Received_Datetime'].append('')
-                try:
-                    col_names['Call_Closed_Datetime'].append(record['ClosedDateTime'])
-                except KeyError:
-                    col_names['Call_Closed_Datetime'].append('')
-                col_names['Latitude'].append(record['Latitude'])
-                col_names['Longitude'].append(record['Longitude'])
-                col_names['FullDisplayAddress'].append(record['FullDisplayAddress'])
-                col_names['Incident_Type'].append(record['PulsePointIncidentCallType'])
-                try:
-                    col_names['Units'].append(record['Unit'])
-                except KeyError:
-                    col_names['Units'].append([])
-                try:
-                    col_names['Unit_Status_Transport'].append(unit_status_is_transport(record['Unit']))
-                except KeyError:
-                    col_names['Unit_Status_Transport'].append('NO')
+        if api_response['incidents'][status_type] is not None:
+            records_to_load = [i for i in api_response['incidents'][status_type] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE"]]
+            if records_to_load is not None and len(records_to_load)>0:
+                for record in records_to_load:
+                    col_names['Status_At_Scrape'].append(status_type)
+                    col_names['Scrape_Datetime'].append(scrape_datetime)
+                    col_names['Incident_ID'].append(record['ID'])
+                    try:
+                        col_names['Call_Received_Datetime'].append(record['CallReceivedDateTime'])
+                    except KeyError:
+                        col_names['Call_Received_Datetime'].append('')
+                    try:
+                        col_names['Call_Closed_Datetime'].append(record['ClosedDateTime'])
+                    except KeyError:
+                        col_names['Call_Closed_Datetime'].append('')
+                    col_names['Latitude'].append(record['Latitude'])
+                    col_names['Longitude'].append(record['Longitude'])
+                    col_names['FullDisplayAddress'].append(record['FullDisplayAddress'])
+                    col_names['Incident_Type'].append(record['PulsePointIncidentCallType'])
+                    try:
+                        col_names['Units'].append(record['Unit'])
+                    except KeyError:
+                        col_names['Units'].append([])
+                    try:
+                        col_names['Unit_Status_Transport'].append(unit_status_is_transport(record['Unit']))
+                    except KeyError:
+                        col_names['Unit_Status_Transport'].append('NO')
 
     df = pd.DataFrame.from_dict(col_names)
 

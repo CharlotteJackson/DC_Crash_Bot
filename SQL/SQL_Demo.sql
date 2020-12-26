@@ -35,7 +35,9 @@ INNER JOIN nabe_boundaries b ON ST_Intersects(b.geography::geometry, a.geography
 ) WITH DATA;
 
 select * from crashes_w_neighborhood limit 100;
-select * from crashes_w_neighborhood where extract(YEAR from FROMDATE) = 2020 and nabe in ('Chevy Chase','Randle Heights') order by nabe;
+select * from crashes_w_neighborhood where extract(YEAR from FROMDATE) = 2020 and nabe in ('Chevy Chase','Randle Heights') 
+and total_pedestrians>0
+order by nabe;
 --both of those neighborhoods border MD and have major commuter routes running through them
 --guess which one had literally 8x the number of crash reports!
 

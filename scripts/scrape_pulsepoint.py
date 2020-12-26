@@ -31,6 +31,11 @@ def main():
 
     data['scrape_datetime']=current_time
 
+    record_status_types = [i for i in data['incidents'].keys() if i != 'alerts']
+
+    for status in record_status_types:
+        data['incidents'][status] = [i for i in data['incidents'][status] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE"]]
+
     # dump it to file and upload to AWS so we have the raw data for every pull
     with open('pulsepoint_data.json', 'w+') as outfile:
         json.dump(data, outfile, indent=4)
