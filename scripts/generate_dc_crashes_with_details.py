@@ -132,7 +132,7 @@ AS (
             ,a.LASTUPDATEDATE
             ,a.BLOCKKEY
             ,a.SUBBLOCKKEY
-            ,a.geometry
+            ,ST_Force2D(a.geography::geometry) as geography
 
     FROM source_data.crashes_raw a
     LEFT JOIN tmp_crash_details_agg b on a.CRIMEID = b.CRIMEID
