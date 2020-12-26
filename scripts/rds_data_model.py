@@ -35,9 +35,11 @@ def get_table_definition(target_table:str):
 
     data_model_dict = {
         'pulsepoint':"""
-        Status_At_Load VARCHAR NULL
+        Status_At_Scrape VARCHAR NULL
+        ,Scrape_Datetime TIMESTAMPTZ NULL
         ,Incident_ID VARCHAR NULL
-        ,CALL_RECEIVED_DATETIME TIMESTAMP NULL
+        ,CALL_RECEIVED_DATETIME TIMESTAMPTZ NULL
+        ,CALL_Closed_DATETIME TIMESTAMPTZ NULL
         ,Latitude NUMERIC NULL
         ,Longitude NUMERIC NULL
         ,FullDisplayAddress VARCHAR NULL
@@ -46,29 +48,29 @@ def get_table_definition(target_table:str):
         ,Unit_Status_Transport VARCHAR NULL
         """
         ,'vision_zero': """
-            OBJECTID VARCHAR NULL
+            OBJECTID VARCHAR PRIMARY KEY
             ,GLOBALID   VARCHAR NULL 
             ,REQUESTID VARCHAR NULL
             ,REQUESTTYPE VARCHAR NULL
-            ,REQUESTDATE TIMESTAMP NULL
+            ,REQUESTDATE TIMESTAMPTZ NULL
             ,STATUS VARCHAR NULL
             ,STREETSEGID VARCHAR NULL
             ,COMMENTS VARCHAR NULL
             ,USERTYPE VARCHAR NULL
-            ,geometry geometry
+            ,geography geography null
             """
         ,'crashes_raw':"""
-            OBJECTID VARCHAR NULL
+            OBJECTID VARCHAR PRIMARY KEY
             ,CRIMEID VARCHAR NULL
             ,CCN VARCHAR NULL
-            ,REPORTDATE TIMESTAMP NULL
+            ,REPORTDATE TIMESTAMPTZ NULL
             ,ROUTEID VARCHAR NULL
             ,MEASURE VARCHAR NULL
             ,_OFFSET VARCHAR NULL
             ,STREETSEGID VARCHAR NULL
             ,ROADWAYSEGID VARCHAR NULL
-            ,FROMDATE TIMESTAMP NULL
-            ,TODATE TIMESTAMP NULL
+            ,FROMDATE TIMESTAMPTZ NULL
+            ,TODATE TIMESTAMPTZ NULL
             ,MARID VARCHAR NULL
             ,ADDRESS VARCHAR NULL
             ,LATITUDE VARCHAR NULL
@@ -105,7 +107,7 @@ def get_table_definition(target_table:str):
             ,OFFINTERSECTION VARCHAR NULL
             ,INTAPPROACHDIRECTION VARCHAR NULL
             ,LOCATIONERROR VARCHAR NULL
-            ,LASTUPDATEDATE TIMESTAMP NULL
+            ,LASTUPDATEDATE TIMESTAMPTZ NULL
             ,MPDLATITUDE VARCHAR NULL
             ,MPDLONGITUDE VARCHAR NULL
             ,MPDGEOX VARCHAR NULL
@@ -116,7 +118,7 @@ def get_table_definition(target_table:str):
             ,MAJORINJURIESPASSENGER INT NULL
             ,MINORINJURIESPASSENGER INT NULL
             ,UNKNOWNINJURIESPASSENGER INT NULL
-            ,geometry geometry null
+            ,geography geography null
             """
         ,'all311':"""
             OBJECTID VARCHAR NULL
@@ -125,12 +127,12 @@ def get_table_definition(target_table:str):
             ,SERVICETYPECODEDESCRIPTION VARCHAR NULL
             ,ORGANIZATIONACRONYM VARCHAR NULL
             ,SERVICECALLCOUNT VARCHAR NULL
-            ,ADDDATE VARCHAR NULL
-            ,RESOLUTIONDATE TIMESTAMP NULL
-            ,SERVICEDUEDATE TIMESTAMP NULL
-            ,SERVICEORDERDATE TIMESTAMP NULL
+            ,ADDDATE TIMESTAMPTZ NULL
+            ,RESOLUTIONDATE TIMESTAMPTZ NULL
+            ,SERVICEDUEDATE TIMESTAMPTZ NULL
+            ,SERVICEORDERDATE TIMESTAMPTZ NULL
             ,INSPECTIONFLAG VARCHAR NULL
-            ,INSPECTIONDATE VARCHAR NULL
+            ,INSPECTIONDATE TIMESTAMPTZ NULL
             ,INSPECTORNAME VARCHAR NULL
             ,SERVICEORDERSTATUS VARCHAR NULL
             ,STATUS_CODE VARCHAR NULL
@@ -147,10 +149,10 @@ def get_table_definition(target_table:str):
             ,MARADDRESSREPOSITORYID VARCHAR NULL
             ,WARD VARCHAR NULL
             ,DETAILS VARCHAR NULL
-            ,geometry geometry null
+            ,geography geography null
         """
         ,'address_points':"""
-            OBJECTID_12 VARCHAR NULL
+            OBJECTID_12 VARCHAR PRIMARY KEY
             ,OBJECTID VARCHAR NULL
             ,SITE_ADDRESS_PK VARCHAR NULL
             ,ADDRESS_ID VARCHAR NULL
@@ -208,10 +210,10 @@ def get_table_definition(target_table:str):
             ,ANC_2012 VARCHAR NULL
             ,SMD_2002 VARCHAR NULL
             ,SMD_2012 VARCHAR NULL
-            ,geometry    geometry
+            ,geography geography null
 """
 ,'census_blocks':"""
-        OBJECTID VARCHAR NULL
+        OBJECTID VARCHAR PRIMARY KEY
         ,BLKGRP VARCHAR NULL
         ,BLOCK VARCHAR NULL
         ,GEOID VARCHAR NULL
@@ -270,10 +272,10 @@ def get_table_definition(target_table:str):
         ,Shape_Length VARCHAR NULL
         ,Shape_Area VARCHAR NULL
         ,SQMILES VARCHAR NULL
-        ,geometry geometry
+        ,geography geography null
 """
 ,'crash_details':"""
-    OBJECTID VARCHAR NULL
+    OBJECTID VARCHAR PRIMARY KEY
     ,CRIMEID VARCHAR NULL
     ,CCN VARCHAR NULL
     ,PERSONID VARCHAR NULL
@@ -288,11 +290,11 @@ def get_table_definition(target_table:str):
     ,LICENSEPLATESTATE VARCHAR NULL
     ,IMPAIRED VARCHAR NULL
     ,SPEEDING VARCHAR NULL
-    ,geometry geometry
+    ,geography geography null
 
 """
 ,'roadway_blocks':"""
-    OBJECTID VARCHAR NULL
+    OBJECTID VARCHAR PRIMARY KEY
     ,ROUTEID VARCHAR NULL
     ,FROMMEASURE NUMERIC NULL
     ,TOMEASURE NUMERIC NULL
@@ -333,11 +335,11 @@ def get_table_definition(target_table:str):
     ,HPMSSECTIONTYPE NUMERIC NULL
     ,ID VARCHAR NULL
     ,IRI NUMERIC NULL
-    ,IRI_DATE TIMESTAMP NULL
+    ,IRI_DATE TIMESTAMPTZ NULL
     ,NHSCODE NUMERIC NULL
     ,OWNERSHIP VARCHAR NULL
     ,PCI_CONDCATEGORY VARCHAR NULL
-    ,PCI_LASTINSPECTED TIMESTAMP NULL
+    ,PCI_LASTINSPECTED TIMESTAMPTZ NULL
     ,PCI_SCORE NUMERIC NULL
     ,QUADRANT VARCHAR NULL
     ,SIDEWALK_IB_PAVTYPE VARCHAR NULL
@@ -377,10 +379,10 @@ def get_table_definition(target_table:str):
     ,SLOWSTREETINFO VARCHAR NULL
     ,SHAPELEN NUMERIC NULL
     ,SHAPE VARCHAR NULL
-    ,geometry geometry
+    ,geography geography null
 """
 ,'roadway_subblocks':"""
-    OBJECTID VARCHAR NULL
+    OBJECTID VARCHAR PRIMARY KEY
     ,ROUTEID VARCHAR NULL
     ,FROMMEASURE NUMERIC NULL
     ,TOMEASURE NUMERIC NULL
@@ -419,11 +421,11 @@ def get_table_definition(target_table:str):
     ,HPMSSECTIONTYPE NUMERIC NULL
     ,ID VARCHAR NULL
     ,IRI NUMERIC NULL
-    ,IRI_DATE TIMESTAMP NULL
+    ,IRI_DATE TIMESTAMPTZ NULL
     ,NHSCODE NUMERIC NULL
     ,OWNERSHIP VARCHAR NULL
     ,PCI_CONDCATEGORY VARCHAR NULL
-    ,PCI_LASTINSPECTED TIMESTAMP NULL
+    ,PCI_LASTINSPECTED TIMESTAMPTZ NULL
     ,PCI_SCORE VARCHAR NULL
     ,SIDEWALK_IB_PAVTYPE VARCHAR NULL
     ,SIDEWALK_IB_WIDTH VARCHAR NULL
@@ -458,10 +460,10 @@ def get_table_definition(target_table:str):
     ,SHAPELEN NUMERIC NULL
     ,TOTALRAISEDBUFFERWIDTH VARCHAR NULL
     ,AADT_YEAR NUMERIC NULL
-    ,geometry geometry
+    ,geography geography null
 """
 ,'roadway_blockface':"""
-    OBJECTID VARCHAR NUll
+    OBJECTID VARCHAR PRIMARY KEY
     ,ROUTEID VARCHAR NUll
     ,SIDE VARCHAR NUll
     ,MEAS_FROM NUMERIC NULL
@@ -470,10 +472,10 @@ def get_table_definition(target_table:str):
     ,_OFFSET NUMERIC NULL
     ,SHAPELEN NUMERIC NULL
     ,SHAPE geometry
-    ,geometry geometry
+    ,geography geography null
     """
 ,'roadway_intersection_approach':"""
-    OBJECTID VARCHAR NUll
+    OBJECTID VARCHAR PRIMARY KEY
     ,ROUTEID VARCHAR NUll
     ,FROMMEASURE NUMERIC NULL
     ,TOMEASURE NUMERIC NULL
@@ -518,11 +520,11 @@ def get_table_definition(target_table:str):
     ,HPMSSECTIONTYPE VARCHAR NUll
     ,ID VARCHAR NUll
     ,IRI VARCHAR NUll
-    ,IRI_DATE TIMESTAMP NULL
+    ,IRI_DATE TIMESTAMPTZ NULL
     ,NHSCODE VARCHAR NUll
     ,OWNERSHIP VARCHAR NUll
     ,PCI_CONDCATEGORY VARCHAR NUll
-    ,PCI_LASTINSPECTED TIMESTAMP NULL
+    ,PCI_LASTINSPECTED TIMESTAMPTZ NULL
     ,PCI_SCORE NUMERIC NULL
     ,QUADRANT NUMERIC NULL
     ,SIDEWALK_IB_PAVTYPE VARCHAR NUll
@@ -561,7 +563,7 @@ def get_table_definition(target_table:str):
     ,GLOBALID VARCHAR NUll
     ,SHAPELEN  NUMERIC NULL
     ,SHAPE geometry
-    ,geometry geometry
+    ,geography geography null
     """
 
 
