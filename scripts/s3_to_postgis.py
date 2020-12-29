@@ -62,21 +62,16 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
         if move_after_loading != 'yes':
             os.system(os_system_arg)
         elif move_after_loading == 'yes' and move_to_folder != '':
+            os.system(os_system_arg)
             try:
-                os.system(os_system_arg)
-                try:
-                    s3_resource.Object(bucket_name,move_to_folder+base_file_name).copy_from(CopySource = {'Bucket': bucket_name, 'Key': file_name_native})
-                    s3_resource.Object(bucket_name, file_name_native).delete()
-                except:
-                    print(file_name_native," could not be copied and/or deleted")
-                    continue
+                s3_resource.Object(bucket_name,move_to_folder+base_file_name).copy_from(CopySource = {'Bucket': bucket_name, 'Key': file_name_native})
+                s3_resource.Object(bucket_name, file_name_native).delete()
             except:
-                print(file_name_native," could not be loaded to PostGIS")
+                print(file_name_native," could not be copied and/or deleted")
                 continue
         else:
             print("please provide move-to folder")
             continue
-
 
         
 # set up ability to call with lists from the command line as follows:

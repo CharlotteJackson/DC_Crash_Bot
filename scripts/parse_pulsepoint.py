@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from connect_to_rds import get_connection_strings
 import json
-from pulse import get_data
 import datetime
 from datetime import timezone 
 import pytz
@@ -144,10 +143,12 @@ for item in items_to_parse:
     files_to_parse = [obj.key for obj in bucket.objects.filter(Prefix=item, Delimiter='/') if '.json' in obj.key]
     for file in files_to_parse:
         file_name = os.path.basename(file) 
-        with open('parse_pulsepoint.json', 'wb') as f:
-            client.download_fileobj(bucket_name, file, f)
-        with open('parse_pulsepoint.json', 'r') as f2:    
-            f3=json.load(f2)
+        # load the json into memory
+        f = client.get_object(Bucket = bucket_name, Key=file)
+        # decode it as string 
+        f2 = f['Body'].read().decode('utf-8')
+        # load back into dictionary format 
+        f3 = json.loads(f2)
         try:
             # parse the file into csv format
             df = parse_pulsepoint(file_name, f3)
@@ -157,13 +158,14 @@ for item in items_to_parse:
             df.to_csv(tmp_filename, index=False, header=True, line_terminator='\n')
             data = open(tmp_filename, 'rb')
             bucket.put_object(Key=parsed_destination+file_name.replace('.json', '')+'.csv', Body=data, Metadata =metadata)
-            try:
-                # move it into the converted folder
-                s3_resource.Object(bucket_name,move_to_folder+file_name).copy_from(CopySource = {'Bucket': bucket_name, 'Key': file})
-                s3_resource.Object(bucket_name, file).delete()
-            except:
-                print(file," could not be copied and/or deleted")
-                continue 
+            if move_to_folder != "":
+                try:
+                    # move it into the converted folder
+                    s3_resource.Object(bucket_name,move_to_folder+file_name).copy_from(CopySource = {'Bucket': bucket_name, 'Key': file})
+                    s3_resource.Object(bucket_name, file).delete()
+                except:
+                    print(file," could not be copied and/or deleted")
+                    continue 
         except:
             print(file, " could not be parsed")
             continue 

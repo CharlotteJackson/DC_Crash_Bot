@@ -44,29 +44,25 @@ SELECT * FROM temp_join
 where unit_status_transport = 'YES' and objectid is null;
 
 SELECT * FROM temp_join
-where unit_status_transport = 'YES' and objectid is not null;
+where objectid is not null and unit_status_transport = 'YES';
+
+
 
 --How many PP crash records did not show up in crashes data?
-select * from temp_join
+select count(distinct incident_id) from temp_join
+--233 records
 where crimeid is null;
---2 records out of 9
---One is on Eastern Ave and was maybe counted in MD crash data instead
-
---How many Open Data DC crash records don't have a corresponding PP call?
-select * from temp_join
-where incident_id is null;
---46 records out of 55
+--200 records out of 233 don't have a record in the MPD crash database on the same date within 20 meters
 
 --How many PP records joined to multiple crash records?
 select * from temp_join 
 where incident_id in (select incident_id from temp_join group by incident_id having count(*)>1)
 order by incident_id
---2/9 each joined to 4 crash records
---IT looks like these two incidents are themselves referring to the same crash - same address and nearly the same call time
---however, not clear which of the DC open data crash records are matches 
+--2/233 each joined to 2 crash records
+--these look to be different crashes
 
 --How many crash records joined to multiple PP records?
 select * from temp_join 
 where crimeid in (select crimeid from temp_join group by crimeid having count(*)>1)
 order by crimeid;
---same 8 records as above
+--same 4 records as above
