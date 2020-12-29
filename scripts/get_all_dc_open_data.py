@@ -129,7 +129,7 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
 
     if mode == 'append':
 
-        current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00")
+        current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00")
         # if mode is append and dataset is not appendable, skip it
         if 'append' not in resources[dataset].keys():
             print('dataset {} not appendable'.format(dataset))
@@ -147,11 +147,11 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
             gdf.rename(columns={"OFFSET": "_OFFSET"})
         # convert the date fields from miliseconds to datetime
         if 'REPORTDATE'in gdf.columns:
-            gdf['REPORTDATE']=gdf['REPORTDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00"))
+            gdf['REPORTDATE']=gdf['REPORTDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
         if 'FROMDATE'in gdf.columns:
-            gdf['FROMDATE']=gdf['FROMDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00"))
+            gdf['FROMDATE']=gdf['FROMDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
         if 'TODATE'in gdf.columns:
-            gdf['TODATE']=gdf['TODATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00"))
+            gdf['TODATE']=gdf['TODATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
         # set S3 dataset name
         s3_dataset_name = dataset+current_time
         # download each dataset to local hard drive, and then upload it to the S3 bucket
