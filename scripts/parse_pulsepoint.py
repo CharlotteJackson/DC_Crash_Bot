@@ -4,10 +4,10 @@ import os
 from pathlib import Path
 from connect_to_rds import get_connection_strings
 import json
-from pulse import get_data
 import datetime
 from datetime import timezone 
 import pytz
+import argparse
 
 # set up S3 connection
 AWS_Credentials=get_connection_strings("AWS_DEV")
@@ -16,11 +16,8 @@ s3_resource = boto3.resource('s3'
     ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
 bucket_name = AWS_Credentials['s3_bucket']
 region=AWS_Credentials['region']
-prefix = 'source-data/pulsepoint/unparsed/'
-destination = 'source-data/pulsepoint/'
 metadata = {'target_schema':'tmp', 'target_table':'pulsepoint',"dataset_info":"https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6"}
-current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00")
-bucket = s3_resource.Bucket('dc-crash-bot-test')
+bucket = s3_resource.Bucket(bucket_name)
 client=boto3.client('s3')
 
 
@@ -113,18 +110,62 @@ def parse_pulsepoint(file_name:str, api_response:dict):
 
     df = pd.DataFrame.from_dict(col_names)
 
-    # # download each dataset to local hard drive, and then upload it to the S3 bucket
-    # # in csv format
-    tmp_filename = Path(os.path.expanduser('~'), 'pulsepoint.csv')
-    df.to_csv(tmp_filename, index=False, header=True, line_terminator='\n')
-    data = open(tmp_filename, 'rb')
-    s3_resource.Bucket(bucket_name).put_object(Key=destination+file_name.replace('.json', '')+'.csv', Body=data, Metadata =metadata)
+    return df
 
+# set up ability to call with lists from the command line as follows:
+# python parse_pulsepoint.py --items_to_parse source-data/pulsepoint/unparsed/ --move_to_folder source-data/pulsepoint/unparsed/converted/ --parsed_destination source-data/pulsepoint/
+CLI=argparse.ArgumentParser()
+CLI.add_argument(
+"--items_to_parse",  
+nargs="*",  
+type=str,
+default=['source-data/pulsepoint/unparsed/'],  # default - parse everything in the unparsed folder
+)
+CLI.add_argument(
+"--move_to_folder",
+type=str, 
+default='source-data/pulsepoint/unparsed/converted/', 
+)
+CLI.add_argument(
+"--parsed_destination",
+type=str, 
+default='source-data/pulsepoint/', 
+)
 
-for obj in bucket.objects.filter(Prefix='source-data/pulsepoint/unparsed/', Delimiter='/'):
-    file_name = obj.key.replace(prefix,'')
-    with open('parse_pulsepoint.json', 'wb') as f:
-        client.download_fileobj('dc-crash-bot-test', obj.key, f)
-    with open('parse_pulsepoint.json', 'r') as f2:    
-        f3=json.load(f2)
-    parse_pulsepoint(file_name, f3)
+# parse the command line
+args = CLI.parse_args()
+items_to_parse = args.items_to_parse
+move_to_folder = args.move_to_folder
+parsed_destination=args.parsed_destination
+
+# call function with command line arguments
+for item in items_to_parse:
+    files_to_parse = [obj.key for obj in bucket.objects.filter(Prefix=item, Delimiter='/') if '.json' in obj.key]
+    for file in files_to_parse:
+        file_name = os.path.basename(file) 
+        # load the json into memory
+        f = client.get_object(Bucket = bucket_name, Key=file)
+        # decode it as string 
+        f2 = f['Body'].read().decode('utf-8')
+        # load back into dictionary format 
+        f3 = json.loads(f2)
+        try:
+            # parse the file into csv format
+            df = parse_pulsepoint(file_name, f3)
+            # # download each dataset to local hard drive, and then upload it to the S3 bucket
+            # # in csv format
+            tmp_filename = Path(os.path.expanduser('~'), 'pulsepoint.csv')
+            df.to_csv(tmp_filename, index=False, header=True, line_terminator='\n')
+            data = open(tmp_filename, 'rb')
+            bucket.put_object(Key=parsed_destination+file_name.replace('.json', '')+'.csv', Body=data, Metadata =metadata)
+            if move_to_folder != "":
+                try:
+                    # move it into the converted folder
+                    s3_resource.Object(bucket_name,move_to_folder+file_name).copy_from(CopySource = {'Bucket': bucket_name, 'Key': file})
+                    s3_resource.Object(bucket_name, file).delete()
+                except:
+                    print(file," could not be copied and/or deleted")
+                    continue 
+        except:
+            print(file, " could not be parsed")
+            continue 
