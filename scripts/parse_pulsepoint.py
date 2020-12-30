@@ -29,6 +29,20 @@ def unit_status_is_transport(units: list):
             break 
         return 'NO'
 
+def transport_unit_is_amr(units: list):
+    for unit in units:
+        if unit['PulsePointDispatchStatus'] in ('TR', 'TA') and 'AMR' in unit["UnitID"]:
+            return 'YES'
+            break 
+        return 'NO'
+
+def transport_unit_is_non_amr(units: list):
+    for unit in units:
+        if unit['PulsePointDispatchStatus'] in ('TR', 'TA') and 'AMR' not in unit["UnitID"]:
+            return 'YES'
+            break 
+        return 'NO'
+
 def parse_pulsepoint(file_name:str, api_response:dict):
 
     utctz=pytz.timezone('UTC')
@@ -45,6 +59,8 @@ def parse_pulsepoint(file_name:str, api_response:dict):
             ,'Incident_Type':[]
             ,'Units':[]
             ,'Unit_Status_Transport':[]
+            ,'Transport_Unit_Is_AMR':[]
+            ,'Transport_Unit_Is_Non_AMR':[]
     }
     ######## start: handle the scrape datetime disaster ######## 
     if 'scrape_datetime' in api_response.keys():
@@ -107,6 +123,14 @@ def parse_pulsepoint(file_name:str, api_response:dict):
                         col_names['Unit_Status_Transport'].append(unit_status_is_transport(record['Unit']))
                     except KeyError:
                         col_names['Unit_Status_Transport'].append('NO')
+                    try:
+                        col_names['Transport_Unit_Is_AMR'].append(transport_unit_is_amr(record['Unit']))
+                    except KeyError:
+                        col_names['Transport_Unit_Is_AMR'].append('NO')
+                    try:
+                        col_names['Transport_Unit_Is_Non_AMR'].append(transport_unit_is_non_amr(record['Unit']))
+                    except KeyError:
+                        col_names['Transport_Unit_Is_Non_AMR'].append('NO')
 
     df = pd.DataFrame.from_dict(col_names)
 
@@ -121,6 +145,12 @@ nargs="*",
 type=str,
 default=['source-data/pulsepoint/unparsed/'],  # default - parse everything in the unparsed folder
 )
+CLI.add_argument(
+"--move_after_parsing",
+type=str, 
+default='no', 
+)
+
 CLI.add_argument(
 "--move_to_folder",
 type=str, 
@@ -137,6 +167,7 @@ args = CLI.parse_args()
 items_to_parse = args.items_to_parse
 move_to_folder = args.move_to_folder
 parsed_destination=args.parsed_destination
+move_after_parsing=args.move_after_parsing
 
 # call function with command line arguments
 for item in items_to_parse:
@@ -158,7 +189,7 @@ for item in items_to_parse:
             df.to_csv(tmp_filename, index=False, header=True, line_terminator='\n')
             data = open(tmp_filename, 'rb')
             bucket.put_object(Key=parsed_destination+file_name.replace('.json', '')+'.csv', Body=data, Metadata =metadata)
-            if move_to_folder != "":
+            if move_after_parsing.lower() == "yes" and move_to_folder != "":
                 try:
                     # move it into the converted folder
                     s3_resource.Object(bucket_name,move_to_folder+file_name).copy_from(CopySource = {'Bucket': bucket_name, 'Key': file})
