@@ -22,6 +22,8 @@ SELECT
     ,Incident_Type
     ,Unit
     ,Unit_Status_Transport
+    ,Transport_Unit_Is_AMR
+    ,Transport_Unit_Is_Non_AMR
     ,Unit_JSON
     ,Num_Units_Responding
     ,geography
@@ -35,6 +37,8 @@ FROM (
         ,Incident_Type
         ,Unit
         ,MAX(Unit_Status_Transport) over (Partition by Incident_ID) as Unit_Status_Transport
+        ,MAX(Transport_Unit_Is_AMR) over (Partition by Incident_ID) as Transport_Unit_Is_AMR
+        ,MAX(Transport_Unit_Is_Non_AMR) over (Partition by Incident_ID) as Transport_Unit_Is_Non_AMR
         ,ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography as geography
         ,cast(replace(unit,'''','"') as jsonb) as Unit_JSON
         ,JSONB_ARRAY_LENGTH(cast(replace(unit,'''','"') as jsonb)::jsonb) as Num_Units_Responding
