@@ -45,9 +45,9 @@ def get_table_definition(target_table:str):
         ,FullDisplayAddress VARCHAR NULL
         ,Incident_Type VARCHAR NULL
         ,Unit VARCHAR NULL
-        ,Unit_Status_Transport VARCHAR NULL
-        ,Transport_Unit_Is_AMR VARCHAR NULL
-        ,Transport_Unit_Is_Non_AMR VARCHAR NULL
+        ,Unit_Status_Transport INT NULL
+        ,Transport_Unit_Is_AMR INT NULL
+        ,Transport_Unit_Is_Non_AMR INT NULL
         """
         ,'vision_zero': """
             OBJECTID VARCHAR PRIMARY KEY

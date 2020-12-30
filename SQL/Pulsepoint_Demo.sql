@@ -3,6 +3,7 @@ Exploratory analysis of first Pulsepoint data dump
 Pulsepoint API documentation: https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6
 Incident types of TC and TCE indicate traffic collisions
 Unit transport status of YES indicates someone was transported to the hospital (per my first responder brother)
+(Number in unit transport status field is the number of units with transport status)
 *************************************************/
 
 --step 1 look at pulsepoint data
@@ -41,12 +42,14 @@ WHERE cast(CALL_RECEIVED_DATETIME as date) <= '2020-12-27'
 ) WITH DATA;
 
 SELECT * FROM temp_join
-where unit_status_transport = 'YES' and objectid is null;
+where unit_status_transport >0 and objectid is null;
 
 SELECT * FROM temp_join
-where objectid is not null and unit_status_transport = 'YES';
+where objectid is not null and unit_status_transport >0;
 
 
+SELECT * FROM temp_join
+where objectid is  null and unit_status_transport >0;
 
 --How many PP crash records did not show up in crashes data?
 select count(distinct incident_id) from temp_join

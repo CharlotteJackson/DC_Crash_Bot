@@ -23,25 +23,25 @@ client=boto3.client('s3')
 
 # define function to get flag whether any responding units have a status of transport or transport arrived
 def unit_status_is_transport(units: list):
+    num_transport_units=0
     for unit in units:
-        if unit['PulsePointDispatchStatus'] in ('TR', 'TA'):
-            return 'YES'
-            break 
-        return 'NO'
+        if unit['PulsePointDispatchStatus'] in ['TR', 'TA'] :
+            num_transport_units+=1
+    return num_transport_units
 
 def transport_unit_is_amr(units: list):
+    num_amr_units=0
     for unit in units:
-        if unit['PulsePointDispatchStatus'] in ('TR', 'TA') and 'AMR' in unit["UnitID"]:
-            return 'YES'
-            break 
-        return 'NO'
+        if unit['PulsePointDispatchStatus'] in ['TR', 'TA'] and 'AMR' in unit["UnitID"]:
+            num_amr_units+=1
+    return num_amr_units
 
 def transport_unit_is_non_amr(units: list):
+    num_non_amr_units=0
     for unit in units:
-        if unit['PulsePointDispatchStatus'] in ('TR', 'TA') and 'AMR' not in unit["UnitID"]:
-            return 'YES'
-            break 
-        return 'NO'
+        if unit['PulsePointDispatchStatus'] in ['TR', 'TA'] and 'AMR' not in unit["UnitID"]:
+            num_non_amr_units+=1
+    return num_non_amr_units
 
 def parse_pulsepoint(file_name:str, api_response:dict):
 
@@ -122,6 +122,7 @@ def parse_pulsepoint(file_name:str, api_response:dict):
                     try:
                         col_names['Unit_Status_Transport'].append(unit_status_is_transport(record['Unit']))
                     except KeyError:
+                        print("transport status key error for record ",record['ID'])
                         col_names['Unit_Status_Transport'].append('NO')
                     try:
                         col_names['Transport_Unit_Is_AMR'].append(transport_unit_is_amr(record['Unit']))
