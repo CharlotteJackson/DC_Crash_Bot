@@ -17,6 +17,7 @@ def get_data(url: str="https://web.pulsepoint.org/DB/giba.php?agency_id=EMS1205"
 
     # Build the password
     t = ""
+    # e = 'IncidentsCommon'
     e = "CommonIncidents"
     t += e[13] + e[1] + e[2] + "brady" + "5" + "r" + e.lower()[6] + e[5] + "gs"
 
@@ -50,3 +51,8 @@ def get_data(url: str="https://web.pulsepoint.org/DB/giba.php?agency_id=EMS1205"
     # [print("%s @ %s" % (c.get("PulsePointIncidentCallType"), c.get("FullDisplayAddress"))) for c in active]
 
     return data
+
+if __name__=='main':
+    results=get_data()
+    with open('data.json', 'w+') as outfile:
+        json.dump(results, outfile, indent=4)

@@ -1,0 +1,7 @@
+pandas
+boto3
+sqlalchemy
+twitter
+requests
+geopandas
+cryptography
