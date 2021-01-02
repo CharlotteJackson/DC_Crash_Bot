@@ -85,7 +85,7 @@ def get_table_definition(target_table:str):
         ,VEH_MAKE VARCHAR NULL
         ,geography geography null
         """
-        ,'pulsepoint':"""
+        ,'pulsepoint_stream':"""
         Status_At_Scrape VARCHAR NULL
         ,Scrape_Datetime TIMESTAMPTZ NULL
         ,Incident_ID VARCHAR NULL

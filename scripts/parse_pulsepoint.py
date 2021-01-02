@@ -16,7 +16,7 @@ s3_resource = boto3.resource('s3'
     ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
 bucket_name = AWS_Credentials['s3_bucket']
 region=AWS_Credentials['region']
-metadata = {'target_schema':'tmp', 'target_table':'pulsepoint',"dataset_info":"https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6"}
+metadata = {'target_schema':'source_data', 'target_table':'pulsepoint_stream',"dataset_info":"https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6"}
 bucket = s3_resource.Bucket(bucket_name)
 client=boto3.client('s3')
 

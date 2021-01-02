@@ -119,8 +119,6 @@ for file in files_to_parse:
 
 full_df=full_df.convert_dtypes(convert_string=True)
 
-full_df['tweet_text'].str.replace('\r\n','   ')
-
 # save csv file
 tmp_filename = Path(home, 'twitter_alltime.csv')
 full_df.to_csv(tmp_filename, index=False, header=True, line_terminator='\n',float_format='%.2f',encoding='utf-8',quoting=csv.QUOTE_NONNUMERIC)

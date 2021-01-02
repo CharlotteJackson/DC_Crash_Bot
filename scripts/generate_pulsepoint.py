@@ -43,7 +43,7 @@ FROM (
         ,cast(replace(unit,'''','"') as jsonb) as Unit_JSON
         ,JSONB_ARRAY_LENGTH(cast(replace(unit,'''','"') as jsonb)::jsonb) as Num_Units_Responding
         ,ROW_NUMBER() over (Partition by Incident_ID order by Scrape_Datetime DESC) as Time_Rank
-        FROM tmp.pulsepoint
+        FROM source_data.pulsepoint_stream
     ) AS tmp
 WHERE Time_Rank = 1
 ) WITH DATA;

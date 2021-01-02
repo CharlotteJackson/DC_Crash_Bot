@@ -13,7 +13,7 @@ import sys
 
 
 # function definition
-def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:str):
+def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_urls=['all']):
 
     sys.path.append(os.path.expanduser('~'))
 
@@ -29,7 +29,7 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
     # dict of datasets to load
     resources = {
         'crashes_raw' : {
-            'url': ['https://opendata.arcgis.com/datasets/70392a096a8e431381f1f692aaa06afd_24.geojson']
+            'url': [('complete','https://opendata.arcgis.com/datasets/70392a096a8e431381f1f692aaa06afd_24.geojson')]
             ,'prefix' :'source-data/dc-open-data/crashes_raw/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'crashes_raw',"dataset_info":"https://opendata.dc.gov/datasets/crashes-in-dc"}
             ,'append':{'endpoint': 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Public_Safety_WebMercator/MapServer/24/query?'
@@ -37,82 +37,125 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
                 ,'metadata' :{'target_schema':'tmp', 'target_table': 'crashes_raw',"dataset_info":"https://opendata.dc.gov/datasets/crashes-in-dc"}}
         }
         ,'crash_details' : {
-            'url': ['https://opendata.arcgis.com/datasets/70248b73c20f46b0a5ee895fc91d6222_25.geojson']
+            'url': [('complete','https://opendata.arcgis.com/datasets/70248b73c20f46b0a5ee895fc91d6222_25.geojson')]
             ,'prefix' :'source-data/dc-open-data/crash_details/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'crash_details',"dataset_info":"https://opendata.dc.gov/datasets/crash-details-table"}
             
         }
         ,'census_blocks' : {
-            'url': ['https://opendata.arcgis.com/datasets/a6f76663621548e1a039798784b64f10_0.geojson']
+            'url': [('complete','https://opendata.arcgis.com/datasets/a6f76663621548e1a039798784b64f10_0.geojson')]
             ,'prefix' :'source-data/dc-open-data/census_blocks/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'census_blocks',"dataset_info":"https://opendata.dc.gov/datasets/census-blocks-2010"}
         }
     ,'vision_zero' : {
-            'url': ['https://opendata.arcgis.com/datasets/3f28bc3ad77f49079efee0ac05d8464c_0.geojson']
+            'url': [('complete','https://opendata.arcgis.com/datasets/3f28bc3ad77f49079efee0ac05d8464c_0.geojson')]
             ,'prefix' :'source-data/dc-open-data/vision_zero/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'vision_zero',"dataset_info":"https://opendata.dc.gov/datasets/vision-zero-safety"}
             ,'append':{'endpoint': 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DDOT/VisionZero/FeatureServer/0/query?'
                 , 'filters': {'where':'REQUESTDATE >= CURRENT_TIMESTAMP - INTERVAL \'1\' DAY','outFields':'*','outSR':'4326','returnGeometry':'true','f':'geojson'}}
         }
     ,'address_points' : {
-            'url': ['https://opendata.arcgis.com/datasets/aa514416aaf74fdc94748f1e56e7cc8a_0.geojson']
+            'url': [('complete','https://opendata.arcgis.com/datasets/aa514416aaf74fdc94748f1e56e7cc8a_0.geojson')]
             ,'prefix' :'source-data/dc-open-data/address_points/'
             ,'metadata' :{'target_schema':'source_data','target_table': 'address_points', "dataset_info":"https://opendata.dc.gov/datasets/address-points"}
         }
     ,'all311' : {
-            'url': ['https://opendata.arcgis.com/datasets/82b33f4833284e07997da71d1ca7b1ba_11.geojson'
-                    ,'https://opendata.arcgis.com/datasets/98b7406def094fa59838f14beb1b8c81_10.geojson'
-                    ,'https://opendata.arcgis.com/datasets/2a46f1f1aad04940b83e75e744eb3b09_9.geojson'
-                    ,'https://opendata.arcgis.com/datasets/19905e2b0e1140ec9ce8437776feb595_8.geojson'
-                    ,'https://opendata.arcgis.com/datasets/0e4b7d3a83b94a178b3d1f015db901ee_7.geojson'
-                    ,'https://opendata.arcgis.com/datasets/b93ec7fc97734265a2da7da341f1bba2_6.geojson'
+            'url': [('2020','https://opendata.arcgis.com/datasets/82b33f4833284e07997da71d1ca7b1ba_11.geojson')
+                    ,('2019','https://opendata.arcgis.com/datasets/98b7406def094fa59838f14beb1b8c81_10.geojson')
+                    ,('2018','https://opendata.arcgis.com/datasets/2a46f1f1aad04940b83e75e744eb3b09_9.geojson')
+                    ,('2017','https://opendata.arcgis.com/datasets/19905e2b0e1140ec9ce8437776feb595_8.geojson')
+                    ,('2016','https://opendata.arcgis.com/datasets/0e4b7d3a83b94a178b3d1f015db901ee_7.geojson')
+                    ,('2015','https://opendata.arcgis.com/datasets/b93ec7fc97734265a2da7da341f1bba2_6.geojson')
+                    ,('last_30_days', 'https://opendata.arcgis.com/datasets/fec196030c0b4cd9901c71e579ec7831_41.geojson')
         ]
             ,'prefix' :'source-data/dc-open-data/all311/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'all311',"dataset_info":"https://opendata.dc.gov/datasets/311-city-service-requests-in-2020"}
-            ,'append':{'endpoint': 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_APPS/SR_30days_Open/MapServer/0/'
-                , 'filters': {'where':'ADDATE >= CURRENT_TIMESTAMP - INTERVAL \'1\' DAY','outFields':'*','outSR':'4326','returnGeometry':'true','f':'json'}}
             ,'filters':"['SERVICECODEDESCRIPTION'] == 'Traffic Safety Investigation']"
         }
+        ,'moving_violations' : {
+            'url': [ #2020
+                    ('2020_11','https://opendata.arcgis.com/datasets/b3a187d6f91c41c38f4a1e24f9d2cdfc_10.geojson')
+                    ,('2020_10','https://opendata.arcgis.com/datasets/47c555af573646358c27fcf6cd62be65_9.geojson')
+                    ,('2020_09','https://opendata.arcgis.com/datasets/81b07a3eac6541bfb87d278f895bfdeb_8.geojson')
+                    ,('2020_08','https://opendata.arcgis.com/datasets/f4e2f2013a584158a37243c1da982e88_7.geojson')
+                    ,('2020_07','https://opendata.arcgis.com/datasets/15c0973e9f4041bfbf69a72026723f18_6.geojson')
+                    ,('2020_06','https://opendata.arcgis.com/datasets/a9edb8e5728a4e07b6d6ce38dc5b013a_5.geojson')
+                    ,('2020_05','https://opendata.arcgis.com/datasets/f7159e8119cd4d3ca73b4663f76ae838_4.geojson')
+                    ,('2020_04','https://opendata.arcgis.com/datasets/186e3b6cf45f44b1ac0fe750518e3cab_3.geojson')
+                    ,('2020_03','https://opendata.arcgis.com/datasets/6ceb38b8e24a464a94434c7d39934ebd_2.geojson')
+                    ,('2020_02','https://opendata.arcgis.com/datasets/c3e91eed970149e6a41853ddadf36394_1.geojson')
+                    ,('2020_01','https://opendata.arcgis.com/datasets/295f4842e345426bb066d9df233a5203_0.geojson')
+                    #2019 - february missing from dc website
+                    ,('2019_12','https://opendata.arcgis.com/datasets/a1f2142a687b425ab49f5ec016f99e24_11.geojson')
+                    ,('2019_11','https://opendata.arcgis.com/datasets/b7b8bea9d9fd4939a0439c7475b8a508_10.geojson')
+                    ,('2019_10','https://opendata.arcgis.com/datasets/4334882edf144a36a19361fe1601edf9_9.geojson')
+                    ,('2019_09','https://opendata.arcgis.com/datasets/ce5cb88d3acb412bbeebe64650f1c0cd_8.geojson')
+                    ,('2019_08','https://opendata.arcgis.com/datasets/3f1f51cf63d647018250360806700ad9_7.geojson')
+                    ,('2019_07','https://opendata.arcgis.com/datasets/6e8387b60cb44adc8a3b917027bc164a_6.geojson')
+                    ,('2019_06','https://opendata.arcgis.com/datasets/805a9187829a4840b1094098d5c2c4bb_5.geojson')
+                    ,('2019_05','https://opendata.arcgis.com/datasets/bc4a0785f2f64b979f249b18c4f3fd29_4.geojson')
+                    ,('2019_04','https://opendata.arcgis.com/datasets/878e5e25b4fe47bbbbd3a37c77285a63_3.geojson')
+                    ,('2019_03','https://opendata.arcgis.com/datasets/0e38e123d4414d37905d0bd64af456ad_2.geojson')
+                    ,('2019_01','https://opendata.arcgis.com/datasets/0d7b690c4e874e39a6f006cc61073561_0.geojson' )
+                    #2018 - july missing from dc website
+                    ,('2018_12','https://opendata.arcgis.com/datasets/1bf00863fedf4d09a236e4353dba1670_11.geojson')
+                    ,('2018_11','https://opendata.arcgis.com/datasets/b3aa63faaeb243ea87eb58f2eb5a1931_10.geojson')
+                    ,('2018_10','https://opendata.arcgis.com/datasets/a9f464dc91d9465394a90d44c61eb06a_10.geojson')
+                    ,('2018_09','https://opendata.arcgis.com/datasets/03dfb384c57d40f8b05fa5936b23fb82_8.geojson')
+                    ,('2018_08','https://opendata.arcgis.com/datasets/e2b5f90018c3487ea293f53edadbd69a_7.geojson')
+                    ,('2018_06','https://opendata.arcgis.com/datasets/f6cced2fa2764599af101884d8e0ade0_5.geojson')
+                    ,('2018_05','https://opendata.arcgis.com/datasets/87a2d2f6a8124b1e9d7406185d8fec80_4.geojson')
+                    ,('2018_04','https://opendata.arcgis.com/datasets/e70527c48ac04bf8839fec666b328b24_3.geojson')
+                    ,('2018_03','https://opendata.arcgis.com/datasets/3d56bc3d7d8046c081159e57ed338f29_2.geojson')
+                    ,('2018_02','https://opendata.arcgis.com/datasets/f7fb9a35ff1c43239b071709ab597ff3_1.geojson')
+                    ,('2018_01','https://opendata.arcgis.com/datasets/cac773db047e478195b4a534b878f6e3_0.geojson')
+        ]
+            ,'prefix' :'source-data/dc-open-data/moving_violations/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'moving_violations',"dataset_info":"https://opendata.dc.gov/datasets/moving-violations-issued-in-november-2020"}
+        
+        }
         ,"roadway_blocks": {
-            'url':['https://opendata.arcgis.com/datasets/6fcba8618ae744949630da3ea12d90eb_163.geojson']
+            'url':[('complete','https://opendata.arcgis.com/datasets/6fcba8618ae744949630da3ea12d90eb_163.geojson')]
             ,'prefix':'source-data/dc-open-data/roadway_blocks/'
             ,'metadata':{'target_schema':'source_data', 'target_table': 'roadway_blocks','dataset_info':'https://opendata.dc.gov/datasets/roadway-block'}
         }
         ,"roadway_subblocks": {
-            'url':['https://opendata.arcgis.com/datasets/df571ab7fea446e396bf2862d0ab6833_162.geojson']
+            'url':[('complete','https://opendata.arcgis.com/datasets/df571ab7fea446e396bf2862d0ab6833_162.geojson')]
             ,'prefix':'source-data/dc-open-data/roadway_subblocks/'
             ,'metadata':{'target_schema':'source_data', 'target_table': 'roadway_subblocks','dataset_info':'https://opendata.dc.gov/datasets/roadway-subblock'}
         }
         ,"roadway_blockface": {
-            'url':['https://opendata.arcgis.com/datasets/47945b50c4f245b58850e81d297e90b9_164.geojson']
+            'url':[('complete','https://opendata.arcgis.com/datasets/47945b50c4f245b58850e81d297e90b9_164.geojson')]
             ,'prefix':'source-data/dc-open-data/roadway_blockface/'
             ,'metadata':{'target_schema':'source_data', 'target_table': 'roadway_blockface','dataset_info':'https://opendata.dc.gov/datasets/roadway-blockface'}
         }
         ,"roadway_intersection_approach": {
-            'url':['https://opendata.arcgis.com/datasets/a779d051865f461eb2a1f50f10940ec4_161.geojson']
+            'url':[('complete','https://opendata.arcgis.com/datasets/a779d051865f461eb2a1f50f10940ec4_161.geojson')]
             ,'prefix':'source-data/dc-open-data/roadway_intersection_approach/'
             ,'metadata':{'target_schema':'source_data', 'target_table': 'roadway_intersection_approach','dataset_info':'https://opendata.dc.gov/datasets/roadway-intersection-approach'}
         }
     }
 
-    if mode == 'replace':
-        # first clean out S3 bucket
-        objects_to_delete = [{'Key': obj.Object().key} for obj in s3.Bucket(bucket_name).objects.filter(Prefix=resources[dataset]['prefix']) if obj.Object().key != resources[dataset]['prefix']]
-        if len(objects_to_delete)>0:
-            client.delete_objects(Bucket=bucket_name,Delete={'Objects': objects_to_delete})
-       
-        # then load each dataset into memory, save it to disk, upload it to S3
-        gdf = gpd.GeoDataFrame() 
-        for i in resources[dataset]['url']:
-            url = i
-            gdf=gpd.read_file(url)
+    
+    # then load each dataset into memory, save it to disk, upload it to S3
+    gdf = gpd.GeoDataFrame() 
+    if len(input_urls)==1 and input_urls[0]=='all':
+        urls_to_load = [(label, url) for (label,url) in resources[dataset]['url']]
+    else:
+        urls_to_load = [(label, url) for (label,url) in resources[dataset]['url'] if label in input_urls]
+    for (label, url) in urls_to_load:
+            try:
+                gdf=gpd.read_file(url)
+            except:
+                print("file ",label, "could not be read")
+                continue
             if 'filters' in resources[dataset].keys():
                 gdf=gdf[gdf['SERVICECODEDESCRIPTION'] == 'Traffic Safety Investigation']
             # 'offset' is apparently a reserved word in Postgres, so rename any columns with that label
             if 'OFFSET' in gdf.columns:
                 gdf.rename(columns={"OFFSET": "_OFFSET"})
             # set S3 dataset name
-            s3_dataset_name=dataset+'_'+str(resources[dataset]['url'].index(i))
+            s3_dataset_name=dataset+'_'+label
             # download each dataset to local hard drive, and then upload it to the S3 bucket
             # in csv format
             if 'csv' in formats:
@@ -127,56 +170,20 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, mode:st
                 data = open(filename, 'rb')
                 s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.geojson', Body=data, Metadata =resources[dataset]['metadata'])
 
-    if mode == 'append':
-
-        current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00")
-        # if mode is append and dataset is not appendable, skip it
-        if 'append' not in resources[dataset].keys():
-            print('dataset {} not appendable'.format(dataset))
-            exit
-        gdf = gpd.GeoDataFrame() 
-        # ping the endpoint
-        response = requests.get(resources[dataset]['append']['endpoint'], params=resources[dataset]['append']['filters'])
-        data=json.loads(response.text)
-        tmpfile=Path(os.path.expanduser('~'), 'dc_open_data.json')
-        with open(tmpfile, 'w+') as outfile:
-            json.dump(data,outfile,indent=4)
-        gdf=gpd.read_file(tmpfile,driver='GeoJSON')
-        # 'offset' is apparently a reserved word in Postgres, so rename any columns with that label
-        if 'OFFSET' in gdf.columns:
-            gdf.rename(columns={"OFFSET": "_OFFSET"})
-        # convert the date fields from miliseconds to datetime
-        if 'REPORTDATE'in gdf.columns:
-            gdf['REPORTDATE']=gdf['REPORTDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
-        if 'FROMDATE'in gdf.columns:
-            gdf['FROMDATE']=gdf['FROMDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
-        if 'TODATE'in gdf.columns:
-            gdf['TODATE']=gdf['TODATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
-        # set S3 dataset name
-        s3_dataset_name = dataset+current_time
-        # download each dataset to local hard drive, and then upload it to the S3 bucket
-        if 'csv' in formats:
-            filename = Path(os.path.expanduser('~'), dataset+'.csv')
-            gdf.to_csv(filename, index=False, header=True, line_terminator='\n')
-            data = open(filename, 'rb')
-            s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.csv', Body=data, Metadata =resources[dataset]['append']['metadata'])
-        # in geojson format
-        if 'geojson' in formats:
-            filename = Path(os.path.expanduser('~'), dataset+'.geojson')
-            gdf.to_file(filename, driver='GeoJSON')
-            data = open(filename, 'rb')
-            s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.geojson', Body=data, Metadata =resources[dataset]['append']['metadata'])
-
 
 # set up ability to call with lists from the command line as follows:
-# python get_all_dc_open_data.py --datasets crashes_raw crash_details vision_zero all311 --formats csv geojson --mode replace
+# python get_all_dc_open_data.py --dataset all311 urls "2020" "2019" "2017" --formats csv geojson 
 CLI=argparse.ArgumentParser()
 CLI.add_argument(
-"--datasets",  
+"--dataset",   
+type=str,
+default='crashes_raw'
+)
+CLI.add_argument(
+"--urls",  
 nargs="*",  
 type=str,
-default=['crashes_raw','crash_details','census_blocks','address_points','all311','vision_zero'
-,'roadway_blocks','roadway_subblocks','roadway_blockface','roadway_intersection_approach'],  # default - load everything
+default='all' 
 )
 CLI.add_argument(
 "--formats",
@@ -184,19 +191,53 @@ nargs="*",
 type=str, 
 default=['csv'], # default is to only load csvs
 )
-CLI.add_argument(
-"--mode",
-nargs="*",
-type=str, 
-default=['append'], # default is to append new records instead of dropping and reloading everything
-)
 
 # parse the command line
 args = CLI.parse_args()
-resources_to_load = args.datasets
+dataset = args.dataset
 formats = args.formats
-mode=args.mode[0]
+urls=args.urls
+print(dataset," ",urls)
 
 # call function with command line arguments
-for dataset in resources_to_load:
-    get_dc_open_dataset(dataset=dataset, AWS_Credentials=get_connection_strings("AWS_DEV"), formats=formats, mode=mode)
+get_dc_open_dataset(dataset=dataset, AWS_Credentials=get_connection_strings("AWS_DEV"), formats=formats, input_urls = urls)
+
+    # if mode == 'append':
+
+    #     current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00")
+    #     # if mode is append and dataset is not appendable, skip it
+    #     if 'append' not in resources[dataset].keys():
+    #         print('dataset {} not appendable'.format(dataset))
+    #         exit
+    #     gdf = gpd.GeoDataFrame() 
+    #     # ping the endpoint
+    #     response = requests.get(resources[dataset]['append']['endpoint'], params=resources[dataset]['append']['filters'])
+    #     data=json.loads(response.text)
+    #     tmpfile=Path(os.path.expanduser('~'), 'dc_open_data.json')
+    #     with open(tmpfile, 'w+') as outfile:
+    #         json.dump(data,outfile,indent=4)
+    #     gdf=gpd.read_file(tmpfile,driver='GeoJSON')
+    #     # 'offset' is apparently a reserved word in Postgres, so rename any columns with that label
+    #     if 'OFFSET' in gdf.columns:
+    #         gdf.rename(columns={"OFFSET": "_OFFSET"})
+    #     # convert the date fields from miliseconds to datetime
+    #     if 'REPORTDATE'in gdf.columns:
+    #         gdf['REPORTDATE']=gdf['REPORTDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
+    #     if 'FROMDATE'in gdf.columns:
+    #         gdf['FROMDATE']=gdf['FROMDATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
+    #     if 'TODATE'in gdf.columns:
+    #         gdf['TODATE']=gdf['TODATE'].apply(lambda x: '' if x is None else datetime.datetime.fromtimestamp(x/1e3,tz = timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00"))
+    #     # set S3 dataset name
+    #     s3_dataset_name = dataset+current_time
+    #     # download each dataset to local hard drive, and then upload it to the S3 bucket
+    #     if 'csv' in formats:
+    #         filename = Path(os.path.expanduser('~'), dataset+'.csv')
+    #         gdf.to_csv(filename, index=False, header=True, line_terminator='\n')
+    #         data = open(filename, 'rb')
+    #         s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.csv', Body=data, Metadata =resources[dataset]['append']['metadata'])
+    #     # in geojson format
+    #     if 'geojson' in formats:
+    #         filename = Path(os.path.expanduser('~'), dataset+'.geojson')
+    #         gdf.to_file(filename, driver='GeoJSON')
+    #         data = open(filename, 'rb')
+    #         s3.Bucket(bucket_name).put_object(Key=resources[dataset]['prefix']+s3_dataset_name+'.geojson', Body=data, Metadata =resources[dataset]['append']['metadata'])
