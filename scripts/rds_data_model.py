@@ -34,7 +34,58 @@ def generate_table(engine, target_schema:str, target_table:str,mode:str):
 def get_table_definition(target_table:str):
 
     data_model_dict = {
-        'pulsepoint':"""
+        'twitter':"""
+                search_term VARCHAR NULL
+                ,search_term_id VARCHAR NULL
+                ,convo_group_id VARCHAR NULL
+                ,tweet_id VARCHAR NULL
+                ,tweet_text VARCHAR NULL
+                ,reply_to_status VARCHAR NULL
+                ,quoted_status VARCHAR NULL
+                ,created_at TIMESTAMPTZ NULL
+                ,user_id VARCHAR NULL
+                ,user_screen_name VARCHAR NULL
+                ,user_location VARCHAR NULL
+                ,coordinates VARCHAR NULL
+                ,user_place VARCHAR NULL
+        """
+        ,'moving_violations': """
+        OBJECTID VARCHAR NULL
+        ,LOCATION VARCHAR NULL
+        ,XCOORD NUMERIC NULL
+        ,YCOORD NUMERIC NULL
+        ,ISSUE_DATE TIMESTAMPTZ NULL
+        ,ISSUE_TIME VARCHAR NULL
+        ,ISSUING_AGENCY_CODE VARCHAR NULL
+        ,ISSUING_AGENCY_NAME VARCHAR NULL
+        ,ISSUING_AGENCY_SHORT VARCHAR NULL
+        ,VIOLATION_CODE VARCHAR NULL
+        ,VIOLATION_PROCESS_DESC VARCHAR NULL
+        ,PLATE_STATE VARCHAR NULL
+        ,ACCIDENT_INDICATOR VARCHAR NULL
+        ,DISPOSITION_CODE VARCHAR NULL
+        ,DISPOSITION_TYPE VARCHAR NULL
+        ,DISPOSITION_DATE TIMESTAMPTZ NULL
+        ,FINE_AMOUNT NUMERIC NULL
+        ,TOTAL_PAID NUMERIC NULL
+        ,PENALTY_1 NUMERIC NULL
+        ,PENALTY_2 NUMERIC NULL
+        ,PENALTY_3 NUMERIC NULL
+        ,PENALTY_4 NUMERIC NULL
+        ,PENALTY_5 NUMERIC NULL
+        ,RP_MULT_OWNER_NO VARCHAR NULL
+        ,BODY_STYLE VARCHAR NULL
+        ,LATITUDE NUMERIC NULL
+        ,LONGITUDE NUMERIC NULL
+        ,MAR_ID VARCHAR NULL
+        ,GIS_LAST_MOD_DTTM TIMESTAMPTZ NULL
+        ,DRV_LIC_STATE VARCHAR NULL
+        ,DOB_YEAR INT NULL
+        ,VEH_YEAR INT NULL
+        ,VEH_MAKE VARCHAR NULL
+        ,geography geography null
+        """
+        ,'pulsepoint':"""
         Status_At_Scrape VARCHAR NULL
         ,Scrape_Datetime TIMESTAMPTZ NULL
         ,Incident_ID VARCHAR NULL
