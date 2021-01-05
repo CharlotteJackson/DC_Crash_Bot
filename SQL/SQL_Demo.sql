@@ -56,7 +56,9 @@ GROUP BY nabe,nabe_boundary, extract(YEAR FROM FROMDATE)
 ORDER BY extract(YEAR FROM FROMDATE) desc, Total_Crashes desc, Pct_Ped_Children desc 
 ) WITH DATA;
 
-SELECT * FROM child_pedestrian_crashes order by total_ped_children desc;
+SELECT * FROM child_pedestrian_crashes 
+where nabe = 'Randle Heights'
+order by total_ped_children desc;
 --Randle Heights is a consistent problem spot for children on foot getting hit by cars
 
 --Were there any traffic safety assessment requests submitted for this neighborhood?
@@ -86,5 +88,35 @@ INNER JOIN nabe_boundaries b ON ST_Intersects(b.geography::geometry, a.geography
 SELECT * FROM vision_zero_w_neighborhood WHERE nabe = 'Randle Heights';
 --Yes, there have been 11 Vision Zero safety requests, two of which specifically call out danger to children
 
-SELECT nabe, count(*) FROM vision_zero_w_neighborhood
-GROUP BY nabe order by count(*) DESC 
+--Combine counts of crashes w/ pedestrians, vision zero requests, and 311 TSA requests by neighborhood and year
+DROP TABLE IF EXISTS vz_counts;
+CREATE TEMP TABLE vz_counts ON COMMIT PRESERVE ROWS AS (
+SELECT nabe, date_part('year', cast(requestdate as date)) as yr, count(*) as num_requests FROM vision_zero_w_neighborhood
+GROUP BY nabe,date_part('year', cast(requestdate as date))  order by count(*) DESC 
+	) WITH DATA;
+
+DROP TABLE IF EXISTS all311_counts;
+CREATE TEMP TABLE all311_counts ON COMMIT PRESERVE ROWS AS (
+SELECT nabe, date_part('year', cast(adddate as date)) as yr, count(*) as num_tsas FROM all311_w_neighborhood
+GROUP BY nabe,date_part('year', cast(adddate as date)) order by count(*) DESC 
+	) WITH DATA;
+	
+DROP TABLE IF EXISTS crash_counts;
+CREATE TEMP TABLE crash_counts ON COMMIT PRESERVE ROWS AS (
+SELECT nabe, date_part('year', cast(fromdate as date)) as yr, count(*) as num_crashes FROM crashes_w_neighborhood
+	where total_pedestrians>0
+GROUP BY nabe,date_part('year', cast(fromdate as date)) order by count(*) DESC 
+	) WITH DATA;
+
+DROP TABLE IF EXISTS final_join;
+CREATE TEMP TABLE final_join ON COMMIT PRESERVE ROWS AS (
+SELECT a.nabe, a.yr , a.num_crashes as num_ped_crashes, b.num_tsas, c.num_requests as num_vz_requests
+FROM crash_counts a
+INNER JOIN all311_counts b on a.nabe = b.nabe and a.yr = b.yr 
+left JOIN vz_counts c on a.nabe = c.nabe and a.yr = c.yr 
+
+	) with data;
+	
+select * from final_join
+where yr=2020 
+order by num_tsas desc
