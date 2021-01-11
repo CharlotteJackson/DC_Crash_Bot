@@ -10,7 +10,9 @@ Unit transport status of YES indicates someone was transported to the hospital (
 select cast(CALL_RECEIVED_DATETIME as date),count(*) 
 from source_data.pulsepoint 
 group by cast(CALL_RECEIVED_DATETIME as date) order by cast(CALL_RECEIVED_DATETIME as date)
+
 select max(fromdate) from analysis_data.dc_crashes_w_details;
+--"2020-12-29 05:00:00+00"
 
 --step 2 limit to just the dates in the pulsepoint data
 drop table if exists tmp_crashes;
@@ -21,6 +23,8 @@ select distinct a.*
 	) with data;
 	
 select * from tmp_crashes;
+select fromdate, count(*) from tmp_crashes
+group by fromdate order by fromdate
 
 --Step 3 join them together 
 DROP TABLE IF EXISTS temp_join;
@@ -32,40 +36,72 @@ SELECT distinct
 	,pp.fulldisplayaddress
 	,pp.incident_type
 	,pp.unit_status_transport
+	,pp.transport_unit_is_amr
+	,pp.transport_unit_is_non_amr
 	,pp.num_units_responding
 	,pp.geography as pp_geography
+	,ST_Distance(pp.geography,crash.geography) AS distance_between_events
 	,crash.*
 FROM source_data.pulsepoint pp 
-LEFT OUTER JOIN tmp_crashes crash ON ST_DWITHIN(ST_Force2D(crash.geography::geometry), pp.geography, 20)--reported locations within 10 meters of each other?
+LEFT OUTER JOIN tmp_crashes crash ON ST_DWITHIN(ST_Force2D(crash.geography::geometry), pp.geography, 100)--reported locations within 100 meters of each other?
 	AND cast(fromdate as date) =cast(CALL_RECEIVED_DATETIME as date)--fromdate doesn't have a timestamp, so same date is the most granular possible join
-WHERE cast(CALL_RECEIVED_DATETIME as date) <= '2020-12-27'		
+WHERE cast(CALL_RECEIVED_DATETIME as date) <= '2020-12-29'		
 ) WITH DATA;
-
-SELECT * FROM temp_join
-where unit_status_transport >0 and objectid is null;
-
-SELECT * FROM temp_join
-where objectid is not null and unit_status_transport >0;
-
-
-SELECT * FROM temp_join
-where objectid is  null and unit_status_transport >0;
 
 --How many PP crash records did not show up in crashes data?
 select count(distinct incident_id) from temp_join
---233 records
+--276 records
 where crimeid is null;
---200 records out of 233 don't have a record in the MPD crash database on the same date within 20 meters
+--241 records out of 276 don't have a record in the MPD crash database on the same date within 10 meters
+--155 records out of 276 don't have a record in the MPD crash database on the same date within 100 meters
 
 --How many PP records joined to multiple crash records?
 select * from temp_join 
 where incident_id in (select incident_id from temp_join group by incident_id having count(*)>1)
 order by incident_id
---2/233 each joined to 2 crash records
+--4/276 each joined to 2 crash records
 --these look to be different crashes
 
 --How many crash records joined to multiple PP records?
 select * from temp_join 
 where crimeid in (select crimeid from temp_join group by crimeid having count(*)>1)
 order by crimeid;
---same 4 records as above
+--10 MPD crash records each joined to 2 PP call records and 1 joined to 3
+
+SELECT * FROM temp_join
+where objectid is null
+and unit_status_transport >0;
+--30
+
+SELECT * FROM temp_join
+where objectid is not null and unit_status_transport >0;
+--18
+
+--for the ones that matched, does the injury information line up?
+SELECT 
+	case 
+		when (total_injuries = 0 and unit_status_transport > 0) or (total_injuries < unit_status_transport) then 'INJURIES MISSING' 
+		when (total_major_injuries >0 and total_major_injuries < transport_unit_is_non_amr)
+				or (total_minor_injuries > 0 and total_minor_injuries < transport_unit_is_amr)
+				then 'INJURY SEVERITY MISMATCH'
+		else 'INJURIES MATCH' end as status,
+	incident_id, crimeid, total_major_injuries, total_minor_injuries,unit_status_transport,transport_unit_is_amr, transport_unit_is_non_amr, *
+FROM temp_join
+where objectid is not null and unit_status_transport >0
+order by case  
+		when (total_injuries = 0 and unit_status_transport > 0) or (total_injuries < unit_status_transport) then 'INJURIES MISSING' 
+		when (total_major_injuries >0 and total_major_injuries < transport_unit_is_non_amr)
+				or (total_minor_injuries > 0 and total_minor_injuries < transport_unit_is_amr)
+				then 'INJURY SEVERITY MISMATCH'
+		else 'INJURIES MATCH' end
+
+
+
+
+
+
+
+
+
+
+

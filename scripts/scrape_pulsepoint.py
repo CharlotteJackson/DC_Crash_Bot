@@ -28,7 +28,7 @@ def main():
     record_status_types = [i for i in data['incidents'].keys() if i != 'alerts']
 
     for status in record_status_types:
-        data['incidents'][status] = [i for i in data['incidents'][status] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE"]]
+        data['incidents'][status] = [i for i in data['incidents'][status] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE", "TCS"]]
 
     # upload to S3 so we have the raw data for every pull
     upload = json.dumps(data)
