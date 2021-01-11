@@ -26,9 +26,48 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
     bucket_name = AWS_Credentials['s3_bucket']
     region=AWS_Credentials['region']
 
-    # dict of datasets to load
+    # dict of datasets to load - listed alphabetically
     resources = {
-        'crashes_raw' : {
+        'address_points' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/aa514416aaf74fdc94748f1e56e7cc8a_0.geojson')]
+            ,'prefix' :'source-data/dc-open-data/address_points/'
+            ,'metadata' :{'target_schema':'source_data','target_table': 'address_points', "dataset_info":"https://opendata.dc.gov/datasets/address-points"}
+        }
+        ,'all311' : {
+            'url': [('2021','https://opendata.arcgis.com/datasets/ea485dbe52ca40aaad8c7660630ec9c6_12.geojson')
+                    ,('2020','https://opendata.arcgis.com/datasets/82b33f4833284e07997da71d1ca7b1ba_11.geojson')
+                    ,('2019','https://opendata.arcgis.com/datasets/98b7406def094fa59838f14beb1b8c81_10.geojson')
+                    ,('2018','https://opendata.arcgis.com/datasets/2a46f1f1aad04940b83e75e744eb3b09_9.geojson')
+                    ,('2017','https://opendata.arcgis.com/datasets/19905e2b0e1140ec9ce8437776feb595_8.geojson')
+                    ,('2016','https://opendata.arcgis.com/datasets/0e4b7d3a83b94a178b3d1f015db901ee_7.geojson')
+                    ,('2015','https://opendata.arcgis.com/datasets/b93ec7fc97734265a2da7da341f1bba2_6.geojson')
+                    ,('last_30_days', 'https://opendata.arcgis.com/datasets/fec196030c0b4cd9901c71e579ec7831_41.geojson')
+        ]
+            ,'prefix' :'source-data/dc-open-data/all311/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'all311',"dataset_info":"https://opendata.dc.gov/datasets/311-city-service-requests-in-2020"}
+            ,'filters':"['SERVICECODEDESCRIPTION'] == 'Traffic Safety Investigation']"
+        }
+        ,'anc_boundaries':{
+            'url': [('complete','https://opendata.arcgis.com/datasets/fcfbf29074e549d8aff9b9c708179291_1.geojson')]
+            ,'prefix' :'source-data/dc-open-data/anc_boundaries/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'anc_boundaries',"dataset_info":"https://opendata.dc.gov/datasets/advisory-neighborhood-commissions-from-2013"}
+        }
+        ,'census_blocks' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/a6f76663621548e1a039798784b64f10_0.geojson')]
+            ,'prefix' :'source-data/dc-open-data/census_blocks/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'census_blocks',"dataset_info":"https://opendata.dc.gov/datasets/census-blocks-2010"}
+        }
+        ,'cityworks_service_requests' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/96bb7f56588c4d4595933c0ba772b3cb_1.geojson')]
+            ,'prefix' :'source-data/dc-open-data/cityworks_service_requests/'
+            ,'metadata' :{'target_schema':'source_data','target_table': 'cityworks_service_requests', "dataset_info":"https://opendata.dc.gov/datasets/cityworks-service-requests"}
+        }
+        ,'cityworks_work_orders' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/a1dd480eb86445239c8129056ab05ade_0.geojson')]
+            ,'prefix' :'source-data/dc-open-data/cityworks_work_orders/'
+            ,'metadata' :{'target_schema':'source_data','target_table': 'cityworks_work_orders', "dataset_info":"https://opendata.dc.gov/datasets/cityworks-workorders"}
+        }
+        ,'crashes_raw' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/70392a096a8e431381f1f692aaa06afd_24.geojson')]
             ,'prefix' :'source-data/dc-open-data/crashes_raw/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'crashes_raw',"dataset_info":"https://opendata.dc.gov/datasets/crashes-in-dc"}
@@ -42,36 +81,13 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'crash_details',"dataset_info":"https://opendata.dc.gov/datasets/crash-details-table"}
             
         }
-        ,'census_blocks' : {
-            'url': [('complete','https://opendata.arcgis.com/datasets/a6f76663621548e1a039798784b64f10_0.geojson')]
-            ,'prefix' :'source-data/dc-open-data/census_blocks/'
-            ,'metadata' :{'target_schema':'source_data', 'target_table': 'census_blocks',"dataset_info":"https://opendata.dc.gov/datasets/census-blocks-2010"}
+        ,'intersection_points' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/96a9bbbb475648769e311d03c78698a7_2.geojson')]
+            ,'prefix' :'source-data/dc-open-data/intersection_points/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'intersection_points',"dataset_info":"https://opendata.dc.gov/datasets/intersection-points"}
+            
         }
-    ,'vision_zero' : {
-            'url': [('complete','https://opendata.arcgis.com/datasets/3f28bc3ad77f49079efee0ac05d8464c_0.geojson')]
-            ,'prefix' :'source-data/dc-open-data/vision_zero/'
-            ,'metadata' :{'target_schema':'source_data', 'target_table': 'vision_zero',"dataset_info":"https://opendata.dc.gov/datasets/vision-zero-safety"}
-            ,'append':{'endpoint': 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DDOT/VisionZero/FeatureServer/0/query?'
-                , 'filters': {'where':'REQUESTDATE >= CURRENT_TIMESTAMP - INTERVAL \'1\' DAY','outFields':'*','outSR':'4326','returnGeometry':'true','f':'geojson'}}
-        }
-    ,'address_points' : {
-            'url': [('complete','https://opendata.arcgis.com/datasets/aa514416aaf74fdc94748f1e56e7cc8a_0.geojson')]
-            ,'prefix' :'source-data/dc-open-data/address_points/'
-            ,'metadata' :{'target_schema':'source_data','target_table': 'address_points', "dataset_info":"https://opendata.dc.gov/datasets/address-points"}
-        }
-    ,'all311' : {
-            'url': [('2020','https://opendata.arcgis.com/datasets/82b33f4833284e07997da71d1ca7b1ba_11.geojson')
-                    ,('2019','https://opendata.arcgis.com/datasets/98b7406def094fa59838f14beb1b8c81_10.geojson')
-                    ,('2018','https://opendata.arcgis.com/datasets/2a46f1f1aad04940b83e75e744eb3b09_9.geojson')
-                    ,('2017','https://opendata.arcgis.com/datasets/19905e2b0e1140ec9ce8437776feb595_8.geojson')
-                    ,('2016','https://opendata.arcgis.com/datasets/0e4b7d3a83b94a178b3d1f015db901ee_7.geojson')
-                    ,('2015','https://opendata.arcgis.com/datasets/b93ec7fc97734265a2da7da341f1bba2_6.geojson')
-                    ,('last_30_days', 'https://opendata.arcgis.com/datasets/fec196030c0b4cd9901c71e579ec7831_41.geojson')
-        ]
-            ,'prefix' :'source-data/dc-open-data/all311/'
-            ,'metadata' :{'target_schema':'source_data', 'target_table': 'all311',"dataset_info":"https://opendata.dc.gov/datasets/311-city-service-requests-in-2020"}
-            ,'filters':"['SERVICECODEDESCRIPTION'] == 'Traffic Safety Investigation']"
-        }
+
         ,'moving_violations' : {
             'url': [ #2020
                     ('2020_11','https://opendata.arcgis.com/datasets/b3a187d6f91c41c38f4a1e24f9d2cdfc_10.geojson')
@@ -114,6 +130,11 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'moving_violations',"dataset_info":"https://opendata.dc.gov/datasets/moving-violations-issued-in-november-2020"}
         
         }
+        ,"neighborhood_clusters": {
+            'url':[('complete','https://opendata.arcgis.com/datasets/f6c703ebe2534fc3800609a07bad8f5b_17.geojson')]
+            ,'prefix':'source-data/dc-open-data/neighborhood_clusters/'
+            ,'metadata':{'target_schema':'source_data', 'target_table': 'neighborhood_clusters','dataset_info':'https://opendata.dc.gov/datasets/neighborhood-clusters'}
+        }
         ,"roadway_blocks": {
             'url':[('complete','https://opendata.arcgis.com/datasets/6fcba8618ae744949630da3ea12d90eb_163.geojson')]
             ,'prefix':'source-data/dc-open-data/roadway_blocks/'
@@ -133,6 +154,23 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             'url':[('complete','https://opendata.arcgis.com/datasets/a779d051865f461eb2a1f50f10940ec4_161.geojson')]
             ,'prefix':'source-data/dc-open-data/roadway_intersection_approach/'
             ,'metadata':{'target_schema':'source_data', 'target_table': 'roadway_intersection_approach','dataset_info':'https://opendata.dc.gov/datasets/roadway-intersection-approach'}
+        }
+        ,"smd_boundaries": {
+            'url':[('complete','https://opendata.arcgis.com/datasets/890415458c4c40c3ada2a3c48e3d9e59_21.geojson')]
+            ,'prefix':'source-data/dc-open-data/smd_boundaries/'
+            ,'metadata':{'target_schema':'source_data', 'target_table': 'smd_boundaries','dataset_info':'https://opendata.dc.gov/datasets/single-member-district-from-2013'}
+        }
+        ,'vision_zero' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/3f28bc3ad77f49079efee0ac05d8464c_0.geojson')]
+            ,'prefix' :'source-data/dc-open-data/vision_zero/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'vision_zero',"dataset_info":"https://opendata.dc.gov/datasets/vision-zero-safety"}
+            ,'append':{'endpoint': 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DDOT/VisionZero/FeatureServer/0/query?'
+                , 'filters': {'where':'REQUESTDATE >= CURRENT_TIMESTAMP - INTERVAL \'1\' DAY','outFields':'*','outSR':'4326','returnGeometry':'true','f':'geojson'}}
+        }
+        ,"ward_boundaries": {
+            'url':[('complete','https://opendata.arcgis.com/datasets/0ef47379cbae44e88267c01eaec2ff6e_31.geojson')]
+            ,'prefix':'source-data/dc-open-data/ward_boundaries/'
+            ,'metadata':{'target_schema':'source_data', 'target_table': 'ward_boundaries','dataset_info':'https://opendata.dc.gov/datasets/ward-from-2012'}
         }
     }
 
