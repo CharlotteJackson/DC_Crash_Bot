@@ -57,6 +57,11 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             ,'prefix' :'source-data/dc-open-data/census_blocks/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'census_blocks',"dataset_info":"https://opendata.dc.gov/datasets/census-blocks-2010"}
         }
+        ,'charter_schools' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/a3832935b1d644e48c887e6ec5a65fcd_1.geojson')]
+            ,'prefix' :'source-data/dc-open-data/charter_schools/'
+            ,'metadata' :{'target_schema':'source_data','target_table': 'charter_schools', "dataset_info":"https://opendata.dc.gov/datasets/charter-schools"}
+        }
         ,'cityworks_service_requests' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/96bb7f56588c4d4595933c0ba772b3cb_1.geojson')]
             ,'prefix' :'source-data/dc-open-data/cityworks_service_requests/'
@@ -134,6 +139,11 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             'url':[('complete','https://opendata.arcgis.com/datasets/f6c703ebe2534fc3800609a07bad8f5b_17.geojson')]
             ,'prefix':'source-data/dc-open-data/neighborhood_clusters/'
             ,'metadata':{'target_schema':'source_data', 'target_table': 'neighborhood_clusters','dataset_info':'https://opendata.dc.gov/datasets/neighborhood-clusters'}
+        }
+        ,"public_schools":{
+            'url':[('complete','https://opendata.arcgis.com/datasets/4ac321b2d409438ebd76a6569ad94034_5.geojson')]
+            ,'prefix':'source-data/dc-open-data/public_schools/'
+            ,'metadata':{'target_schema':'source_data', 'target_table': 'public_schools','dataset_info':'https://opendata.dc.gov/datasets/public-schools'}
         }
         ,"roadway_blocks": {
             'url':[('complete','https://opendata.arcgis.com/datasets/6fcba8618ae744949630da3ea12d90eb_163.geojson')]

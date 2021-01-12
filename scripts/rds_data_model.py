@@ -198,6 +198,37 @@ def get_table_definition(target_table:str):
             ,SQMILES VARCHAR NULL
             ,geography geography null
     """
+    ,'charter_schools':"""
+            OBJECTID VARCHAR NULL
+            ,NAME VARCHAR NULL
+            ,ADDRESS VARCHAR NULL
+            ,DIRECTOR VARCHAR NULL
+            ,PHONE VARCHAR NULL
+            ,AUTHORIZER VARCHAR NULL
+            ,GRADES VARCHAR NULL
+            ,ENROLLMENT VARCHAR NULL
+            ,GIS_ID VARCHAR NULL
+            ,WEB_URL VARCHAR NULL
+            ,ADDRID VARCHAR NULL
+            ,X VARCHAR NULL
+            ,Y VARCHAR NULL
+            ,AUTHORIZAT VARCHAR NULL
+            ,MYSCHOOL VARCHAR NULL
+            ,SCHOOL_YEA VARCHAR NULL
+            ,LEA_NAME VARCHAR NULL
+            ,LEA_ID VARCHAR NULL
+            ,SCHOOL_NAM VARCHAR NULL
+            ,SCHOOL_ID VARCHAR NULL
+            ,SCHOOLCODE VARCHAR NULL
+            ,GRADES_1 VARCHAR NULL
+            ,LATITUDE VARCHAR NULL
+            ,LONGITUDE VARCHAR NULL
+            ,FACILITY_ID VARCHAR NULL
+            ,CLUSTER_ VARCHAR NULL
+            ,WARD VARCHAR NULL
+            ,ZIPCODE VARCHAR NULL
+            ,geography geography null
+    """
     ,'cityworks_service_requests':"""
             OBJECTID VARCHAR PRIMARY KEY
             ,REQUESTID VARCHAR NULL
@@ -470,6 +501,43 @@ def get_table_definition(target_table:str):
             ,TYPE VARCHAR NULL 
             ,geography geography null
     """ 
+    ,'public_schools':"""
+            OBJECTID VARCHAR PRIMARY KEY
+            ,NAME VARCHAR NULL
+            ,ADDRESS VARCHAR NULL
+            ,FACUSE VARCHAR NULL
+            ,LEVEL_ VARCHAR NULL
+            ,STATUS VARCHAR NULL
+            ,PHONE VARCHAR NULL
+            ,TOTAL_STUD NUMERIC NULL
+            ,SSL VARCHAR NULL
+            ,GIS_ID VARCHAR NULL
+            ,WEB_URL VARCHAR NULL
+            ,BLDG_NUM VARCHAR NULL
+            ,SCH_PROG VARCHAR NULL
+            ,CAPITALGAINS VARCHAR NULL
+            ,CAPACITY VARCHAR NULL
+            ,YEAR_BUILT VARCHAR NULL
+            ,SQUARE_FOOTAGE NUMERIC NULL
+            ,POPULATION_PLAN VARCHAR NULL
+            ,LONGITUDE VARCHAR NULL
+            ,LATITUDE VARCHAR NULL
+            ,SCHOOL_YEA VARCHAR NULL
+            ,LEA_NAME VARCHAR NULL
+            ,LEA_ID VARCHAR NULL
+            ,SCHOOL_NAM VARCHAR NULL
+            ,SCHOOL_ID VARCHAR NULL
+            ,GRADES VARCHAR NULL
+            ,MAR_ID VARCHAR NULL
+            ,XCOORD VARCHAR NULL
+            ,YCOORD VARCHAR NULL
+            ,ZIPCODE VARCHAR NULL
+            ,PK3 VARCHAR NULL
+            ,PK4 VARCHAR NULL
+            ,UN_CE VARCHAR NULL
+            ,FACILITY_ID VARCHAR NULL
+            ,geography geography null
+    """
     ,'pulsepoint_stream':"""
             Status_At_Scrape VARCHAR NULL
             ,Scrape_Datetime TIMESTAMPTZ NULL
