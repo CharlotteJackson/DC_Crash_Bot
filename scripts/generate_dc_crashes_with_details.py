@@ -10,7 +10,8 @@ target_schema = 'analysis_data'
 target_table='dc_crashes_w_details'
 
 add_columns_query ="""
-CREATE TEMP TABLE tmp_crash_details ON COMMIT PRESERVE ROWS 
+DROP TABLE IF EXISTS tmp.crash_details;
+CREATE TABLE tmp.crash_details 
 AS (
     SELECT *
         ,CASE WHEN PERSONTYPE = 'Driver' AND AGE >=80 THEN 1 ELSE 0 END AS DRIVERS_OVER_80
@@ -44,10 +45,11 @@ AS (
         ,CASE WHEN PERSONTYPE = 'Pedestrian' THEN 1 ELSE 0 END AS TOTAL_PEDESTRIANS
         ,CASE WHEN PERSONTYPE = 'Bicyclist' THEN 1 ELSE 0 END AS TOTAL_BICYCLISTS
     FROM source_data.crash_details
-)WITH DATA;
+)
 """
 group_by_query = """
-CREATE TEMP TABLE tmp_crash_details_agg ON COMMIT PRESERVE ROWS 
+DROP TABLE IF EXISTS tmp.crash_details_agg;
+CREATE  TABLE tmp.crash_details_agg 
 AS (
     SELECT 
         CRIMEID
@@ -80,13 +82,16 @@ AS (
         ,ARRAY_AGG(PERSONTYPE) AS PERSONTYPE_ARRAY
         ,ARRAY_AGG(INVEHICLETYPE) AS INVEHICLETYPE_ARRAY
         ,ARRAY_AGG(LICENSEPLATESTATE) AS LICENSEPLATESTATE_ARRAY
-    FROM tmp_crash_details
+    FROM tmp.crash_details
     GROUP BY CRIMEID
-) WITH DATA;
+) ;
+create index crime_id on tmp.crash_details_agg (crimeid);
 """
 
 join_query = """
-CREATE TEMP TABLE tmp_crashes_join ON COMMIT PRESERVE ROWS 
+DROP TABLE IF EXISTS tmp.crashes_join;
+SELECT "TMP.CRASHES_JOIN DROPPED";
+CREATE TABLE tmp.crashes_join
 AS (
     SELECT 
         a.OBJECTID
@@ -164,19 +169,123 @@ AS (
             ,ST_Force2D(a.geography::geometry) as geography
 
     FROM source_data.crashes_raw a
-    LEFT JOIN tmp_crash_details_agg b on a.CRIMEID = b.CRIMEID
-) WITH DATA;
+    LEFT JOIN tmp.crash_details_agg b on a.CRIMEID = b.CRIMEID
+) ;
+"""
+
+nbh_ward_query="""
+DROP TABLE IF EXISTS tmp.crashes_nbh_ward;
+CREATE TABLE tmp.crashes_nbh_ward 
+AS (
+	WITH anc_boundaries as (SELECT anc_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.anc_boundaries),
+		neighborhood_clusters as (SELECT name, nbh_names, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.neighborhood_clusters),
+		smd_boundaries as (SELECT smd_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.smd_boundaries),
+		ward_boundaries as (SELECT name, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.ward_boundaries)
+SELECT 
+	c.anc_id
+	,c.geography as anc_boundary
+	,d.name as nbh_cluster
+	,d.nbh_names as nbh_cluster_names
+	,d.geography as nbh_cluster_boundary
+	,e.smd_id
+	,e.geography as smd_boundary
+	,f.name as ward_name 
+	,f.geography as ward_boundary
+    ,ROW_NUMBER() OVER (PARTITION BY a.objectid) as crash_row_num
+	,a.*
+FROM tmp.crashes_join a
+LEFT JOIN anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
+LEFT JOIN neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
+LEFT JOIN smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
+LEFT JOIN ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
+) 
+"""
+
+schools_query ="""
+DROP TABLE IF EXISTS tmp.crashes_schools;
+CREATE  TABLE tmp.crashes_schools 
+AS (
+    SELECT  ARRAY_AGG(distinct b.school_name) as near_schools
+        , MAX(b.ES) as ES
+        , MAX(b.MS) as MS
+        , MAX(b.HS) as HS
+        , MAX(b.public_school) as public_school
+        , MAX(b.charter_school) as charter_school
+        , a.* 
+    FROM  tmp.crashes_nbh_ward a
+    LEFT JOIN analysis_data.all_schools b on ST_DWithin(b.geography,a.geography,200)
+    WHERE a.crash_row_num = 1
+    GROUP BY 
+        a.anc_id
+        ,a.anc_boundary
+        ,a.nbh_cluster
+        ,a.nbh_cluster_names
+        ,a.nbh_cluster_boundary
+        ,a.smd_id
+        ,a.smd_boundary
+        ,a.ward_name
+        ,a.ward_boundary
+        ,a.objectid
+        ,crimeid
+        ,reportdate
+        ,fromdate
+        ,todate
+        ,a.address
+        ,bicycle_injuries
+        ,vehicle_injuries
+        ,pedestrian_injuries
+        ,total_injuries
+        ,total_major_injuries
+        ,total_minor_injuries
+        ,bicycle_fatalities
+        ,pedestrian_fatalities
+        ,vehicle_fatalities
+        ,drivers_impaired
+        ,drivers_speeding
+        ,total_vehicles
+        ,total_bicyclists
+        ,total_pedestrians
+        ,drivers_over_80
+        ,drivers_under_25
+        ,peds_over_80
+        ,peds_under_12
+        ,bikers_over_70
+        ,bikers_under_18
+        ,oos_vehicles
+        ,num_cars
+        ,num_suvs_or_trucks
+        ,driver_tickets
+        ,bicycle_tickets
+        ,ped_tickets
+        ,persontype_array
+        ,invehicletype_array
+        ,licenseplatestate_array
+        ,intapproachdirection
+        ,locationerror
+        ,lastupdatedate
+        ,blockkey
+        ,subblockkey
+        ,a.geography
+) 
 """
 final_query="""
 DROP TABLE IF EXISTS {0}.{1};
 
 CREATE TABLE {0}.{1} AS 
-    SELECT * FROM tmp_crashes_join;
+    SELECT * FROM tmp.crashes_schools;
 
 GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
 """.format(target_schema, target_table)
 
 engine.execute(add_columns_query)
+print("add columns query complete")
 engine.execute(group_by_query)
+print("group by query complete")
 engine.execute(join_query)
+print("join query complete")
+engine.execute(nbh_ward_query)
+print("neighborhood-ward query complete")
+engine.execute(schools_query)
+print("schools query complete")
 engine.execute(final_query)
+print("final query complete")

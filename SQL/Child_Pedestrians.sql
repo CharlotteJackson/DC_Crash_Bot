@@ -18,15 +18,13 @@ WITH DATA;
 --Use subdivide function to speed up query
 DROP TABLE IF EXISTS crashes_w_neighborhood;
 CREATE TEMP TABLE crashes_w_neighborhood  ON COMMIT PRESERVE ROWS AS (
-	WITH assessment_nabe2 as (SELECT assessment_nabe, ST_SUBDIVIDE(geography::geometry) geography FROM assessment_nabe),
+	WITH --assessment_nabe2 as (SELECT assessment_nabe, ST_SUBDIVIDE(geography::geometry) geography FROM assessment_nabe),
 		anc_boundaries as (SELECT anc_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.anc_boundaries),
 		neighborhood_clusters as (SELECT name, nbh_names, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.neighborhood_clusters),
 		smd_boundaries as (SELECT smd_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.smd_boundaries),
 		ward_boundaries as (SELECT name, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.ward_boundaries)
 SELECT 
-	b.assessment_nabe
-	,b.geography as assessment_nabe_boundary
-	,c.anc_id
+	c.anc_id
 	,c.geography as anc_boundary
 	,d.name as nbh_cluster
 	,d.nbh_names as nbh_cluster_names
@@ -35,10 +33,10 @@ SELECT
 	,e.geography as smd_boundary
 	,f.name as ward_name 
 	,f.geography as ward_boundary
-	,row_number() over (partition by a.objectid order by b.assessment_nabe) as crash_row_num
+	--,row_number() over (partition by a.objectid) as crash_row_num
 	,a.*
 FROM analysis_data.dc_crashes_w_details a
-LEFT JOIN assessment_nabe2 b ON ST_Intersects(b.geography::geometry, a.geography::geometry)
+--LEFT JOIN assessment_nabe2 b ON ST_Intersects(b.geography::geometry, a.geography::geometry)
 LEFT JOIN anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
 LEFT JOIN neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
 LEFT JOIN smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
@@ -63,18 +61,32 @@ group by ward_name,nbh_cluster_names order by count(*) desc
 select * from all311_w_neighborhood
 where ward_name = 'Ward 8';
 
+select * from inner join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,70)
+
+select count(*) from analysis_data.all311
+--6155
+select count(*) from source_data.all311
+select * from source_data.intersection_points limit 100;
+drop table if exists all311_intersections;
+create temp table  all311_intersections ON COMMIT PRESERVE ROWS AS (
+select a.*, b.block_name , c.fullintersection, row_number() over (partition by a.objectid) as row_num
+	from analysis_data.all311  a
+left join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,10)
+left join source_data.intersection_points c on ST_DWithin(c.geography,a.geography,10)
+) WITH DATA;
+
 --Add ward, neighborhood cluster, ANC, SMD, and assessment neighborhood to TSA requests
 DROP TABLE IF EXISTS all311_w_neighborhood;
 CREATE TEMP TABLE all311_w_neighborhood  ON COMMIT PRESERVE ROWS AS (
-	WITH assessment_nabe2 as (SELECT assessment_nabe, ST_SUBDIVIDE(geography::geometry) geography FROM assessment_nabe),
+	WITH --assessment_nabe2 as (SELECT assessment_nabe, ST_SUBDIVIDE(geography::geometry) geography FROM assessment_nabe),
 		anc_boundaries as (SELECT anc_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.anc_boundaries),
 		neighborhood_clusters as (SELECT name, nbh_names, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.neighborhood_clusters),
 		smd_boundaries as (SELECT smd_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.smd_boundaries),
 		ward_boundaries as (SELECT name, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.ward_boundaries)
 SELECT 
-	b.assessment_nabe
-	,b.geography as assessment_nabe_boundary
-	,c.anc_id
+-- 	b.assessment_nabe
+-- 	,b.geography as assessment_nabe_boundary
+	c.anc_id
 	,c.geography as anc_boundary
 	,d.name as nbh_cluster
 	,d.nbh_names as nbh_cluster_names
@@ -83,10 +95,10 @@ SELECT
 	,e.geography as smd_boundary
 	,f.name as ward_name 
 	,f.geography as ward_boundary
-	,row_number() over (partition by a.objectid order by b.assessment_nabe) as tsa_row_num
+	,row_number() over (partition by a.objectid) as tsa_row_num
 	,a.*
 FROM source_data.all311 a
-LEFT JOIN assessment_nabe2 b ON ST_Intersects(b.geography::geometry, a.geography::geometry)
+--LEFT JOIN assessment_nabe2 b ON ST_Intersects(b.geography::geometry, a.geography::geometry)
 LEFT JOIN anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
 LEFT JOIN neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
 LEFT JOIN smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
@@ -118,7 +130,7 @@ where
 --1143 blocks 
 
 select ST_Force2D(geometry::geometry)::geography, * from source_data.roadway_blocks 
-where bikelane_protected is not null
+where bikelane_protected is not null or bikelane_buffered is not null
 
 
 select * from crashes_w_neighborhood where date_part('year', fromdate)>=2015 and bikers_under_18=0 and total_bicyclists>0
@@ -210,6 +222,147 @@ select count(*) from crashes_w_neighborhood where date_part('year', fromdate)>=2
 select nbh_cluster_names, count(*) as num_crashes
 from crashes_w_neighborhood where date_part('year', fromdate)>=2015 and peds_under_12>0
 group by nbh_cluster_names order by count(*) desc 
+
+select distinct a.*, b.block_name from all311_w_neighborhood a
+inner join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,10)
+where nbh_cluster_names in ('Capitol Hill, Lincoln Park','Union Station, Stanton Park, Kingman Park')
+limit 100;
+
+select grades, count(*)
+from source_data.charter_schools
+group by grades order by count(*) desc
+
+select grades, count(*)
+from source_data.public_schools
+group by grades order by count(*) desc
+
+select * from source_data.public_schools limit 100;
+
+SELECT 
+	0 as charter_school
+	,1 as public_school
+	,grades
+	,name as school_name 
+	,case when grades like 'PK3%' or grades like 'PK4%' or grades like '1st%' or grades like '4th%' or grades like '%KG%' then 1 else 0 end as ES 
+	,case when grades like '6th%' or grades like '%8th%' then 1 else 0 end as MS 
+	,case when grades like '9th%' or grades like '%12th%' or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
+	,geography
+from source_data.public_schools
+UNION ALL
+SELECT 
+	1 as charter_school
+	,0 as public_school
+	,grades
+	,name as school_name 
+	,case when grades like 'PK3%' or grades like 'PK4%' or grades like '1st%' or grades like '4th%' or grades like '%KG%' then 1 else 0 end as ES 
+	,case when grades like '6th%' or grades like '%8th%' then 1 else 0 end as MS 
+	,case when grades like '9th%' or grades like '%12th%' or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
+	,geography
+from source_data.charter_schools
+
+DROP TABLE IF EXISTS tmp_schools;
+CREATE TEMP TABLE tmp_schools ON COMMIT PRESERVE ROWS 
+AS ( 
+    SELECT 
+        0 as charter_school
+        ,1 as public_school
+        ,grades
+        ,name as school_name 
+        ,case when grades like 'PK3%' or grades like 'PK4%' or grades like '1st%' or grades like '4th%' or grades like '%KG%' then 1 else 0 end as ES 
+        ,case when grades like '6th%' or grades like '%8th%' then 1 else 0 end as MS 
+        ,case when grades like '9th%' or grades like '%12th%' or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
+        ,geography
+    from source_data.public_schools
+    UNION ALL
+    SELECT 
+        1 as charter_school
+        ,0 as public_school
+        ,grades
+        ,name as school_name 
+        ,case when grades like 'PK3%' or grades like 'PK4%' or grades like '1st%' or grades like '4th%' or grades like '%KG%' then 1 else 0 end as ES 
+        ,case when grades like '6th%' or grades like '%8th%' then 1 else 0 end as MS 
+        ,case when grades like '9th%' or grades like '%12th%' or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
+        ,geography
+    from source_data.charter_schools
+) WITH DATA;
+
+select  array_agg(distinct b.school_name) as near_schools, a.* from analysis_data.dc_crashes_w_details a
+inner join analysis_data.all_schools b on ST_DWithin(b.geography,a.geography,200)
+--inner join source_data.public_schools b on ST_DWithin(ST_Force2D(b.geography::geometry)::geography,a.geography,200)
+where total_pedestrians >0
+--and b.name in ('School-Within-School', 'Ludlow-Taylor Elementary School','J.O. Wilson Elementary School','Stuart-Hobson Middle School')
+--1862 rows affected w/out array
+--1730 rows affected w/array
+group by (
+a.anc_id
+,a.anc_boundary
+,a.nbh_cluster
+,a.nbh_cluster_names
+,a.nbh_cluster_boundary
+,a.smd_id
+,a.smd_boundary
+,a.ward_name
+,a.ward_boundary
+,a.objectid
+,crimeid
+,reportdate
+,fromdate
+,todate
+,a.address
+,bicycle_injuries
+,vehicle_injuries
+,pedestrian_injuries
+,total_injuries
+,total_major_injuries
+,total_minor_injuries
+,bicycle_fatalities
+,pedestrian_fatalities
+,vehicle_fatalities
+,drivers_impaired
+,drivers_speeding
+,total_vehicles
+,total_bicyclists
+,total_pedestrians
+,drivers_over_80
+,drivers_under_25
+,peds_over_80
+,peds_under_12
+,bikers_over_70
+,bikers_under_18
+,oos_vehicles
+,num_cars
+,num_suvs_or_trucks
+,driver_tickets
+,bicycle_tickets
+,ped_tickets
+,persontype_array
+,invehicletype_array
+,licenseplatestate_array
+,intapproachdirection
+,locationerror
+,lastupdatedate
+,blockkey
+,subblockkey
+,a.geography)
+
+select * from analysis_data.dc_crashes_w_details limit 100;
+
+select * from information_schema.columns where table_name = 'dc_crashes_w_details'
+
+select distinct a.*, b.name from all311_w_neighborhood a
+left join source_data.public_schools b on ST_DWithin(ST_Force2D(b.geography::geometry)::geography,a.geography,200)
+where nbh_cluster_names in ('Capitol Hill, Lincoln Park','Union Station, Stanton Park, Kingman Park')
+
+select distinct a.* from all311_w_neighborhood a
+where nbh_cluster_names in ('Capitol Hill, Lincoln Park','Union Station, Stanton Park, Kingman Park')
+
+select * from analysis_data.all311 limit 100;
+
+select * from analysis_data.all_schools where es = 0 and ms = 0 and hs = 0;
+
+select ward_name, nbh_cluster_names, count(*) as num_tsa_requests
+from all311_w_neighborhood 
+group by ward_name, nbh_cluster_names order by count(*) desc 
 --"Congress Heights, Bellevue, Washington Highlands"
 --"Brightwood Park, Crestwood, Petworth"
 --"Douglas, Shipley Terrace"
@@ -259,6 +412,9 @@ select * from source_data.neighborhood_clusters
 select * from source_data.anc_boundaries
 
 select * from source_data.smd_boundaries
+
+select * from source_data.pulsepoint_stream where cast(call_received_datetime as date) = '2021-01-04'
+order by incident_id, scrape_datetime
 
 select * from analysis_data.dc_crashes_w_details where date_part('year', fromdate) = 2020 and peds_under_12 >0;
 */

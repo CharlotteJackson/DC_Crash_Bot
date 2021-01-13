@@ -31,15 +31,31 @@ select * from source_data.crashes_raw
 where speeding_involved>0 and date_part('year', reportdate)>=2015
 limit 100;
 
+--crashes
 drop table if exists h_st_crashes;
 create temp table h_st_crashes on commit preserve rows as (
 select distinct a.* , b.block_name
 from analysis_data.dc_crashes_w_details a
-inner join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,30)
-where  b.routename in ('H ST NE', 'BENNING RD NE') 
-and ST_DWithin(a.geography::geography, '0101000020E6100000030F554C994053C029DFF3583A734340'::geography,2305)
+inner join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,100)
+where  b.routename in ('H ST NE', 'BENNING RD NE', 'G ST NE', 'I ST NE', 'F ST NE', '8TH ST NE', 'E ST NE', '6TH ST NE') 
+--and ST_DWithin(a.geography::geography, '0101000020E6100000030F554C994053C029DFF3583A734340'::geography,2305)
 	and date_part('year',fromdate)>=2015
 ) with data;
+
+select * from h_st_crashes where total_pedestrians>0
+order by fromdate asc;
+
+--TSA requests
+drop table if exists h_st_tsas;
+create temp table h_st_tsas on commit preserve rows as (
+select distinct a.* --, b.block_name
+from source_data.all311 a
+inner join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,70)
+where  b.routename in ('H ST NE', 'BENNING RD NE') 
+and ST_DWithin(a.geography::geography, '0101000020E6100000030F554C994053C029DFF3583A734340'::geography,2315)
+) with data;
+
+select * from h_st_tsas
 
 --add intersection id and name 
 drop table if exists h_st_intersections;
@@ -65,6 +81,8 @@ select
 from h_st_intersections
 group by CONCAT(date_part('year', fromdate),'-', right(concat('0',date_part('month', fromdate)),2)) 
 order by CONCAT(date_part('year', fromdate),'-', right(concat('0',date_part('month', fromdate)),2)) 
+
+create index crime_id on source_data.crashes_raw (crimeid);
 
 select *
 from h_st_intersections
