@@ -44,20 +44,20 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
         generate_table(engine=engine, target_schema=target_schema,target_table=target_table,mode=mode)
 
     # set table import parameters that are the same for every file
-    copy_parameters = '\'(FORMAT {}, HEADER {}, ESCAPE \'\'\\\'\')\''.format(format, header)
+    copy_parameters = '\'(FORMAT {}, HEADER {})\''.format(format, header)
     columns_to_copy = '\'\''
     aws_credentials_param = '\'{}\', \'{}\',\'\''.format(AWS_Credentials['aws_access_key_id'],AWS_Credentials['aws_secret_access_key'])
 
     # create file-specific table import parameters
     for (file_name, file_name_native, target_schema, target_table) in files_to_load:
         destination_table = '\'{}.{}\''.format(target_schema,target_table)
-        create_s3_uri_param = '\'{}\', \'{}\',\'{}\''.format(AWS_Credentials['s3_bucket'], file_name, region)
+        create_s3_uri_param = '\'{}\', \'{}\',\'{}\''.format(AWS_Credentials['s3_bucket'], file_name_native, region)
         base_file_name = os.path.basename(file_name_native) 
 
         # create import statement
         import_table_query = 'SELECT aws_s3.table_import_from_s3({}, {},{}, aws_commons.create_s3_uri({}) ,aws_commons.create_aws_credentials({}));'.format(destination_table, columns_to_copy, copy_parameters, create_s3_uri_param, aws_credentials_param)
         # create arg to pass to os.system
-        os_system_arg='PGPASSWORD={} psql --host={} --port={} --username={} --dbname={}  --no-password --command=\"{}\"'.format(db_pwd,db_host, db_port, db_uid, dbname, import_table_query)
+        os_system_arg='PGPASSWORD=\'{}\' psql --host={} --port={} --username={} --dbname={}  --no-password --command=\"{}\"'.format(db_pwd,db_host, db_port, db_uid, dbname, import_table_query)
         # execute
         if move_after_loading != 'yes':
             os.system(os_system_arg)

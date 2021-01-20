@@ -13,10 +13,6 @@ nbh_ward_query="""
 DROP TABLE IF EXISTS tmp.all311_nbh_ward;
 CREATE TABLE tmp.all311_nbh_ward 
 AS (
-	WITH anc_boundaries as (SELECT anc_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.anc_boundaries),
-		neighborhood_clusters as (SELECT name, nbh_names, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.neighborhood_clusters),
-		smd_boundaries as (SELECT smd_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.smd_boundaries),
-		ward_boundaries as (SELECT name, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.ward_boundaries)
 SELECT 
 	c.anc_id
 	,c.geography as anc_boundary
@@ -30,10 +26,11 @@ SELECT
     ,ROW_NUMBER() OVER (PARTITION BY a.objectid) as tsa_row_num
 	,a.*
 FROM source_data.all311 a
-LEFT JOIN anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
-LEFT JOIN neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
-LEFT JOIN smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
-LEFT JOIN ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
+WHERE servicecode in (\'MARKMAIN\', \'MARKMODI\', \'MARKINST\',   \'S0376\',\'SAROTOSC\', \'SCCRGUPR\', \'SPSTDAMA\')
 ) 
 """
 

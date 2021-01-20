@@ -90,7 +90,6 @@ create index crime_id on tmp.crash_details_agg (crimeid);
 
 join_query = """
 DROP TABLE IF EXISTS tmp.crashes_join;
-SELECT "TMP.CRASHES_JOIN DROPPED";
 CREATE TABLE tmp.crashes_join
 AS (
     SELECT 
@@ -100,6 +99,8 @@ AS (
             ,a.FROMDATE
             ,a.TODATE 
             ,a.ADDRESS
+            ,a.latitude
+            ,a.longitude
             ,CASE WHEN b.CRIMEID IS NULL OR b.BICYCLE_INJURIES < (a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
                 THEN (a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
                 ELSE b.BICYCLE_INJURIES END AS BICYCLE_INJURIES
@@ -171,16 +172,14 @@ AS (
     FROM source_data.crashes_raw a
     LEFT JOIN tmp.crash_details_agg b on a.CRIMEID = b.CRIMEID
 ) ;
+CREATE INDEX crashes_geom_idx ON tmp.crashes_join USING GIST (geography);
 """
 
 nbh_ward_query="""
 DROP TABLE IF EXISTS tmp.crashes_nbh_ward;
 CREATE TABLE tmp.crashes_nbh_ward 
 AS (
-	WITH anc_boundaries as (SELECT anc_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.anc_boundaries),
-		neighborhood_clusters as (SELECT name, nbh_names, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.neighborhood_clusters),
-		smd_boundaries as (SELECT smd_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.smd_boundaries),
-		ward_boundaries as (SELECT name, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.ward_boundaries)
+
 SELECT 
 	c.anc_id
 	,c.geography as anc_boundary
@@ -194,11 +193,12 @@ SELECT
     ,ROW_NUMBER() OVER (PARTITION BY a.objectid) as crash_row_num
 	,a.*
 FROM tmp.crashes_join a
-LEFT JOIN anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
-LEFT JOIN neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
-LEFT JOIN smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
-LEFT JOIN ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
-) 
+LEFT JOIN tmp.anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
+) ;
+CREATE INDEX crashes2_geom_idx ON tmp.crashes_nbh_ward USING GIST (geography);
 """
 
 schools_query ="""
@@ -225,12 +225,15 @@ AS (
         ,a.smd_boundary
         ,a.ward_name
         ,a.ward_boundary
+        ,a.crash_row_num
         ,a.objectid
         ,crimeid
         ,reportdate
         ,fromdate
         ,todate
         ,a.address
+        ,a.latitude
+        ,a.longitude
         ,bicycle_injuries
         ,vehicle_injuries
         ,pedestrian_injuries
@@ -273,7 +276,7 @@ DROP TABLE IF EXISTS {0}.{1};
 
 CREATE TABLE {0}.{1} AS 
     SELECT * FROM tmp.crashes_schools;
-
+    CREATE INDEX crashesfinal_geom_idx ON {0}.{1} USING GIST (geography);
 GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
 """.format(target_schema, target_table)
 

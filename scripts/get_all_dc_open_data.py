@@ -10,6 +10,7 @@ from datetime import timezone
 import requests
 import json
 import sys
+import csv
 
 
 # function definition
@@ -28,7 +29,12 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
 
     # dict of datasets to load - listed alphabetically
     resources = {
-        'address_points' : {
+        'acs_housing_2011_2015' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/7db7a4684b4c41268ca7a84d4170f2d0_34.geojson')]
+            ,'prefix' :'source-data/dc-open-data/acs_housing_2011_2015/'
+            ,'metadata' :{'target_schema':'source_data','target_table': 'acs_housing_2011_2015', "dataset_info":"https://opendata.dc.gov/datasets/housing-acs-characteristics-2011-to-2015"}
+        }
+        ,'address_points' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/aa514416aaf74fdc94748f1e56e7cc8a_0.geojson')]
             ,'prefix' :'source-data/dc-open-data/address_points/'
             ,'metadata' :{'target_schema':'source_data','target_table': 'address_points', "dataset_info":"https://opendata.dc.gov/datasets/address-points"}
@@ -71,6 +77,12 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             'url': [('complete','https://opendata.arcgis.com/datasets/a1dd480eb86445239c8129056ab05ade_0.geojson')]
             ,'prefix' :'source-data/dc-open-data/cityworks_work_orders/'
             ,'metadata' :{'target_schema':'source_data','target_table': 'cityworks_work_orders', "dataset_info":"https://opendata.dc.gov/datasets/cityworks-workorders"}
+        }
+        ,'comp_plan_areas' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/203c2342b36240949e0ad95d75a5bdca_2.geojson')]
+            ,'prefix' :'source-data/dc-open-data/comp_plan_areas/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'comp_plan_areas',"dataset_info":"https://opendata.dc.gov/datasets/comprehensive-plan-planning-areas"}
+            
         }
         ,'crashes_raw' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/70392a096a8e431381f1f692aaa06afd_24.geojson')]
@@ -190,18 +202,23 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
     if len(input_urls)==1 and input_urls[0]=='all':
         urls_to_load = [(label, url) for (label,url) in resources[dataset]['url']]
     else:
-        urls_to_load = [(label, url) for (label,url) in resources[dataset]['url'] if label in input_urls]
+        urls_to_load = [(label, url) for (label,url) in resources[dataset]['url'] if label in input_urls or input_urls[0] in label]
     for (label, url) in urls_to_load:
             try:
                 gdf=gpd.read_file(url)
             except:
                 print("file ",label, "could not be read")
                 continue
-            if 'filters' in resources[dataset].keys():
-                gdf=gdf[gdf['SERVICECODEDESCRIPTION'] == 'Traffic Safety Investigation']
+            # if 'filters' in resources[dataset].keys():
+            #     gdf=gdf[gdf['SERVICECODEDESCRIPTION'] == 'Traffic Safety Investigation']
             # 'offset' is apparently a reserved word in Postgres, so rename any columns with that label
             if 'OFFSET' in gdf.columns:
                 gdf.rename(columns={"OFFSET": "_OFFSET"})
+            # TODO: fix this hack 
+            if dataset == 'all311' and label == '2018':
+                print("currently dataframe has ",len(gdf)," rows")
+                gdf =  gdf[~gdf["DETAILS"].str.contains(" per N. Williams on 7/27/2018. Closed by N. Whiteman on 7/30/2018.", na=False)]
+                print("after removing the one record, gdf has ",len(gdf), " rows")
             # set S3 dataset name
             s3_dataset_name=dataset+'_'+label
             # download each dataset to local hard drive, and then upload it to the S3 bucket
@@ -220,7 +237,7 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
 
 
 # set up ability to call with lists from the command line as follows:
-# python get_all_dc_open_data.py --dataset all311 urls "2020" "2019" "2017" --formats csv geojson 
+# python get_all_dc_open_data.py --dataset all311 --urls "2020" "2019" "2017" --formats csv geojson 
 CLI=argparse.ArgumentParser()
 CLI.add_argument(
 "--dataset",   
