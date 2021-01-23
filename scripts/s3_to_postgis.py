@@ -33,6 +33,7 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
 
     # grab list of all files in target folder that have a target table
     # url encode the file key so the ones with semicolons don't throw an error
+    # update january 2021: the script now throws an error if i try to feed it URL-encoded object keys, so just using the plain text one now
     files_to_load = [(urllib.parse.quote(obj.key), obj.key, obj.Object().metadata['target_schema'],obj.Object().metadata['target_table']) for obj in bucket.objects.filter(Prefix=folder_to_load) if 'target_table' in obj.Object().metadata.keys() if format in obj.key]
     # generate distinct list of target tables so they're all only dropped and recreated/truncated one time
     target_tables = [(target_schema, target_table) for (file_name, file_name_native, target_schema, target_table) in files_to_load]
