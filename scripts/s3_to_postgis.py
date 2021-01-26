@@ -1,9 +1,7 @@
-import geopandas as gpd
-import pandas as pd
 import boto3
 import os
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from rds_data_model import generate_table
+from rds_data_model import generate_table, correct_geo
 import subprocess
 import sys
 import argparse
@@ -33,6 +31,7 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
 
     # grab list of all files in target folder that have a target table
     # url encode the file key so the ones with semicolons don't throw an error
+    # update january 2021: the script now throws an error if i try to feed it URL-encoded object keys, so just using the plain text one now
     files_to_load = [(urllib.parse.quote(obj.key), obj.key, obj.Object().metadata['target_schema'],obj.Object().metadata['target_table']) for obj in bucket.objects.filter(Prefix=folder_to_load) if 'target_table' in obj.Object().metadata.keys() if format in obj.key]
     # generate distinct list of target tables so they're all only dropped and recreated/truncated one time
     target_tables = [(target_schema, target_table) for (file_name, file_name_native, target_schema, target_table) in files_to_load]
@@ -44,20 +43,20 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
         generate_table(engine=engine, target_schema=target_schema,target_table=target_table,mode=mode)
 
     # set table import parameters that are the same for every file
-    copy_parameters = '\'(FORMAT {}, HEADER {}, ESCAPE \'\'\\\'\')\''.format(format, header)
+    copy_parameters = '\'(FORMAT {}, HEADER {})\''.format(format, header)
     columns_to_copy = '\'\''
     aws_credentials_param = '\'{}\', \'{}\',\'\''.format(AWS_Credentials['aws_access_key_id'],AWS_Credentials['aws_secret_access_key'])
 
     # create file-specific table import parameters
     for (file_name, file_name_native, target_schema, target_table) in files_to_load:
         destination_table = '\'{}.{}\''.format(target_schema,target_table)
-        create_s3_uri_param = '\'{}\', \'{}\',\'{}\''.format(AWS_Credentials['s3_bucket'], file_name, region)
+        create_s3_uri_param = '\'{}\', \'{}\',\'{}\''.format(AWS_Credentials['s3_bucket'], file_name_native, region)
         base_file_name = os.path.basename(file_name_native) 
 
         # create import statement
         import_table_query = 'SELECT aws_s3.table_import_from_s3({}, {},{}, aws_commons.create_s3_uri({}) ,aws_commons.create_aws_credentials({}));'.format(destination_table, columns_to_copy, copy_parameters, create_s3_uri_param, aws_credentials_param)
         # create arg to pass to os.system
-        os_system_arg='PGPASSWORD={} psql --host={} --port={} --username={} --dbname={}  --no-password --command=\"{}\"'.format(db_pwd,db_host, db_port, db_uid, dbname, import_table_query)
+        os_system_arg='PGPASSWORD=\'{}\' psql --host={} --port={} --username={} --dbname={}  --no-password --command=\"{}\"'.format(db_pwd,db_host, db_port, db_uid, dbname, import_table_query)
         # execute
         if move_after_loading != 'yes':
             os.system(os_system_arg)
@@ -73,6 +72,9 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
             print("please provide move-to folder")
             continue
 
+    # after data is loaded, update the geographies
+    for (target_schema, target_table) in target_tables:
+        correct_geo(engine=engine, target_schema=target_schema,target_table=target_table,mode=mode)
         
 # set up ability to call with lists from the command line as follows:
 # python s3_to_postgis.py --folders source-data/dc-open-data/crashes_raw/ source-data/dc-open-data/crash_details/ source-data/dc-open-data/vision_zero/ --format csv --mode replace --header true

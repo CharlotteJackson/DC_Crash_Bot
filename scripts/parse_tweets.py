@@ -40,6 +40,7 @@ def convert_tweets_to_df(tweets:list, df=None):
                 ,'convo_group_id':[]
                 ,'tweet_id':[]
                 ,'tweet_text':[]
+                ,'tweet_place':[]
                 ,'reply_to_status':[]
                 ,'quoted_status':[]
                 ,'created_at':[]
@@ -69,6 +70,10 @@ def convert_tweets_to_df(tweets:list, df=None):
             statuses_list['user_place'].append(tweet['user']['place'])
         except KeyError:
             statuses_list['user_place'].append('')
+        try:    
+            statuses_list['tweet_place'].append(tweet['place'])
+        except KeyError:
+            statuses_list['tweet_place'].append('')
         statuses_list['user_id'].append(tweet['user']['id_str'])
         statuses_list['user_screen_name'].append(tweet['user']['screen_name'])
         try:

@@ -63,17 +63,67 @@ where ward_name = 'Ward 8';
 
 select * from inner join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,70)
 
+select * from source_data.intersection_points
+where fullintersection in ('NEW YORK AVENUE NE AND FLORIDA AVENUE NE','FLORIDA AVENUE NE AND NEW YORK AVENUE NE')
+
+create table tmp.anc_boundaries as (SELECT anc_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.anc_boundaries);
+CREATE INDEX geom_idx ON tmp.anc_boundaries USING GIST (geography);
+create table tmp.neighborhood_clusters as (SELECT name, nbh_names, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.neighborhood_clusters);
+CREATE INDEX nbh_geom_idx ON tmp.neighborhood_clusters USING GIST (geography);
+create table tmp.smd_boundaries as (SELECT smd_id, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.smd_boundaries);
+CREATE INDEX smd_geom_idx ON tmp.smd_boundaries USING GIST (geography);
+create table tmp.ward_boundaries as (SELECT name, ST_SUBDIVIDE(geography::geometry) geography FROM source_data.ward_boundaries);
+CREATE INDEX ward_geom_idx ON tmp.ward_boundaries USING GIST (geography);
+
+CREATE INDEX crashes_geom_idx
+  ON tmp.crashes_join
+  USING GIST (geography);
+
+DROP TABLE IF EXISTS tmp.crashes_nbh_ward;
+CREATE TABLE tmp.crashes_nbh_ward 
+AS (
+SELECT 
+	c.anc_id
+	,c.geography as anc_boundary
+	,d.name as nbh_cluster
+	,d.nbh_names as nbh_cluster_names
+	,d.geography as nbh_cluster_boundary
+	,e.smd_id
+	,e.geography as smd_boundary
+	,f.name as ward_name 
+	,f.geography as ward_boundary
+    ,ROW_NUMBER() OVER (PARTITION BY a.objectid) as crash_row_num
+	,a.*
+FROM tmp.crashes_join a
+LEFT JOIN tmp.anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
+LEFT JOIN tmp.ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
+) 
+--finally returned in 6 minutes after putting damn indexes on everything...
+
 select count(*) from analysis_data.all311
 --6155
 select count(*) from source_data.all311
 select * from source_data.intersection_points limit 100;
 drop table if exists all311_intersections;
 create temp table  all311_intersections ON COMMIT PRESERVE ROWS AS (
-select a.*, b.block_name , c.fullintersection, row_number() over (partition by a.objectid) as row_num
+select distinct a.*
+	--, --b.block_name --
+	, c.fullintersection
+	, row_number() over (partition by a.objectid) as row_num
 	from analysis_data.all311  a
-left join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,10)
+--left join source_data.roadway_blocks b on ST_DWithin(ST_Force2D(b.geometry::geometry)::geography,a.geography,10)
 left join source_data.intersection_points c on ST_DWithin(c.geography,a.geography,10)
 ) WITH DATA;
+--10045
+
+select * from all311_intersections order by objectid, row_num
+
+select fullintersection, count(distinct objectid) as num_requests
+from all311_intersections
+group by fullintersection
+order by 2 desc 
 
 --Add ward, neighborhood cluster, ANC, SMD, and assessment neighborhood to TSA requests
 DROP TABLE IF EXISTS all311_w_neighborhood;

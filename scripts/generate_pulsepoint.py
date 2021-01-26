@@ -19,6 +19,8 @@ SELECT
     ,CALL_RECEIVED_DATETIME
     ,CALL_Closed_DATETIME
     ,FullDisplayAddress
+    ,longitude
+    ,latitude
     ,Incident_Type
     ,Unit
     ,Unit_Status_Transport
@@ -34,6 +36,8 @@ FROM (
         ,CALL_RECEIVED_DATETIME
         ,CALL_Closed_DATETIME
         ,FullDisplayAddress
+        ,longitude
+        ,latitude
         ,Incident_Type
         ,Unit
         ,MAX(Unit_Status_Transport) over (Partition by Incident_ID) as Unit_Status_Transport
