@@ -2,7 +2,7 @@ from connect_to_rds import create_postgres_engine
 import sqlalchemy
 
 def generate_table(engine, target_schema:str, target_table:str,mode:str):
-    
+
     schema_query = """
         CREATE SCHEMA IF NOT EXISTS {0};
         GRANT ALL PRIVILEGES ON SCHEMA {0} TO PUBLIC;
@@ -23,18 +23,59 @@ def generate_table(engine, target_schema:str, target_table:str,mode:str):
         TRUNCATE {}.{};
     """.format(target_schema, target_table)
 
+    # always run the create schema query
     engine.execute(schema_query)
+    # depending on mode, either drop or truncate target table
     if mode.lower()=='replace':
         engine.execute(drop_table_query)
     if mode.lower()=='truncate':
         engine.execute(truncate_table_query)
+    # always run the create table query 
     engine.execute(create_table_query)
+    
+def correct_geo(engine, target_schema:str, target_table:str,mode:str):
 
+    # check whether the target table has a geography field
+    check_geo_field_query = """
+    SELECT CASE WHEN EXISTS
+	(SELECT 1 from information_schema.columns WHERE table_schema = '{}' AND table_name = '{}' AND column_name = 'geography') 
+	THEN 1 ELSE 0 END
+    """.format(target_schema, target_table)
+
+    create_geo_index_query = """
+        DROP INDEX IF EXISTS {0};
+        CREATE INDEX {0}
+        ON {1}.{2}
+        USING GIST (geography);
+    """.format(target_table+'_index',target_schema, target_table)
+
+    update_geography_query = """
+    UPDATE {}.{}  SET geography=ST_Force2D(geography::geometry)::geography
+    """.format(target_schema, target_table)
+
+    # check to see if table has a geography field, if yes, make sure it's the right format and create an index
+    geo_field_exists = engine.execute(check_geo_field_query).fetchone()[0]
+    if geo_field_exists==1:
+        engine.execute(update_geography_query)
+        engine.execute(create_geo_index_query)
 
 def get_table_definition(target_table:str):
 
     data_model_dict = {
-        'acs_housing_2011_2015':"""
+        'acs_2019_by_tract': """
+                NAME VARCHAR NULL
+                ,total_pop NUMERIC NULL
+                ,total_households NUMERIC NULL
+                ,total_households_w_no_vehicle NUMERIC NULL
+                ,total_households_w_1_vehicles NUMERIC NULL
+                ,total_households_w_2_vehicles NUMERIC NULL
+                ,total_households_w_3_vehicles NUMERIC NULL
+                ,total_households_w_4plus_vehicles NUMERIC NULL
+                ,state VARCHAR NULL
+                ,county VARCHAR NULL
+                ,tract VARCHAR NULL
+        """
+        ,'acs_housing_2011_2015':"""
             OBJECTID VARCHAR PRIMARY KEY
             ,COMP_PLAN_AREA VARCHAR NULL
             ,HOUSING_TOTAL_UNITS NUMERIC NULL
@@ -173,7 +214,7 @@ def get_table_definition(target_table:str):
             ,GRAPI_OC_PAY_RENT_30_TO_34_9P NUMERIC NULL
             ,GRAPI_OC_PAY_RENT_35_MORE NUMERIC NULL
             ,GRAPI_OCCUP_HU_NOT_COMPUT NUMERIC NULL
-            ,geometry geography null
+            ,geography geography null
         """
         ,'address_points':"""
             OBJECTID_12 VARCHAR PRIMARY KEY
@@ -338,6 +379,76 @@ def get_table_definition(target_table:str):
             ,SQMILES VARCHAR NULL
             ,geography geography null
     """
+    ,'census_tracts':"""
+        OBJECTID VARCHAR PRIMARY KEY
+        ,TRACT VARCHAR NULL
+        ,GEOID VARCHAR NULL
+        ,total_pop NUMERIC NULL
+        ,total_pop_1_race NUMERIC NULL
+        ,total_pop_1_race_white NUMERIC NULL
+        ,total_pop_1_race_black NUMERIC NULL
+        ,total_pop_1_race_native NUMERIC NULL
+        ,total_pop_1_race_asian NUMERIC NULL
+        ,total_pop_1_race_pacific_islander NUMERIC NULL
+        ,total_pop_1_race_other NUMERIC NULL
+        ,total_pop_2_races_black_and NUMERIC NULL
+        ,total_pop_2_races_native_and NUMERIC NULL
+        ,total_pop_2_races_asian_and NUMERIC NULL
+        ,total_pop_2_races_pacific_islander_and NUMERIC NULL
+        ,total_pop_hispanic NUMERIC NULL
+        ,pop_non_hispanic_white NUMERIC NULL
+        ,pop_non_hispanic_black NUMERIC NULL
+        ,pop_non_hispanic_native NUMERIC NULL
+        ,pop_non_hispanic_asian NUMERIC NULL
+        ,pop_non_hispanic_pacific_islander NUMERIC NULL
+        ,pop_non_hispanic_other NUMERIC NULL
+        ,pop_non_hispanic_2_races_black_and NUMERIC NULL
+        ,pop_non_hispanic_2_races_native_and NUMERIC NULL
+        ,pop_non_hispanic_2_races_asian_and NUMERIC NULL
+        ,pop_non_hispanic_2_races_pacific_islander_and NUMERIC NULL
+        ,total_pop_over_18 NUMERIC NULL
+        ,total_pop_over_18_white NUMERIC NULL
+        ,total_pop_over_18_black NUMERIC NULL
+        ,total_pop_over_18_native NUMERIC NULL
+        ,total_pop_over_18_asian NUMERIC NULL
+        ,total_pop_over_18_pacific_islander NUMERIC NULL
+        ,total_pop_over_18_other NUMERIC NULL
+        ,pop_over_18_black_and NUMERIC NULL
+        ,pop_over_18_native_and NUMERIC NULL
+        ,pop_over_18_asian_and NUMERIC NULL
+        ,pop_over_18_pacific_islander_and NUMERIC NULL
+        ,hispanic_pop_over_18 NUMERIC NULL
+        ,non_hispanic_white_pop_over_18 NUMERIC NULL
+        ,non_hispanic_black_pop_over_18 NUMERIC NULL
+        ,non_hispanic_native_pop_over_18 NUMERIC NULL
+        ,non_hispanic_asian_pop_over_18 NUMERIC NULL
+        ,non_hispanic_pacific_islander_pop_over_18 NUMERIC NULL
+        ,non_hispanic_other_race_pop_over_18 NUMERIC NULL
+        ,OP000013 NUMERIC NULL
+        ,OP000014 NUMERIC NULL
+        ,OP000015 NUMERIC NULL
+        ,OP000016 NUMERIC NULL
+        ,total_housing_units NUMERIC NULL
+        ,occupied_housing_units NUMERIC NULL
+        ,vacant_housing_units NUMERIC NULL
+        ,ACRES NUMERIC NULL
+        ,SQ_MILES NUMERIC NULL
+        ,Shape_Length NUMERIC NULL
+        ,Shape_Area NUMERIC NULL
+        ,FAGI_TOTAL_2010 NUMERIC NULL
+        ,FAGI_MEDIAN_2010 NUMERIC NULL
+        ,FAGI_TOTAL_2013 NUMERIC NULL
+        ,FAGI_MEDIAN_2013 NUMERIC NULL
+        ,FAGI_TOTAL_2011 NUMERIC NULL
+        ,FAGI_MEDIAN_2011 NUMERIC NULL
+        ,FAGI_TOTAL_2012 NUMERIC NULL
+        ,FAGI_MEDIAN_2012 NUMERIC NULL
+        ,FAGI_TOTAL_2014 NUMERIC NULL
+        ,FAGI_MEDIAN_2014 NUMERIC NULL
+        ,FAGI_TOTAL_2015 NUMERIC NULL
+        ,FAGI_MEDIAN_2015 NUMERIC NULL
+        ,geography geography
+"""
     ,'charter_schools':"""
             OBJECTID VARCHAR NULL
             ,NAME VARCHAR NULL
@@ -495,7 +606,7 @@ def get_table_definition(target_table:str):
             ,AREA NUMERIC NULL
             ,SHAPE_Length NUMERIC NULL
             ,SHAPE_Area NUMERIC NULL
-            ,geometry geography null
+            ,geography geography null
     """
     ,'crash_details':"""
             OBJECTID VARCHAR PRIMARY KEY
@@ -577,7 +688,21 @@ def get_table_definition(target_table:str):
             ,UNKNOWNINJURIESPASSENGER INT NULL
             ,geography geography null
             """
-    ,'intersection_points':"""
+        ,'dc_metro_stations':"""
+                OBJECTID VARCHAR PRIMARY KEY
+                ,GIS_ID VARCHAR NULL
+                ,NAME VARCHAR NULL
+                ,WEB_URL VARCHAR NULL
+                ,EXIT_TO_STREET VARCHAR NULL
+                ,FEATURECOD VARCHAR NULL
+                ,DESCRIPTION VARCHAR NULL
+                ,CAPTUREYEAR TIMESTAMPTZ NULL
+                ,LINE VARCHAR NULL
+                ,ADDRESS_ID VARCHAR NULL
+                ,ADDRESS VARCHAR NULL
+                ,geography geography null
+        """
+        ,'intersection_points':"""
             OBJECTID VARCHAR PRIMARY KEY
             ,MARID VARCHAR NULL
             ,INTERSECTIONID VARCHAR NULL
@@ -603,6 +728,55 @@ def get_table_definition(target_table:str):
             ,LATITUDE NUMERIC NULL
             ,LONGITUDE NUMERIC NULL
             ,geography geography
+    """
+    ,'metro_stations_daily_ridership':"""
+            OBJECTID VARCHAR PRIMARY KEY
+            ,Station VARCHAR NULL
+            ,StationNumber VARCHAR NULL
+            ,y1977 NUMERIC NULL
+            ,y1978 NUMERIC NULL
+            ,y1979 NUMERIC NULL
+            ,y1980 NUMERIC NULL
+            ,y1981 NUMERIC NULL
+            ,y1982 NUMERIC NULL
+            ,y1984 NUMERIC NULL
+            ,y1985 NUMERIC NULL
+            ,y1986 NUMERIC NULL
+            ,y1987 NUMERIC NULL
+            ,y1988 NUMERIC NULL
+            ,y1989 NUMERIC NULL
+            ,y1990 NUMERIC NULL
+            ,y1991 NUMERIC NULL
+            ,y1992 NUMERIC NULL
+            ,y1993 NUMERIC NULL
+            ,y1994 NUMERIC NULL
+            ,y1995 NUMERIC NULL
+            ,y1996 NUMERIC NULL
+            ,y1997 NUMERIC NULL
+            ,y1998 NUMERIC NULL
+            ,y1999 NUMERIC NULL
+            ,y2000 NUMERIC NULL
+            ,y2001 NUMERIC NULL
+            ,y2002 NUMERIC NULL
+            ,y2003 NUMERIC NULL
+            ,y2004 NUMERIC NULL
+            ,y2005 NUMERIC NULL
+            ,y2006 NUMERIC NULL
+            ,y2007 NUMERIC NULL
+            ,y2008 NUMERIC NULL
+            ,y2009 NUMERIC NULL
+            ,y2010 NUMERIC NULL
+            ,y2011 NUMERIC NULL
+            ,y2012 NUMERIC NULL
+            ,y2013 NUMERIC NULL
+            ,y2014 NUMERIC NULL
+            ,y2015 NUMERIC NULL
+            ,y2016 NUMERIC NULL
+            ,y2017 NUMERIC NULL
+            ,y2018 NUMERIC NULL
+            ,XCOORD VARCHAR NULL
+            ,YCOORD VARCHAR NULL
+            ,geography geography null
     """
     ,'moving_violations': """
             OBJECTID VARCHAR NULL
@@ -731,8 +905,6 @@ def get_table_definition(target_table:str):
             ,BIEKLANE_DUAL_BUFFERED VARCHAR NULL
             ,BIKELANE_PROTECTED VARCHAR NULL
             ,BIKELANE_BUFFERED VARCHAR NULL
-            ,RIGHTTURN_EXCLUSIVE VARCHAR NULL
-            ,LEFTTURN_EXCLUSIVE VARCHAR NULL
             ,DOUBLEYELLOW_LINE VARCHAR NULL
             ,SECTIONFLAGS VARCHAR NULL
             ,LOC_ERROR VARCHAR NULL
@@ -818,8 +990,6 @@ def get_table_definition(target_table:str):
             ,BIKELANE_DUAL_BUFFERED VARCHAR NULL
             ,BIKELANE_PROTECTED VARCHAR NULL
             ,BIKELANE_BUFFERED VARCHAR NULL
-            ,RIGHTTURN_EXCLUSIVE VARCHAR NULL
-            ,LEFTTURN_EXCLUSIVE VARCHAR NULL
             ,DOUBLEYELLOW_LINE VARCHAR NULL
             ,SECTIONFLAGS VARCHAR NULL
             ,LOC_ERROR VARCHAR NULL
@@ -866,9 +1036,10 @@ def get_table_definition(target_table:str):
             ,RPPDIRECTION VARCHAR NULL
             ,RPPSIDE VARCHAR NULL
             ,SLOWSTREETINFO VARCHAR NULL
-            ,SHAPELEN NUMERIC NULL
             ,TOTALRAISEDBUFFERWIDTH VARCHAR NULL
             ,AADT_YEAR NUMERIC NULL
+            ,SHAPELEN NUMERIC NULL
+            ,SHAPE VARCHAR NULL
             ,geography geography null
     """
     ,'roadway_blockface':"""
@@ -912,8 +1083,6 @@ def get_table_definition(target_table:str):
             ,BIKELANE_DUAL_BUFFERED VARCHAR NUll
             ,BIKELANE_PROTECTED VARCHAR NUll
             ,BIKELANE_BUFFERED VARCHAR NUll
-            ,RIGHTTURN_EXCLUSIVE VARCHAR NUll
-            ,LEFTTURN_EXCLUSIVE VARCHAR NUll
             ,DOUBLEYELLOW_LINE VARCHAR NUll
             ,SECTIONFLAGS VARCHAR NUll
             ,LOC_ERROR VARCHAR NUll

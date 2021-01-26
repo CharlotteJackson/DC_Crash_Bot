@@ -1,9 +1,7 @@
-import geopandas as gpd
-import pandas as pd
 import boto3
 import os
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from rds_data_model import generate_table
+from rds_data_model import generate_table, correct_geo
 import subprocess
 import sys
 import argparse
@@ -74,6 +72,9 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
             print("please provide move-to folder")
             continue
 
+    # after data is loaded, update the geographies
+    for (target_schema, target_table) in target_tables:
+        correct_geo(engine=engine, target_schema=target_schema,target_table=target_table,mode=mode)
         
 # set up ability to call with lists from the command line as follows:
 # python s3_to_postgis.py --folders source-data/dc-open-data/crashes_raw/ source-data/dc-open-data/crash_details/ source-data/dc-open-data/vision_zero/ --format csv --mode replace --header true

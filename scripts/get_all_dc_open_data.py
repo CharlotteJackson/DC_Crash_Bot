@@ -63,6 +63,12 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             ,'prefix' :'source-data/dc-open-data/census_blocks/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'census_blocks',"dataset_info":"https://opendata.dc.gov/datasets/census-blocks-2010"}
         }
+        ,'census_tracts':{
+            'url': [('complete','https://opendata.arcgis.com/datasets/6969dd63c5cb4d6aa32f15effb8311f3_8.geojson')]
+            ,'prefix' :'source-data/dc-open-data/census_tracts/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'census_tracts',"dataset_info":"https://opendata.dc.gov/datasets/census-tracts-in-2010"}
+
+        }
         ,'charter_schools' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/a3832935b1d644e48c887e6ec5a65fcd_1.geojson')]
             ,'prefix' :'source-data/dc-open-data/charter_schools/'
@@ -98,10 +104,22 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'crash_details',"dataset_info":"https://opendata.dc.gov/datasets/crash-details-table"}
             
         }
+        ,'dc_metro_stations' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/ab5661e1a4d74a338ee51cd9533ac787_50.geojson')]
+            ,'prefix' :'source-data/dc-open-data/dc_metro_stations/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'dc_metro_stations',"dataset_info":"https://opendata.dc.gov/datasets/metro-station-entrances-in-dc"}
+            
+        }
         ,'intersection_points' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/96a9bbbb475648769e311d03c78698a7_2.geojson')]
             ,'prefix' :'source-data/dc-open-data/intersection_points/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'intersection_points',"dataset_info":"https://opendata.dc.gov/datasets/intersection-points"}
+            
+        }
+        ,'metro_stations_daily_ridership': {
+            'url': [('complete','https://opendata.arcgis.com/datasets/3982795643fa45598a2fa472afbbea69_6.geojson')]
+            ,'prefix' :'source-data/dc-open-data/metro_stations_daily_ridership/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'metro_stations_daily_ridership',"dataset_info":"https://rtdc-mwcog.opendata.arcgis.com/datasets/metro-rail-ridership-historical"}
             
         }
 
