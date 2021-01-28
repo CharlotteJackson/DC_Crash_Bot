@@ -1,17 +1,15 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from add_location_info import add_location_info
-from add_school_info import add_school_info
+from add_location_info import add_location_info, add_school_info, add_roadway_info, create_final_table
 
+# create database connection
 dbname='postgres'
 env="DEV"
 engine = create_postgres_engine(destination="AWS_PostGIS", target_db=dbname, env=env)
 db_credentials = get_connection_strings("AWS_PostGIS")
 
 
-target_schema = 'analysis_data'
-target_table='dc_crashes_w_details'
-
+# The queries that are specific to the crash data and are not run anywhere else
 add_columns_query ="""
 DROP TABLE IF EXISTS tmp.crash_details;
 CREATE TABLE tmp.crash_details 
@@ -23,7 +21,7 @@ AS (
         ,CASE WHEN PERSONTYPE = 'Pedestrian' AND AGE <=12 THEN 1 ELSE 0 END AS PEDS_UNDER_12
         ,CASE WHEN PERSONTYPE = 'Bicyclist' AND AGE >=70 THEN 1 ELSE 0 END AS BIKERS_OVER_70
         ,CASE WHEN PERSONTYPE = 'Bicyclist' AND AGE <=18 THEN 1 ELSE 0 END AS BIKERS_UNDER_18
-        ,CASE WHEN PERSONTYPE = 'Driver' AND LICENSEPLATESTATE <> 'DC' THEN 1 ELSE 0 END AS OOS_VEHICLES
+        ,CASE WHEN PERSONTYPE = 'Driver' AND LICENSEPLATESTATE <> 'DC' AND LICENSEPLATESTATE <> ' None' THEN 1 ELSE 0 END AS OOS_VEHICLES
         ,CASE WHEN PERSONTYPE = 'Driver' AND INVEHICLETYPE = 'Passenger Car/automobile' THEN 1 ELSE 0 END AS NUM_CARS
         ,CASE WHEN PERSONTYPE = 'Driver' AND INVEHICLETYPE in ('Suv (sport Utility Vehicle)', 'Pickup Truck') THEN 1 ELSE 0 END AS NUM_SUVS_OR_TRUCKS
 
@@ -178,54 +176,20 @@ AS (
 CREATE INDEX crashes_geom_idx ON tmp.crashes_join USING GIST (geography);
 """
 
-roadway_info_query="""
-        DROP TABLE IF EXISTS tmp.crashes_roadways;
-        CREATE TABLE tmp.crashes_roadways
-        AS (
-            SELECT DISTINCT a.*
-            ,ROW_NUMBER() over (partition by a.objectid order by ST_Distance(a.geography,b.geography)) as row_num
-            ,ST_Distance(a.geography,b.geography) AS distance_to_nearest_block
-            ,b.totaltravellanes
-            ,b.totalcrosssectionwidth
-            ,b.totalparkinglanes
-            ,b.doubleyellow_line
-            ,case 
-                when b.sidewalk_ib_pavtype is not null and b.sidewalk_ob_pavtype is not null then 2
-                when b.sidewalk_ib_pavtype is not null or b.sidewalk_ob_pavtype is not null then 1
-                else 0 end as Num_Sides_W_Sidewalks
-            ,coalesce(b.sidewalk_ib_width, b.sidewalk_ob_width) as sidewalk_width
-            ,coalesce(b.speedlimits_ib, b.speedlimits_ob) as speed_limit
-            ,b.dcfunctionalclass
-            ,b.nhstype
-            FROM tmp.crashes_schools a
-            LEFT JOIN source_data.roadway_blocks b on ST_DWithin(b.geography, a.geography,0.001)
-        ) ;
-        DELETE FROM tmp.crashes_roadways WHERE row_num >1;
-
-        ALTER TABLE tmp.crashes_roadways DROP COLUMN row_num;
-
-    """
-
-final_query="""
-DROP TABLE IF EXISTS {0}.{1};
-
-CREATE TABLE {0}.{1} AS 
-    SELECT * FROM tmp.crashes_roadways;
-CREATE INDEX crashesfinal_geom_idx ON {0}.{1} USING GIST (geography);
-GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
-""".format(target_schema, target_table)
-
+# First execute the table-specific queries
 engine.execute(add_columns_query)
 print("add columns query complete")
 engine.execute(group_by_query)
 print("group by query complete")
 engine.execute(join_query)
 print("join query complete")
-add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crashes_join', partition_by_field='objectid')
+
+# Then execute the same location-info queries (roadway, schools, neighborhoods) that apply to all analysis tables and create the final table
+next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crashes_join', partition_by_field='objectid')
 print("neighborhood-ward query complete")
-add_school_info(engine=engine, target_schema='tmp', target_table='crashes_schools', from_schema='tmp', from_table='crashes_nbh_ward')
+next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='crashes_schools', from_schema=next_tables[0], from_table=next_tables[1])
 print("schools query complete")
-engine.execute(roadway_info_query)
+next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='crashes_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 0.001)
 print("roadway info query complete")
-engine.execute(final_query)
-print("final query complete")
+row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='dc_crashes_w_details', from_schema=next_tables[0], from_table=next_tables[1])
+print("final query complete with row count ",row_count)

@@ -16,23 +16,32 @@ region= AWS_Credentials['region']
 prefix = 'source-data/pulsepoint/unparsed/'
 metadata = {'target_schema':'tmp', "dataset_info":"https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6"}
 dataset = 'pulsepoint'
-current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00")
 
+def main(agency:str):
 
-def main():
+    url = "https://web.pulsepoint.org/DB/giba.php?agency_id={}".format(agency)
 
-    data = pulse.get_data()
+    current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00")
+
+    data = pulse.get_data(url)
 
     data['scrape_datetime']=current_time
+
+    data['Agency_ID']=agency
 
     record_status_types = [i for i in data['incidents'].keys() if i != 'alerts']
 
     for status in record_status_types:
         data['incidents'][status] = [i for i in data['incidents'][status] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE", "TCS"]]
 
+    # create file key variable
+    s3_key = prefix+dataset+current_time+agency+'.json'
     # upload to S3 so we have the raw data for every pull
     upload = json.dumps(data)
-    s3_resource.Bucket(bucket_name).put_object(Key=prefix+dataset+current_time+'.json', Body=upload, Metadata =metadata)
+    s3_resource.Bucket(bucket_name).put_object(Key=s3_key, Body=upload, Metadata =metadata)
 
 if __name__ == "__main__":
-    main()
+    main('EMS1205')
+    main('05900')
+    main('16000')
+

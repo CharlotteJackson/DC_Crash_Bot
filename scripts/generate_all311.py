@@ -15,9 +15,15 @@ filter_query="""
 DROP TABLE IF EXISTS tmp.all311_filtered;
 CREATE TABLE tmp.all311_filtered 
 AS (
-SELECT *
-FROM source_data.all311
-WHERE servicecode in (\'MARKMAIN\', \'MARKMODI\', \'MARKINST\',   \'S0376\',\'SAROTOSC\', \'SCCRGUPR\', \'SPSTDAMA\')
+SELECT DISTINCT a.*
+    ,b.objectid as csr_objectid
+	,b.status as csr_status
+	,c.objectid as cwo_objectid
+	,c.status as cwo_status
+FROM source_data.all311 a
+LEFT JOIN source_data.cityworks_service_requests b on a.servicerequestid = b.csrnumber
+LEFT JOIN source_data.cityworks_work_orders c on b.workorderid = c.workorderid
+WHERE a.servicecode in (\'MARKMAIN\', \'MARKMODI\', \'MARKINST\',   \'S0376\',\'SAROTOSC\', \'SCCRGUPR\', \'SPSTDAMA\')
 ) 
 """
 

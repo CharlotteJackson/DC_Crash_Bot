@@ -18,7 +18,8 @@ bucket_name = AWS_Credentials['s3_bucket']
 region=AWS_Credentials['region']
 metadata = {'target_schema':'source_data', 'target_table':'pulsepoint_stream',"dataset_info":"https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6"}
 bucket = s3_resource.Bucket(bucket_name)
-client=boto3.client('s3')
+client=boto3.client('s3',aws_access_key_id=AWS_Credentials['aws_access_key_id']
+    ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
 
 
 # define function to get flag whether any responding units have a status of transport or transport arrived
@@ -61,6 +62,7 @@ def parse_pulsepoint(file_name:str, api_response:dict):
             ,'Unit_Status_Transport':[]
             ,'Transport_Unit_Is_AMR':[]
             ,'Transport_Unit_Is_Non_AMR':[]
+            ,'Agency_ID':[]
     }
     ######## start: handle the scrape datetime disaster ######## 
     if 'scrape_datetime' in api_response.keys():
@@ -94,12 +96,18 @@ def parse_pulsepoint(file_name:str, api_response:dict):
     # get all record status types
     record_status_types = [i for i in api_response['incidents'].keys() if i != 'alerts']
 
+    # set agency id
+    try:
+        Agency_ID = api_response['Agency_ID']
+    except:
+        Agency_ID = 'EMS1205'
     # parse into dataframe
     for status_type in record_status_types:
         if api_response['incidents'][status_type] is not None:
             records_to_load = [i for i in api_response['incidents'][status_type] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE"]]
             if records_to_load is not None and len(records_to_load)>0:
                 for record in records_to_load:
+                    col_names['Agency_ID'].append(Agency_ID)
                     col_names['Status_At_Scrape'].append(status_type)
                     col_names['Scrape_Datetime'].append(scrape_datetime)
                     col_names['Incident_ID'].append(record['ID'])
@@ -123,15 +131,15 @@ def parse_pulsepoint(file_name:str, api_response:dict):
                         col_names['Unit_Status_Transport'].append(unit_status_is_transport(record['Unit']))
                     except KeyError:
                         print("transport status key error for record ",record['ID'])
-                        col_names['Unit_Status_Transport'].append('NO')
+                        col_names['Unit_Status_Transport'].append(0)
                     try:
                         col_names['Transport_Unit_Is_AMR'].append(transport_unit_is_amr(record['Unit']))
                     except KeyError:
-                        col_names['Transport_Unit_Is_AMR'].append('NO')
+                        col_names['Transport_Unit_Is_AMR'].append(0)
                     try:
                         col_names['Transport_Unit_Is_Non_AMR'].append(transport_unit_is_non_amr(record['Unit']))
                     except KeyError:
-                        col_names['Transport_Unit_Is_Non_AMR'].append('NO')
+                        col_names['Transport_Unit_Is_Non_AMR'].append(0)
 
     df = pd.DataFrame.from_dict(col_names)
 

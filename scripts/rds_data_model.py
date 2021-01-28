@@ -875,6 +875,7 @@ def get_table_definition(target_table:str):
             ,Unit_Status_Transport INT NULL
             ,Transport_Unit_Is_AMR INT NULL
             ,Transport_Unit_Is_Non_AMR INT NULL
+            ,Agency_ID VARCHAR NULL
         """ 
     ,'roadway_blocks':"""
             OBJECTID VARCHAR PRIMARY KEY

@@ -1,14 +1,11 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from add_location_info import add_location_info
+from add_location_info import add_location_info, add_school_info, create_final_table, add_roadway_info
 
 dbname='postgres'
 env="DEV"
 engine = create_postgres_engine(destination="AWS_PostGIS", target_db=dbname, env=env)
 db_credentials = get_connection_strings("AWS_PostGIS")
-
-target_schema = 'analysis_data'
-target_table='metro_stations_ridership'
 
 step1_query ="""
 DROP TABLE IF EXISTS tmp.metro_stations_ridership;
@@ -31,20 +28,14 @@ WHERE station is not null
 )
 """
 
-final_query="""
-DROP TABLE IF EXISTS {0}.{1};
-
-CREATE TABLE {0}.{1} AS 
-    SELECT * FROM tmp.metro_stations_nbh_ward;
-
-GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
-
-CREATE INDEX {0}_{1}_index ON {0}.{1} USING GIST (geography);
-""".format(target_schema, target_table)
-
+# First execute the table-specific queries
 engine.execute(step1_query)
-print("initial query complete")
-# add all the boundaries
-add_location_info(engine=engine, target_schema='tmp', target_table='metro_stations_nbh_ward', from_schema='tmp', from_table='metro_stations_ridership', partition_by_field='objectid')
+print("step1 query complete")
+
+# Then execute the same location-info queries (roadway, schools, neighborhoods) that apply to all analysis tables and create the final table
+next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='metro_stations_ridership_nbh_ward', from_schema='tmp', from_table='metro_stations_ridership', partition_by_field='objectid')
 print("neighborhood-ward query complete")
-engine.execute(final_query)
+next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='metro_stations_ridership_schools', from_schema=next_tables[0], from_table=next_tables[1])
+print("schools query complete")
+row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='metro_stations_ridership', from_schema=next_tables[0], from_table=next_tables[1])
+print("final query complete with row count ",row_count)
