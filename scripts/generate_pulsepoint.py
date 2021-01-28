@@ -14,7 +14,8 @@ DROP TABLE IF EXISTS tmp_pulsepoint;
 CREATE TEMP TABLE tmp_pulsepoint ON COMMIT PRESERVE ROWS 
 AS ( 
 SELECT 
-    Incident_ID
+    Agency_ID
+    ,Incident_ID
     ,Scrape_Datetime
     ,CALL_RECEIVED_DATETIME
     ,CALL_Closed_DATETIME
@@ -31,7 +32,8 @@ SELECT
     ,geography
 FROM (
     SELECT 
-        Incident_ID
+        Agency_ID
+        ,Incident_ID
         ,Scrape_Datetime
         ,CALL_RECEIVED_DATETIME
         ,CALL_Closed_DATETIME
@@ -46,7 +48,7 @@ FROM (
         ,ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography as geography
         ,cast(replace(unit,'''','"') as jsonb) as Unit_JSON
         ,JSONB_ARRAY_LENGTH(cast(replace(unit,'''','"') as jsonb)::jsonb) as Num_Units_Responding
-        ,ROW_NUMBER() over (Partition by Incident_ID order by Scrape_Datetime DESC) as Time_Rank
+        ,ROW_NUMBER() over (Partition by Agency_ID, Incident_ID order by Scrape_Datetime DESC) as Time_Rank
         FROM source_data.pulsepoint_stream
     ) AS tmp
 WHERE Time_Rank = 1
