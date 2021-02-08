@@ -24,6 +24,9 @@ and details is not null
 order by servicecode, adddate
 --confsign seems to be mostly parking related
 
+select * from analysis_data.all311 where ST_DWithin(geography, (select geography from source_data.intersection_points where objectid = '3956'),100)
+order by adddate 
+
 select * from source_data.all311 --final list
 where servicecode in ('MARKMAIN', 'MARKMODI', 'MARKINST',   'S0376'
 					 ,'SAROTOSC', 'SCCRGUPR', 'SPSTDAMA')
@@ -63,6 +66,19 @@ where servicecode in ('MARKMAIN', 'MARKMODI', 'MARKINST',   'S0376','SAROTOSC', 
 group by servicecode order by count(*) desc 
 --this more than doubles the number of safety requests
 
+select * from source_data.intersection_points where st1name ilike 'MINN%' and st2name ilike 'BENN%'
+
+select * from source_data.crash_details where crimeid = '26631724'
+select * from source_data.crash_details where persontype ilike '%Driver%' and licenseplatestate not ilike '%None%'
+select * from analysis_data.dc_crashes_w_details where ST_DWithin(geography, (select geography from source_data.intersection_points where objectid = '12142'),100)
+and (total_pedestrians > 0 or total_bicyclists>0)
+
+select * from source_data.pulsepoint where ST_DWithin(geography, (select geography from source_data.intersection_points where objectid = '12142'),100)
+and (total_pedestrians > 0 or total_bicyclists>0)
+
+select * from analysis_data.all311 where ST_DWithin(geography, (select geography from source_data.intersection_points where objectid = '4159'),100)
+order by adddate 
+
 select servicecode
 	, sum(case when date_part('year', adddate) = 2015 then 1 else 0 end) as num_2015
 	, sum(case when date_part('year', adddate) = 2016 then 1 else 0 end) as num_2016
@@ -76,10 +92,30 @@ from source_data.all311
 where servicecode in ('MARKMAIN', 'MARKMODI', 'MARKINST',   'S0376','SAROTOSC', 'SCCRGUPR', 'SPSTDAMA')
 group by servicecode order by count(*) desc
 
+select case when details is null then 'no details' else 'details' end as status
+	, sum(case when date_part('year', adddate) = 2015 then 1 else 0 end) as num_2015
+	, sum(case when date_part('year', adddate) = 2016 then 1 else 0 end) as num_2016
+	, sum(case when date_part('year', adddate) = 2017 then 1 else 0 end) as num_2017
+	, sum(case when date_part('year', adddate) = 2018 then 1 else 0 end) as num_2018
+	, sum(case when date_part('year', adddate) = 2019 then 1 else 0 end) as num_2019
+	, sum(case when date_part('year', adddate) = 2020 then 1 else 0 end) as num_2020
+	, sum(case when date_part('year', adddate) = 2021 then 1 else 0 end) as num_2021
+	,count(*) as total
+from source_data.all311
+--where servicecode in ('MARKMAIN', 'MARKMODI', 'MARKINST',   'S0376','SAROTOSC', 'SCCRGUPR', 'SPSTDAMA')
+group by case when details is null then 'no details' else 'details' end order by count(*) desc
+
+
+select * from source_data.cityworks_service_requests limit 100;
+
 select ward_name, nbh_cluster_names, count(*)
 from analysis_data.all311
 group by ward_name, nbh_cluster_names
 order by count(*) desc 
+
+select * from analysis_data.all311 where details ilike '%enforce%' or details ilike '%mpd%' or details like '%police%'
+
+select * from analysis_data.roadway_blocks where routename ilike '%17TH ST NE%'
 
 select * from analysis_data.all311 where ward_name = 'Ward 8'
 order by adddate

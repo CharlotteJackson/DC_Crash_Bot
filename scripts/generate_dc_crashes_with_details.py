@@ -1,6 +1,6 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from add_location_info import add_location_info, add_school_info, add_roadway_info, create_final_table
+from add_location_info import add_location_info, add_school_info, add_roadway_info, add_intersection_info, create_final_table
 
 # create database connection
 dbname='postgres'
@@ -15,11 +15,11 @@ DROP TABLE IF EXISTS tmp.crash_details;
 CREATE TABLE tmp.crash_details 
 AS (
     SELECT *
-        ,CASE WHEN PERSONTYPE = 'Driver' AND AGE >=80 THEN 1 ELSE 0 END AS DRIVERS_OVER_80
+        ,CASE WHEN PERSONTYPE = 'Driver' AND AGE >=65 THEN 1 ELSE 0 END AS DRIVERS_OVER_65
         ,CASE WHEN PERSONTYPE = 'Driver' AND AGE <=25 THEN 1 ELSE 0 END AS DRIVERS_UNDER_25
-        ,CASE WHEN PERSONTYPE = 'Pedestrian' AND AGE >=80 THEN 1 ELSE 0 END AS PEDS_OVER_80
+        ,CASE WHEN PERSONTYPE = 'Pedestrian' AND AGE >=65 THEN 1 ELSE 0 END AS PEDS_OVER_65
         ,CASE WHEN PERSONTYPE = 'Pedestrian' AND AGE <=12 THEN 1 ELSE 0 END AS PEDS_UNDER_12
-        ,CASE WHEN PERSONTYPE = 'Bicyclist' AND AGE >=70 THEN 1 ELSE 0 END AS BIKERS_OVER_70
+        ,CASE WHEN PERSONTYPE = 'Bicyclist' AND AGE >=65 THEN 1 ELSE 0 END AS BIKERS_OVER_65
         ,CASE WHEN PERSONTYPE = 'Bicyclist' AND AGE <=18 THEN 1 ELSE 0 END AS BIKERS_UNDER_18
         ,CASE WHEN PERSONTYPE = 'Driver' AND LICENSEPLATESTATE <> 'DC' AND LICENSEPLATESTATE <> ' None' THEN 1 ELSE 0 END AS OOS_VEHICLES
         ,CASE WHEN PERSONTYPE = 'Driver' AND INVEHICLETYPE = 'Passenger Car/automobile' THEN 1 ELSE 0 END AS NUM_CARS
@@ -54,11 +54,11 @@ CREATE  TABLE tmp.crash_details_agg
 AS (
     SELECT 
         CRIMEID
-        ,SUM(DRIVERS_OVER_80) AS DRIVERS_OVER_80
+        ,SUM(DRIVERS_OVER_65) AS DRIVERS_OVER_65
         ,SUM(DRIVERS_UNDER_25) AS DRIVERS_UNDER_25
-        ,SUM(PEDS_OVER_80) AS PEDS_OVER_80
+        ,SUM(PEDS_OVER_65) AS PEDS_OVER_65
         ,SUM(PEDS_UNDER_12) AS PEDS_UNDER_12
-        ,SUM(BIKERS_OVER_70) AS BIKERS_OVER_70
+        ,SUM(BIKERS_OVER_65) AS BIKERS_OVER_65
         ,SUM(BIKERS_UNDER_18) AS BIKERS_UNDER_18
         ,SUM(OOS_VEHICLES) AS OOS_VEHICLES
         ,SUM(NUM_CARS) AS NUM_CARS
@@ -148,11 +148,11 @@ AS (
             ,CASE WHEN b.CRIMEID IS NULL or b.TOTAL_VEHICLES < a.TOTAL_VEHICLES THEN a.TOTAL_VEHICLES ELSE b.TOTAL_VEHICLES END AS TOTAL_VEHICLES 
             ,CASE WHEN b.CRIMEID IS NULL or b.TOTAL_BICYCLISTS < a.TOTAL_BICYCLES THEN a.TOTAL_BICYCLES ELSE b.TOTAL_BICYCLISTS END AS TOTAL_BICYCLISTS 
             ,CASE WHEN b.CRIMEID IS NULL or b.TOTAL_PEDESTRIANS < a.TOTAL_PEDESTRIANS THEN a.TOTAL_PEDESTRIANS ELSE b.TOTAL_PEDESTRIANS END AS TOTAL_PEDESTRIANS 
-            ,b.DRIVERS_OVER_80
+            ,b.DRIVERS_OVER_65
             ,b.DRIVERS_UNDER_25
-            ,b.PEDS_OVER_80
+            ,b.PEDS_OVER_65
             ,b.PEDS_UNDER_12
-            ,b.BIKERS_OVER_70
+            ,b.BIKERS_OVER_65
             ,b.BIKERS_UNDER_18
             ,b.OOS_VEHICLES
             ,b.NUM_CARS
@@ -191,5 +191,7 @@ next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='
 print("schools query complete")
 next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='crashes_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 0.001)
 print("roadway info query complete")
+next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='crashes_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 10)
+print("intersection info query complete")
 row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='dc_crashes_w_details', from_schema=next_tables[0], from_table=next_tables[1])
 print("final query complete with row count ",row_count)

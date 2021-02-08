@@ -18,6 +18,8 @@ select *,ST_Force2D(geometry::geometry)::geography
 from  source_data.roadway_intersection_approach
 where intersectionid = '12000602_12042442'
 
+
+
 drop table if exists intersection_polygons;
 create temp table intersection_polygons on commit preserve rows as (
 select intersectionid, array_agg(distinct routename) as int_name, ST_ConcaveHull(ST_Collect(ST_Force2D(geometry)), 0.99)::geography AS geography
@@ -30,6 +32,15 @@ select * from source_data.crash_details limit 100;
 select * from source_data.crashes_raw 
 where speeding_involved>0 and date_part('year', reportdate)>=2015
 limit 100;
+
+--roadway blocks
+drop table if exists h_st_blocks;
+create temp table h_st_blocks on commit preserve rows as (
+select distinct a.* 
+from analysis_data.roadway_blocks a
+where  a.routename in ('H ST NE') 
+and ST_DWithin(a.geography::geography, '0101000020E6100000030F554C994053C029DFF3583A734340'::geography,2305)
+) with data;
 
 --crashes
 drop table if exists h_st_crashes;

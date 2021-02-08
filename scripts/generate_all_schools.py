@@ -18,7 +18,7 @@ AS (
         ,name as school_name 
         ,case when left(grades,3) in('PK3','PK4', '1st', '4th') then 1 else 0 end as ES 
         ,case when left(grades,3) in ('6th', '7th', '8th') then 1 else 0 end as MS 
-        ,case when left(grades,3) in ('9th','10th','11th','12th') or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
+        ,case when left(grades,3) = '9th' or left(grades,4) in ('10th','11th','12th') or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
         ,geography
     from source_data.public_schools
     UNION ALL
@@ -29,7 +29,7 @@ AS (
         ,name as school_name 
         ,case when left(grades,3) in('PK3','PK4', '1st', '4th') then 1 else 0 end as ES 
         ,case when left(grades,3) in ('6th', '7th', '8th') then 1 else 0 end as MS 
-        ,case when left(grades,3) in ('9th','10th','11th','12th') or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
+        ,case when left(grades,3) = '9th' or left(grades,4) in ('10th','11th','12th') or grades ='Adult' or grades ='Alternative' then 1 else 0 end as HS
         ,geography
     from source_data.charter_schools
 ) ;
