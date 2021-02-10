@@ -13,10 +13,10 @@ class GeoLoc:
     def GetGeoLoc(self, test_address):
         url = "https://maps.googleapis.com/maps/api/geocode/json?address={final_address}&key={GOOGLE_KEY}".format(
             final_address=test_address, GOOGLE_KEY=self.google_key)
-        print(url)
+        # print(url)
 
         r = requests.get(url)
-        print(r.json())
+        # print(r.json())
         return r.json()['results'][0]['geometry']['location']
 
 

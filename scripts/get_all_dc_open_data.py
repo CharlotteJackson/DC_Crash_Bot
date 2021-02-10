@@ -125,7 +125,8 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
 
         ,'moving_violations' : {
             'url': [ #2020
-                    ('2020_11','https://opendata.arcgis.com/datasets/b3a187d6f91c41c38f4a1e24f9d2cdfc_10.geojson')
+                    ('2020_12','https://opendata.arcgis.com/datasets/0b0b44b8e92f48948b3d9be49e605b77_11.geojson')
+                    ,('2020_11','https://opendata.arcgis.com/datasets/b3a187d6f91c41c38f4a1e24f9d2cdfc_10.geojson')
                     ,('2020_10','https://opendata.arcgis.com/datasets/47c555af573646358c27fcf6cd62be65_9.geojson')
                     ,('2020_09','https://opendata.arcgis.com/datasets/81b07a3eac6541bfb87d278f895bfdeb_8.geojson')
                     ,('2020_08','https://opendata.arcgis.com/datasets/f4e2f2013a584158a37243c1da982e88_7.geojson')
