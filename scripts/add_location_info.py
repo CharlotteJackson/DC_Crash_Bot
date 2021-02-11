@@ -5,7 +5,7 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
 
     # check whether the target table has a geography field
     check_geo_field_type_query = """
-    SELECT ST_GeometryType(geography::geometry) from {0}.{1} LIMIT 1
+    SELECT ST_GeometryType(geography::geometry) from {0}.{1} WHERE geography IS NOT NULL LIMIT 1
     """.format(from_schema, from_table)
 
     # check to see if table has a geography field, if yes, make sure it's the right format and create an index
