@@ -104,7 +104,7 @@ def parse_pulsepoint(file_name:str, api_response:dict):
     # parse into dataframe
     for status_type in record_status_types:
         if api_response['incidents'][status_type] is not None:
-            records_to_load = [i for i in api_response['incidents'][status_type] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE"]]
+            records_to_load = [i for i in api_response['incidents'][status_type] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE", "TCS", "RES"]]
             if records_to_load is not None and len(records_to_load)>0:
                 for record in records_to_load:
                     col_names['Agency_ID'].append(Agency_ID)
