@@ -8,7 +8,7 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
     SELECT ST_GeometryType(geography::geometry) from {0}.{1} WHERE geography IS NOT NULL LIMIT 1
     """.format(from_schema, from_table)
 
-    # check to see if table has a geography field, if yes, make sure it's the right format and create an index
+    # depending on whether the geo type is a line, point, or polygon, execute appropriate query
     geo_field_type = engine.execute(check_geo_field_type_query).fetchone()[0]
     print(geo_field_type)
     if 'ST_Point' in geo_field_type:

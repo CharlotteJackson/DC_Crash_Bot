@@ -176,6 +176,31 @@ AS (
 CREATE INDEX crashes_geom_idx ON tmp.crashes_join USING GIST (geography);
 """
 
+# join in the pulsepoint info
+pulsepoint_join_query="""
+DROP TABLE IF EXISTS tmp.crash_pulsepoint_join;
+CREATE TABLE tmp.crash_pulsepoint_join 
+AS (SELECT * 
+FROM (
+    SELECT DISTINCT a.* 
+    ,b.Agency_Incident_ID as pp_agency_incident_id
+    ,b.unit_status_transport as pp_total_injuries
+    ,b.transport_unit_is_amr as pp_total_minor_injuries
+    ,b.transport_unit_is_non_amr as pp_total_major_injuries
+        ,Row_Number() over (partition by a.objectid order by ST_Distance(a.geography, b.geography)) as PP_Call_Distance_Rank
+        ,Row_Number() over (partition by a.objectid order by a.reportdate - b.CALL_RECEIVED_DATETIME) as PP_Call_Time_Rank
+	FROM tmp.crashes_join a
+	LEFT JOIN analysis_data.pulsepoint b on ST_DWITHIN(a.geography, b.geography, 150) 
+        AND cast(a.fromdate as date) =cast(b.CALL_RECEIVED_DATETIME as date)
+        AND b.CALL_RECEIVED_DATETIME < a.reportdate
+) tmp WHERE PP_Call_Distance_Rank = 1
+) ;
+
+CREATE INDEX IF NOT EXISTS crash_pulsepoint_join_geom_idx ON tmp.crash_pulsepoint_join USING GIST (geography);
+
+alter table tmp.crash_pulsepoint_join drop column PP_Call_Distance_Rank;
+"""
+
 # First execute the table-specific queries
 engine.execute(add_columns_query)
 print("add columns query complete")
@@ -183,9 +208,11 @@ engine.execute(group_by_query)
 print("group by query complete")
 engine.execute(join_query)
 print("join query complete")
+engine.execute(pulsepoint_join_query)
+print("pulsepoint join query complete")
 
 # Then execute the same location-info queries (roadway, schools, neighborhoods) that apply to all analysis tables and create the final table
-next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crashes_join', partition_by_field='objectid')
+next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crash_pulsepoint_join', partition_by_field='objectid')
 print("neighborhood-ward query complete")
 next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='crashes_schools', from_schema=next_tables[0], from_table=next_tables[1])
 print("schools query complete")
