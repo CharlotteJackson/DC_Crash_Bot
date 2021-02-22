@@ -350,6 +350,24 @@ def add_intersection_info(engine, from_schema:str, from_table:str, target_schema
     # if desired, pass target schema and table to the next function
     return(target_schema,target_table)
 
+def is_national_park(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
+
+    check_national_park_query="""
+        DROP TABLE IF EXISTS {0}.{1};
+        CREATE TABLE {0}.{1}
+        AS (
+            SELECT DISTINCT a.*
+            ,case when b.objectid is not null then 1 else 0 end as national_park
+            FROM {2}.{3} a
+            LEFT JOIN source_data.national_parks b on ST_Intersects(b.geography, a.geography)
+        ) ;
+
+    """.format(target_schema, target_table, from_schema, from_table)
+
+    engine.execute(check_national_park_query)
+
+    # if desired, pass target schema and table to the next function
+    return(target_schema,target_table)
 
 def create_final_table(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
 

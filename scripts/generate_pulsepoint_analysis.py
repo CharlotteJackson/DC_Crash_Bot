@@ -1,6 +1,6 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from add_location_info import add_location_info,add_school_info,add_intersection_info,add_roadway_info,create_final_table
+from add_location_info import add_location_info,add_school_info,add_intersection_info,add_roadway_info,is_national_park,create_final_table
 
 
 dbname='postgres'
@@ -89,6 +89,8 @@ print("schools query complete")
 next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='pulsepoint_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='Agency_Incident_ID', within_distance= 100)
 print("roadway info query complete")
 next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='pulsepoint_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='Agency_Incident_ID', within_distance= 60)
+print("intersection info query complete")
+next_tables = is_national_park(engine=engine, target_schema='tmp', target_table='pulsepoint_national_park', from_schema=next_tables[0], from_table=next_tables[1])
 print("intersection info query complete")
 row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='pulsepoint', from_schema=next_tables[0], from_table=next_tables[1])
 print("final query complete with row count ",row_count)

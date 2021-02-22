@@ -166,6 +166,11 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'moving_violations',"dataset_info":"https://opendata.dc.gov/datasets/moving-violations-issued-in-november-2020"}
         
         }
+        ,"national_parks": {
+            'url':[('complete','https://opendata.arcgis.com/datasets/14eb1c6b576940c7b876ebafb227febe_10.geojson')]
+            ,'prefix':'source-data/dc-open-data/national_parks/'
+            ,'metadata':{'target_schema':'source_data', 'target_table': 'national_parks','dataset_info':'https://opendata.dc.gov/datasets/national-parks/data'}
+        }
         ,"neighborhood_clusters": {
             'url':[('complete','https://opendata.arcgis.com/datasets/f6c703ebe2534fc3800609a07bad8f5b_17.geojson')]
             ,'prefix':'source-data/dc-open-data/neighborhood_clusters/'

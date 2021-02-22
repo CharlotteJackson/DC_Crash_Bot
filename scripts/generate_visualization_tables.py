@@ -23,7 +23,7 @@ geography_levels = {
         ,'orig_field_name': 'name'}
     ,'anc_id': {
         'geo_boundaries_source_table': 'source_data.anc_boundaries'
-        ,'orig_field_name': 'name'}
+        ,'orig_field_name': 'anc_id'}
     ,'smd_id': {
         'geo_boundaries_source_table': 'source_data.smd_boundaries'
         ,'orig_field_name': 'smd_id'}
@@ -54,7 +54,11 @@ for geo_level in geography_levels.keys():
     create temp table {0}_2 on commit preserve rows as (
     select 
             a.*
-            ,c.total_pop_2010
+            ,case when c.total_pop_2010 is null then 0 else c.total_pop_2010 end as total_pop_2010
+            ,case when c.pct_white is null then 0 else c.pct_white end as pct_white_2010
+            ,case when c.pct_black is null then 0 else c.pct_black end as pct_black_2010
+            ,case when c.pct_hispanic is null then 0 else c.pct_hispanic end as pct_hispanic_2010
+            ,case when c.pct_asian is null then 0 else c.pct_asian end as pct_asian_2010
             ,b.total_pop_2019
             ,b.num_households
             ,b.num_households_w_car
@@ -68,9 +72,14 @@ for geo_level in geography_levels.keys():
                     ,sum(fagi_total_2015)/sum(total_pop*1.00) as fagi_per_capita_2015
                     from analysis_data.acs_2019_by_tract
                     group by {0}) b on b.{0}=a.{0}
-        inner join (select {0}
+        left join (select {0}
                     , sum(total_pop) as total_pop_2010
+                    , sum(pop_white_non_hispanic)/sum(total_pop*1.00) as pct_white
+                    , sum(pop_non_hispanic_black)/sum(total_pop*1.00) as pct_black
+                    , sum(pop_hispanic)/sum(total_pop*1.00) as pct_hispanic
+                    , sum(pop_non_hispanic_asian)/sum(total_pop*1.00) as pct_asian
                     from analysis_data.census_blocks
+                    where total_pop > 0
                     group by {0}) c on c.{0}=a.{0}
         ) with data;
 
