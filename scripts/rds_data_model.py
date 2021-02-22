@@ -814,6 +814,27 @@ def get_table_definition(target_table:str):
             ,VEH_MAKE VARCHAR NULL
             ,geography geography null
         """  
+    ,'national_parks':"""
+            OBJECTID VARCHAR NULL
+            ,GIS_ID VARCHAR NULL
+            ,NAME VARCHAR NULL
+            ,ALPHA_CODE VARCHAR NULL
+            ,PARK_CODE VARCHAR NULL
+            ,LOCATION VARCHAR NULL
+            ,AQUIRED VARCHAR NULL
+            ,TRANS_DC VARCHAR NULL
+            ,SOURCE VARCHAR NULL
+            ,RESERVE VARCHAR NULL
+            ,LABEL VARCHAR NULL
+            ,Shape_Length VARCHAR NULL
+            ,Shape_Area VARCHAR NULL
+            ,SQUARE VARCHAR NULL
+            ,SUFFIX VARCHAR NULL
+            ,LOT VARCHAR NULL
+            ,SSL VARCHAR NULL
+            ,PAR VARCHAR NULL
+            ,geography geography null
+    """
     ,'neighborhood_clusters':"""
             OBJECTID VARCHAR PRIMARY KEY
             ,WEB_URL VARCHAR NULL

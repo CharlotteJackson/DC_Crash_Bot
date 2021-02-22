@@ -42,9 +42,9 @@ FROM (
         ,latitude
         ,Incident_Type
         ,Unit
-        ,MAX(Unit_Status_Transport) over (Partition by Incident_ID) as Unit_Status_Transport
-        ,MAX(Transport_Unit_Is_AMR) over (Partition by Incident_ID) as Transport_Unit_Is_AMR
-        ,MAX(Transport_Unit_Is_Non_AMR) over (Partition by Incident_ID) as Transport_Unit_Is_Non_AMR
+        ,MAX(Unit_Status_Transport) over (Partition by Agency_ID, Incident_ID) as Unit_Status_Transport
+        ,MAX(Transport_Unit_Is_AMR) over (Partition by Agency_ID, Incident_ID) as Transport_Unit_Is_AMR
+        ,MAX(Transport_Unit_Is_Non_AMR) over (Partition by Agency_ID, Incident_ID) as Transport_Unit_Is_Non_AMR
         ,ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography as geography
         ,cast(replace(unit,'''','"') as jsonb) as Unit_JSON
         ,JSONB_ARRAY_LENGTH(cast(replace(unit,'''','"') as jsonb)::jsonb) as Num_Units_Responding
@@ -55,14 +55,37 @@ WHERE Time_Rank = 1
 ) WITH DATA;
 """
 
+step_2_query = """
+DROP TABLE IF EXISTS tmp_pulsepoint_units;
+CREATE TEMP TABLE tmp_pulsepoint_units ON COMMIT PRESERVE ROWS 
+AS (
+    SELECT incident_id, Agency_ID, array_agg((Units#>'{{UnitID}}')::text) as Unit_IDs
+    FROM tmp_pulsepoint
+    CROSS JOIN json_array_elements(unit_json::json) as Units
+    GROUP BY incident_id, Agency_ID
+    ) WITH DATA; 
+"""
+
+step_3_query = """
+DROP TABLE IF EXISTS tmp_pulsepoint_units_join;
+CREATE TEMP TABLE tmp_pulsepoint_units_join ON COMMIT PRESERVE ROWS 
+AS (
+    SELECT DISTINCT a.*, b.Unit_IDs
+    FROM tmp_pulsepoint a
+    LEFT JOIN tmp_pulsepoint_units b on a.incident_id = b.incident_id and a.agency_id = b.agency_id
+    ) WITH DATA; 
+"""
+
 final_query="""
 DROP TABLE IF EXISTS {0}.{1};
 
 CREATE TABLE {0}.{1} AS 
-    SELECT * FROM tmp_pulsepoint;
+    SELECT * FROM tmp_pulsepoint_units_join;
 
 GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
 """.format(target_schema, target_table)
 
 engine.execute(step1_query)
+engine.execute(step_2_query)
+engine.execute(step_3_query)
 engine.execute(final_query)

@@ -8,7 +8,7 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
     SELECT ST_GeometryType(geography::geometry) from {0}.{1} WHERE geography IS NOT NULL LIMIT 1
     """.format(from_schema, from_table)
 
-    # check to see if table has a geography field, if yes, make sure it's the right format and create an index
+    # depending on whether the geo type is a line, point, or polygon, execute appropriate query
     geo_field_type = engine.execute(check_geo_field_type_query).fetchone()[0]
     print(geo_field_type)
     if 'ST_Point' in geo_field_type:
@@ -350,6 +350,24 @@ def add_intersection_info(engine, from_schema:str, from_table:str, target_schema
     # if desired, pass target schema and table to the next function
     return(target_schema,target_table)
 
+def is_national_park(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
+
+    check_national_park_query="""
+        DROP TABLE IF EXISTS {0}.{1};
+        CREATE TABLE {0}.{1}
+        AS (
+            SELECT DISTINCT a.*
+            ,case when b.objectid is not null then 1 else 0 end as national_park
+            FROM {2}.{3} a
+            LEFT JOIN source_data.national_parks b on ST_Intersects(b.geography, a.geography)
+        ) ;
+
+    """.format(target_schema, target_table, from_schema, from_table)
+
+    engine.execute(check_national_park_query)
+
+    # if desired, pass target schema and table to the next function
+    return(target_schema,target_table)
 
 def create_final_table(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
 

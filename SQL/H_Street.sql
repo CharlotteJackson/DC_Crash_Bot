@@ -42,6 +42,9 @@ where  a.routename in ('H ST NE')
 and ST_DWithin(a.geography::geography, '0101000020E6100000030F554C994053C029DFF3583A734340'::geography,2305)
 ) with data;
 
+
+select avg(aadt) from h_st_blocks
+
 --crashes
 drop table if exists h_st_crashes;
 create temp table h_st_crashes on commit preserve rows as (
