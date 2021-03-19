@@ -178,6 +178,7 @@ CREATE INDEX crashes_geom_idx ON tmp.crashes_join USING GIST (geography);
 
 # join in the pulsepoint info
 pulsepoint_join_query="""
+
 DROP TABLE IF EXISTS tmp.crash_pulsepoint_join;
 CREATE TABLE tmp.crash_pulsepoint_join 
 AS (SELECT * 
@@ -191,7 +192,7 @@ FROM (
         ,Row_Number() over (partition by a.objectid order by a.reportdate - b.CALL_RECEIVED_DATETIME) as PP_Call_Time_Rank
 	FROM tmp.crashes_join a
 	LEFT JOIN analysis_data.pulsepoint b on ST_DWITHIN(a.geography, b.geography, 150) 
-        AND cast(a.fromdate as date) =cast(b.CALL_RECEIVED_DATETIME as date)
+        AND cast(fromdate as date) =cast((call_received_datetime at time zone 'America/New_York') as date)
         AND b.CALL_RECEIVED_DATETIME < a.reportdate
 ) tmp WHERE PP_Call_Distance_Rank = 1
 ) ;

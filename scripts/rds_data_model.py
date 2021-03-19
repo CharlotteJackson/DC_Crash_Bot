@@ -637,8 +637,8 @@ def get_table_definition(target_table:str):
             ,_OFFSET VARCHAR NULL
             ,STREETSEGID VARCHAR NULL
             ,ROADWAYSEGID VARCHAR NULL
-            ,FROMDATE TIMESTAMPTZ NULL
-            ,TODATE TIMESTAMPTZ NULL
+            ,FROMDATE DATE NULL
+            ,TODATE DATE NULL
             ,MARID VARCHAR NULL
             ,ADDRESS VARCHAR NULL
             ,LATITUDE VARCHAR NULL

@@ -36,8 +36,8 @@ for geo_level in geography_levels.keys():
     create table viz.{0}_boundaries as
     SELECT a.{1} as {0},
         (ST_Dumppoints(a.geography::geometry)).path[2] as POINT_ORDER
-        ,ST_X((ST_Dumppoints(a.geography::geometry)).geom) as Latitude
-        ,ST_Y((ST_Dumppoints(a.geography::geometry)).geom) as Longitude
+        ,ST_X((ST_Dumppoints(a.geography::geometry)).geom) as Longitude
+        ,ST_Y((ST_Dumppoints(a.geography::geometry)).geom) as Latitude
     FROM {2} a;
 
     drop table if exists {0};

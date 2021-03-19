@@ -38,6 +38,8 @@ CREATE INDEX IF NOT EXISTS pulsepoint_dupe_check_geom_idx ON tmp.pulsepoint_dupe
 
 # then join to the crashes table 
 crashes_join_query="""
+
+
 DROP TABLE IF EXISTS tmp.pulsepoint_crash_join;
 CREATE TABLE tmp.pulsepoint_crash_join 
 AS (SELECT * 
@@ -62,7 +64,7 @@ FROM (
         ,Row_Number() over (partition by a.incident_id, a.agency_id order by b.reportdate - a.CALL_RECEIVED_DATETIME) as Crash_Time_Rank
 	FROM tmp.pulsepoint_dupe_check a
 	LEFT JOIN analysis_data.dc_crashes_w_details b on ST_DWITHIN(a.geography, b.geography, 150) 
-        AND cast(b.fromdate as date) =cast(a.CALL_RECEIVED_DATETIME as date)
+        AND cast(b.fromdate as date) =cast((call_received_datetime at time zone 'America/New_York') as date)
         AND a.CALL_RECEIVED_DATETIME < b.reportdate
     WHERE a.KEEP_RECORD_FLAG = 1
 ) tmp WHERE Crash_Distance_Rank = 1
@@ -91,6 +93,6 @@ print("roadway info query complete")
 next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='pulsepoint_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='Agency_Incident_ID', within_distance= 60)
 print("intersection info query complete")
 next_tables = is_national_park(engine=engine, target_schema='tmp', target_table='pulsepoint_national_park', from_schema=next_tables[0], from_table=next_tables[1])
-print("intersection info query complete")
+print("national parks info query complete")
 row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='pulsepoint', from_schema=next_tables[0], from_table=next_tables[1])
 print("final query complete with row count ",row_count)
