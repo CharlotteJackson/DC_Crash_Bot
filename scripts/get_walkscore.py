@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS tmp.address_walkscores as
 (
     SELECT * FROM 
     (  
-        SELECT DISTINCT b.objectid as census_block_objectid, a.fulladdress, a.latitude, a.longitude
+        SELECT DISTINCT b.objectid as census_block_objectid, a.fulladdress, a.latitude, a.longitude, b.geography
             , ROW_NUMBER() over (PARTITION BY b.objectid ORDER BY a.fulladdress) AS row_num
         FROM source_data.address_points a
         INNER JOIN source_data.census_blocks b on ST_Intersects(a.geography::geometry, b.geography::geometry)
@@ -38,6 +38,7 @@ create_tables_query = """
 CREATE TABLE IF NOT EXISTS source_data.address_walkscores (
     fulladdress varchar null
     ,census_block_objectid varchar null
+    ,geography geography null
     ,latitude numeric null
     ,longitude numeric null
     ,walkscore numeric null
@@ -46,7 +47,7 @@ CREATE TABLE IF NOT EXISTS source_data.address_walkscores (
 );
 
 CREATE INDEX IF NOT EXISTS fulladdress_index ON source_data.address_walkscores (fulladdress);
-CREATE INDEX IF NOT EXISTS census_block_index ON source_data.address_walkscores (census_block);
+CREATE INDEX IF NOT EXISTS census_block_index ON source_data.address_walkscores (census_block_objectid);
 
 """
 engine.execute(create_tables_query)
@@ -54,31 +55,31 @@ print("geocode tables created")
 
 # extract al the locations that need to be geocoded
 get_addresses_to_check_query = """
-select distinct a.fulladdress,a.census_block_objectid , a.latitude, a.longitude
+select distinct a.fulladdress,a.census_block_objectid , a.latitude, a.longitude, a.geography
 from tmp.address_walkscores a
-left join source_data.address_walkscores b on a.fulladdress = b.fulladdress
+left join source_data.address_walkscores b on a.fulladdress = b.fulladdress and a.census_block_objectid = b.census_block_objectid
 where b.fulladdress is null
 """
 records = engine.execute(get_addresses_to_check_query).fetchall()
 print(len(records)," records without walkscore pulled for an update")
 
 # then using the google maps API, add a lat and long for addresses that don't have them
-for record in records[:3]:
+for record in records:
     address = str(record[0])
     lat=record[2]
     long=record[3]
     census_block = record[1]
+    geography = record[4]
     params = {"format": format, "address":address, "lat":lat, "lon":long, "bike":1, "transit":1
           ,"wsapikey":WALKSCORE_API_KEY}
     try:
         response = requests.get(walkscore_endpoint, params = params)
         content=json.loads(response.text)
-        print(content)
         walkscore=content['walkscore']
         bikescore=content['bike']['score']
         transitscore=content['transit']['score']
         # insert into the table
-        insert_record_query = "INSERT INTO source_data.address_walkscores VALUES (\'{0}\',\'{1}\',{2},{3},{4},{5},{6})".format(address, record[1], lat, long, walkscore, bikescore, transitscore)
+        insert_record_query = "INSERT INTO source_data.address_walkscores VALUES (\'{0}\',\'{1}\',{2},{3},{4},{5},{6},{7})".format(address, census_block, geography, lat, long, walkscore, bikescore, transitscore)
         engine.execute(insert_record_query)
     except Exception as error:
         print("could not find location for address ", address)

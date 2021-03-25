@@ -1,6 +1,6 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from add_location_info import add_location_info,add_school_info,add_intersection_info,create_final_table
+from add_location_info import add_location_info,add_school_info,add_walkscore_info,add_intersection_info,create_final_table
 
 
 dbname='postgres'
@@ -33,6 +33,8 @@ next_tables = add_location_info(engine=engine, target_schema='tmp', target_table
 print("neighborhood-ward query complete")
 next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='all311_schools', from_schema=next_tables[0], from_table=next_tables[1])
 print("schools query complete")
+next_tables = add_walkscore_info(engine=engine, target_schema='tmp', target_table='all311_walkscore', from_schema=next_tables[0], from_table=next_tables[1])
+print("walkscore query complete")
 next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='all311_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 20)
 print("intersection info query complete")
 row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='all311', from_schema=next_tables[0], from_table=next_tables[1])

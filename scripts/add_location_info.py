@@ -232,6 +232,44 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
     # if desired, pass target schema and table to the next function
     return(target_schema,target_table)
 
+def add_walkscore_info(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
+
+    # empty variable to store list of table columns
+    columns_string =''
+
+    # get column names of source table
+    get_columns_query = """
+    SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{0}' AND TABLE_NAME = '{1}'
+    """.format(from_schema, from_table)
+
+    # put column names of source table in list
+    columns = [r for (r,) in engine.execute(get_columns_query).fetchall()]
+    columns_string+='a.'+columns[0]
+    for column in columns[1:]:
+        columns_string+=' ,a.'+column
+
+    add_walkscore_query="""
+        DROP TABLE IF EXISTS {0}.{1};
+        CREATE TABLE {0}.{1}
+        AS (
+
+        SELECT 
+          AVG(b.walkscore)::decimal(10,2) as Walkscore
+          ,AVG(b.bikescore)::decimal(10,2) AS Bikescore
+          ,AVG(b.transitscore)::decimal(10,2) AS Transitscore
+        , a.* 
+        FROM {2}.{3} a
+        LEFT JOIN source_data.address_walkscores b on ST_Intersects(a.geography::geometry, b.geography::geometry)
+        GROUP BY {5}
+        ) ;
+
+        CREATE INDEX {4} ON {0}.{1} USING GIST (geography);
+    """.format(target_schema, target_table, from_schema, from_table, target_schema+'_'+target_table+'_index', columns_string)
+    
+    engine.execute(add_walkscore_query)
+
+    # if desired, pass target schema and table to the next function
+    return(target_schema,target_table)
 
 def add_school_info(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
 
