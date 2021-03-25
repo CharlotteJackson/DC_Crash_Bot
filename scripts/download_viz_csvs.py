@@ -4,8 +4,8 @@ import os
 from connect_to_rds import get_connection_strings, create_postgres_engine
 
 # Add the data folder to path library, to store downloads 
-# cur_path = os.path.dirname(__file__)
-cur_path = os.getcwd()
+cur_path = os.path.dirname(__file__)
+# cur_path = os.getcwd()
 print(cur_path)
 path_parent = os.path.dirname(cur_path)
 print(path_parent)

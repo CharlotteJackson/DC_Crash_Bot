@@ -77,7 +77,7 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
         correct_geo(engine=engine, target_schema=target_schema,target_table=target_table,mode=mode)
         
 # set up ability to call with lists from the command line as follows:
-# python s3_to_postgis.py --folders source-data/dc-open-data/crashes_raw/ source-data/dc-open-data/crash_details/ source-data/dc-open-data/vision_zero/ --format csv --mode replace --header true
+# python s3_to_postgis.py --folders source-data/dc-open-data/crash --format csv --mode replace --header true --move_after_loading no --move_to_folder ""
 CLI=argparse.ArgumentParser()
 CLI.add_argument(
 "--folders",  

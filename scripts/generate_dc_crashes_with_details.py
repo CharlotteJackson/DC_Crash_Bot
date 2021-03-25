@@ -1,6 +1,6 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from add_location_info import add_location_info, add_school_info, add_roadway_info, add_intersection_info, create_final_table
+from add_location_info import add_location_info, add_school_info, add_walkscore_info, add_roadway_info, add_intersection_info, create_final_table
 
 # create database connection
 dbname='postgres'
@@ -172,6 +172,7 @@ AS (
 
     FROM source_data.crashes_raw a
     LEFT JOIN tmp.crash_details_agg b on a.CRIMEID = b.CRIMEID
+    WHERE date_part('year', a.fromdate) >=2015
 ) ;
 CREATE INDEX crashes_geom_idx ON tmp.crashes_join USING GIST (geography);
 """
@@ -217,6 +218,8 @@ next_tables = add_location_info(engine=engine, target_schema='tmp', target_table
 print("neighborhood-ward query complete")
 next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='crashes_schools', from_schema=next_tables[0], from_table=next_tables[1])
 print("schools query complete")
+next_tables = add_walkscore_info(engine=engine, target_schema='tmp', target_table='crashes_walkscore', from_schema=next_tables[0], from_table=next_tables[1])
+print("walkscore query complete")
 next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='crashes_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 0.001)
 print("roadway info query complete")
 next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='crashes_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 10)
