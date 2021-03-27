@@ -83,9 +83,9 @@
     };
 
     myConnector.getData = function (table, doneCallback) {
-        $.getJSON("https://github.com/CharlotteJackson/DC_Crash_Bot/blob/tableau_web_connector/tableau/webdataconnector/data/february_2021_crashes.json", function (resp) {
-            var feat = resp.features,
-                tableData = [];
+        $.getJSON("https://raw.githubusercontent.com/CharlotteJackson/DC_Crash_Bot/tableau_web_connector/tableau/webdataconnector/data/february_2021_crashes.json", function (resp) {
+            var feat = resp.crashes
+            var tableData = [];
 
             // Iterate over the JSON object
             for (var i = 0, len = feat.length; i < len; i++) {
