@@ -5,7 +5,7 @@
 
         var cols = [{
             id: "objectid",
-            dataType: tableau.dataTypeEnum.int
+            dataType: tableau.dataTypeEnum.string
         }, {
             id: "fromdate",
             alias: "fromdate",
@@ -49,7 +49,7 @@
         {
             id: "crash_on_interstate",
             alias: "crash_on_interstate",
-            dataType: tableau.dataTypeEnum.int
+            dataType: tableau.dataTypeEnum.bool
         },
         {
             id: "scanner_audio_missing",
@@ -64,11 +64,11 @@
         {
             id: "national_park",
             alias: "national_park",
-            dataType: tableau.dataTypeEnum.int
+            dataType: tableau.dataTypeEnum.bool
         },
         {
             id: "geography",
-            dataType: tableau.dataTypeEnum.geometry
+            dataType: tableau.dataTypeEnum.string
         }];
 
         var tableSchema = {
