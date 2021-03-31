@@ -20,8 +20,10 @@ objectid
 	or int_road_types::text ilike '%freeway%' or dcfunctionalclass_desc ilike '%freeway%'
 	then 1 else 0 end as Crash_On_Interstate
 , NULL as Scanner_Audio_Missing
+, '' as Scanner_audio
 ,case when pp_agency_incident_id is null then 'MPD Only' else 'MPD and DCFEMS' end as Crash_Category
 ,0 as national_park
+,0 as boundary_street
 from analysis_data.dc_crashes_w_details 
 where date_part('year', fromdate) = 2021 and date_part('month', fromdate) = 2
 union all 
@@ -44,8 +46,11 @@ a.incident_id
 	or b.Incident_On_Interstate = 1
 	then 1 else 0 end as Crash_On_Interstate
 ,b.audio_missing as Scanner_Audio_Missing
+,b.Scanner_audio as scanner_audio
 ,'DCFEMS Only' as Crash_Category
 ,national_park
+,case when fulldisplayaddress ilike '%southern ave%' or fulldisplayaddress ilike '%eastern ave%' or fulldisplayaddress ilike '%western ave%'
+or routename ilike '%southern ave%' or routename ilike '%eastern ave%' or routename ilike '%western ave%' then 1 else 0 end 
 from analysis_data.pulsepoint a
 left join source_data.february_2021_dcfems_scanner_audio b on a.incident_id = b.incident_id
 where a.agency_id = 'EMS1205'
