@@ -14,12 +14,9 @@ https://usa.streetsblog.org/2020/09/29/why-your-city-doesnt-map-its-worst-car-cr
 
 # Resources 
 
-The Pulsepoint API: https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6
-Open Data DC: https://opendata.dc.gov
-Geopandas: https://geopandas.org/index.html
-PostGIS: https://postgis.net
-Postgresql JSON Type: https://www.postgresql.org/docs/9.4/datatype-json.html
-A sample project: https://github.com/sunlightpolicy/sql4housing/tree/master/chicago_example
+[Data dictionary for the analysis_data schema in our database](https://docs.google.com/spreadsheets/d/18OQh78KhlL65JHM2DyQKVEdYUY8zXjHzTfYbdsd-Kes/edit?usp=sharing) 
+[The Google doc where we brainstorm analysis ideas](https://docs.google.com/document/d/1HlG7ByM-neLiwFWd1FnOOlRzC0llvIF79l7-fzT8WpE/edit?usp=sharing)
+[Diagram of our data flow and architecture] (https://docs.google.com/presentation/d/1QyD4gr7tRS95WkxUa_VGdnQ99jNrT60-43LnF4n9Z5M/edit?usp=sharing) (still a work in progress!)
 
 ### Link to our map
 
@@ -27,7 +24,7 @@ TODO:
 
 ### How to contribute
  
-Our PostGIS database currently has Open Data DC datasets on 311/Vision Zero requests, crashes, crash details, census blocks, address points, and all roadway centerlines-related data. We also have a small sample dataset scraped from the Pulsepoint website, with more to come soon.  **If you're interested in doing any reporting, analytics, or visualization with this data, all you need to do is 1) download pgAdmin; 2) message me for a login.** 
+Our PostGIS database currently has Open Data DC datasets on 311/Vision Zero requests, crashes, crash details, census blocks, address points, and all roadway centerlines-related data. We also have a regular feed of DC Fire & EMS dispatch data for car crash calls.  **If you're interested in doing any reporting, analytics, or visualization with this data, all you need to do is 1) download pgAdmin; 2) message me for a login.** 
 
 We need people with interests or skills in front-end, machine learning/NLP, data engineering, and geographic data. If that sounds like you, join us at an upcoming [Code for DC Meetup](https://www.meetup.com/Code-for-DC/)! 
 
