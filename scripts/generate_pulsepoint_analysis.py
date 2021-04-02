@@ -1,6 +1,6 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
-from add_location_info import add_location_info,add_school_info,add_intersection_info,add_roadway_info,is_national_park,create_final_table
+from add_location_info import add_location_info,add_school_info,add_walkscore_info,add_intersection_info,add_roadway_info,is_national_park,create_final_table
 
 
 dbname='postgres'
@@ -67,7 +67,7 @@ FROM (
         AND cast(b.fromdate as date) =cast((call_received_datetime at time zone 'America/New_York') as date)
         AND a.CALL_RECEIVED_DATETIME < b.reportdate
     WHERE a.KEEP_RECORD_FLAG = 1
-) tmp WHERE Crash_Distance_Rank = 1
+) tmp WHERE Crash_Distance_Rank = 1 and (incident_type <> 'RES' or agency_id = '16000')
 ) ;
 
 CREATE INDEX IF NOT EXISTS pulsepoint_crash_join_geom_idx ON tmp.pulsepoint_crash_join USING GIST (geography);
@@ -88,6 +88,8 @@ next_tables = add_location_info(engine=engine, target_schema='tmp', target_table
 print("neighborhood-ward query complete")
 next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='pulsepoint_schools', from_schema=next_tables[0], from_table=next_tables[1])
 print("schools query complete")
+next_tables = add_walkscore_info(engine=engine, target_schema='tmp', target_table='pulsepoint_walkscore', from_schema=next_tables[0], from_table=next_tables[1])
+print("walkscore query complete")
 next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='pulsepoint_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='Agency_Incident_ID', within_distance= 100)
 print("roadway info query complete")
 next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='pulsepoint_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='Agency_Incident_ID', within_distance= 60)
