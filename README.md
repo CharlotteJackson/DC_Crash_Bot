@@ -15,8 +15,10 @@ https://usa.streetsblog.org/2020/09/29/why-your-city-doesnt-map-its-worst-car-cr
 # Resources 
 
 [Data dictionary for the analysis_data schema in our database](https://docs.google.com/spreadsheets/d/18OQh78KhlL65JHM2DyQKVEdYUY8zXjHzTfYbdsd-Kes/edit?usp=sharing) 
+
 [The Google doc where we brainstorm analysis ideas](https://docs.google.com/document/d/1HlG7ByM-neLiwFWd1FnOOlRzC0llvIF79l7-fzT8WpE/edit?usp=sharing)
-[Diagram of our data flow and architecture] (https://docs.google.com/presentation/d/1QyD4gr7tRS95WkxUa_VGdnQ99jNrT60-43LnF4n9Z5M/edit?usp=sharing) (still a work in progress!)
+
+[Diagram of our data flow and architecture](https://docs.google.com/presentation/d/1QyD4gr7tRS95WkxUa_VGdnQ99jNrT60-43LnF4n9Z5M/edit?usp=sharing) (still a work in progress!)
 
 ### Link to our map
 
