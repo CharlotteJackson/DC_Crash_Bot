@@ -100,8 +100,8 @@ AS (
             ,a.FROMDATE
             ,a.TODATE 
             ,a.ADDRESS
-            ,a.latitude
-            ,a.longitude
+            ,a.mpdlatitude
+            ,a.mpdlongitude
             ,CASE WHEN b.CRIMEID IS NULL OR b.BICYCLE_INJURIES < (a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
                 THEN (a.MAJORINJURIES_BICYCLIST + a.MINORINJURIES_BICYCLIST + a.UNKNOWNINJURIES_BICYCLIST)
                 ELSE b.BICYCLE_INJURIES END AS BICYCLE_INJURIES
@@ -190,11 +190,11 @@ FROM (
     ,b.transport_unit_is_amr as pp_total_minor_injuries
     ,b.transport_unit_is_non_amr as pp_total_major_injuries
         ,Row_Number() over (partition by a.objectid order by ST_Distance(a.geography, b.geography)) as PP_Call_Distance_Rank
-        ,Row_Number() over (partition by a.objectid order by a.reportdate - b.CALL_RECEIVED_DATETIME) as PP_Call_Time_Rank
+        ,Row_Number() over (partition by a.objectid order by (a.reportdate at time zone 'America/New_York')  - (b.CALL_RECEIVED_DATETIME at time zone 'America/New_York')) as PP_Call_Time_Rank
 	FROM tmp.crashes_join a
-	LEFT JOIN analysis_data.pulsepoint b on ST_DWITHIN(a.geography, b.geography, 150) 
+	LEFT JOIN analysis_data.pulsepoint b on ST_DWITHIN(a.geography, b.geography, 200) 
         AND cast(fromdate as date) =cast((call_received_datetime at time zone 'America/New_York') as date)
-        AND b.CALL_RECEIVED_DATETIME < a.reportdate
+        AND (b.CALL_RECEIVED_DATETIME at time zone 'America/New_York')  < (a.reportdate at time zone 'America/New_York') 
 ) tmp WHERE PP_Call_Distance_Rank = 1
 ) ;
 

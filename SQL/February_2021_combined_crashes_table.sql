@@ -6,8 +6,8 @@ select
 objectid
 ,fromdate
 ,geography
-,latitude::numeric
-,longitude::numeric
+,mpdlatitude::numeric as latitude
+,mpdlongitude::numeric as longitude
 ,address
 ,ward_name
 ,nbh_cluster_names
