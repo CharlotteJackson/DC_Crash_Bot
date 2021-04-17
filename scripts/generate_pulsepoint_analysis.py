@@ -57,15 +57,15 @@ FROM (
         ,b.pedestrian_injuries as Crash_Ped_Injuries
         ,case when b.total_injuries is null or b.total_injuries < a.unit_status_transport then 1 else 0 end as injuries_mismatch
         ,ST_Distance(a.geography, b.geography) as Distance_To_Crash
-        ,b.reportdate - a.CALL_RECEIVED_DATETIME as Time_Between_Crash_And_Report
+        ,(b.reportdate at time zone 'America/New_York')  - (a.CALL_RECEIVED_DATETIME at time zone 'America/New_York')  as Time_Between_Crash_And_Report
         ,b.intersectionid as Crash_Intersection_ID
         ,b.block_objectid as Crash_Block_Objectid
         ,Row_Number() over (partition by a.incident_id, a.agency_id order by ST_Distance(a.geography, b.geography)) as Crash_Distance_Rank
-        ,Row_Number() over (partition by a.incident_id, a.agency_id order by b.reportdate - a.CALL_RECEIVED_DATETIME) as Crash_Time_Rank
+        ,Row_Number() over (partition by a.incident_id, a.agency_id order by (b.reportdate at time zone 'America/New_York')  - (a.CALL_RECEIVED_DATETIME at time zone 'America/New_York')) as Crash_Time_Rank
 	FROM tmp.pulsepoint_dupe_check a
-	LEFT JOIN analysis_data.dc_crashes_w_details b on ST_DWITHIN(a.geography, b.geography, 150) 
+	LEFT JOIN analysis_data.dc_crashes_w_details b on ST_DWITHIN(a.geography, b.geography, 200) 
         AND cast(b.fromdate as date) =cast((call_received_datetime at time zone 'America/New_York') as date)
-        AND a.CALL_RECEIVED_DATETIME < b.reportdate
+        AND (a.CALL_RECEIVED_DATETIME at time zone 'America/New_York')  < (b.reportdate at time zone 'America/New_York') 
     WHERE a.KEEP_RECORD_FLAG = 1
 ) tmp WHERE Crash_Distance_Rank = 1 and (incident_type <> 'RES' or agency_id = '16000')
 ) ;
