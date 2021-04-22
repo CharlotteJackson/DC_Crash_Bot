@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?><metadata>
+    <idinfo>
+        <citation>
+            <citeinfo>
+                <origin/>
+                <pubdate>20210111</pubdate>
+                <title>Ward from 2012</title>
+                <geoform>vector digital data</geoform>
+            </citeinfo>
+        </citation>
+        <descript>
+            <abstract>2012 Wards. The dataset contains polygons representing boundaries of District of Columbia 2012 election wards, created as part of the DC Geographic Information System (DC GIS) for the D.C. Office of the Chief Technology Officer (OCTO) and participating D.C. government agencies. The DC Office of Planning provided the boundaries to the DC GIS program.</abstract>
+            <purpose>The dataset contains polygons representing boundaries of District of Columbia 2012 election wards.</purpose>
+        </descript>
+        <status>
+            <progress>In work</progress>
+            <update>As needed</update>
+        </status>
+        <spdom>
+            <bounding>
+                <westbc>-77.119896</westbc>
+                <eastbc>-76.909016</eastbc>
+                <northbc>38.995967</northbc>
+                <southbc>38.791582</southbc>
+            </bounding>
+        </spdom>
+        <keywords>
+            <theme>
+                <themekt>None</themekt>
+                <themekey>council</themekey>
+                <themekey>boundary</themekey>
+                <themekey>Politics</themekey>
+                <themekey>Wards</themekey>
+            </theme>
+            <theme>
+                <themekt>ISO 19115 Topic Categories</themekt>
+                <themekey>boundaries</themekey>
+            </theme>
+            <place>
+                <placekt>None</placekt>
+                <placekey>Washington</placekey>
+                <placekey>DC</placekey>
+                <placekey>Washington</placekey>
+            </place>
+        </keywords>
+        <accconst>None</accconst>
+        <useconst>This work is licensed under a Creative Commons Attribution 4.0 International License.</useconst>
+        <ptcontac>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>D.C. Office of the Chief Technology Officer</cntorg>
+                    <cntper>GIS Data Coordinator</cntper>
+                </cntorgp>
+                <cntaddr>
+                    <addrtype>mailing and physical</addrtype>
+                    <address>200 I Street SE, 5th Floor</address>
+                    <city>Washington</city>
+                    <state>DC</state>
+                    <postal>20003</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntfax>(202) 727-5660</cntfax>
+                <cntemail>dcgis@dc.gov</cntemail>
+                <hours>8:30 am - 5 pm</hours>
+            </cntinfo>
+        </ptcontac>
+        <datacred>Office of Planning</datacred>
+    </idinfo>
+    <dataqual>
+        <attracc>
+            <attraccr>Validated by source and/or responsible agency.</attraccr>
+        </attracc>
+        <logic>Validated by source and/or responsible agency.</logic>
+        <complete>Validated by source and/or responsible agency.</complete>
+        <posacc>
+            <horizpa>
+                <horizpar>Features have been topologically matched to the snapbase where the boundary matched features such as rivers, shoreline, and street centerlines. OCTO took the Office of Planning digitized boundary in between parts that matched the snapbase.</horizpar>
+            </horizpa>
+            <vertacc>
+                <vertaccr>N/A</vertaccr>
+            </vertacc>
+        </posacc>
+        <lineage>
+            <srcinfo>
+                <srccite>
+                    <citeinfo>
+                        <origin/>
+                        <pubdate>20110101</pubdate>
+                        <title>WARD REDISTRICTING AMENDMENT ACT OF 2011</title>
+                        <geoform>document</geoform>
+                        <onlink>http://www.dccouncil.washington.dc.us/</onlink>
+                    </citeinfo>
+                </srccite>
+                <typesrc>hardcopyPaper</typesrc>
+                <srccitea>WARD REDISTRICTING AMENDMENT ACT OF 2011</srccitea>
+                <srccontr>location and attribution</srccontr>
+            </srcinfo>
+            <procstep>
+                <procdesc>The District Office of Planning updated the ward boundaries to reflect the revised legislation due to the 10 year redistricting effort. OCTO then took those snapped boundaries and selected snapbase feature, such as street centerlines and shoreline, where the boundaries overlapped. Two line files were formed, areas where the boundaries overlapped snapbase features and the original OLP boundary between the snapbase lines. Staff then merged the two layers together, constructed polygons, and appended the basic 2002 attributes to the layer. Note that these boundaries do split certain Census Blocks.</procdesc>
+                <procdate>20110907</procdate>
+                <proccont>
+                    <cntinfo>
+                        <cntorgp>
+                            <cntorg>Office of the Chief Technology Officer</cntorg>
+                            <cntper>GIS Data Coordinator</cntper>
+                        </cntorgp>
+                        <cntfax>202-727-5660</cntfax>
+                        <cntemail>dcgis@dc.gov</cntemail>
+                        <hours>9am - 5pm</hours>
+                    </cntinfo>
+                </proccont>
+            </procstep>
+            <procstep>
+                <procdesc>Staff updated Ward 4 Council member's information.</procdesc>
+                <procdate>20210108</procdate>
+            </procstep>
+        </lineage>
+    </dataqual>
+    <spdoinfo>
+        <direct>Vector</direct>
+        <ptvctinf>
+            <sdtsterm>
+                <sdtstype>GT-polygon composed of chains</sdtstype>
+                <ptvctcnt>0</ptvctcnt>
+            </sdtsterm>
+        </ptvctinf>
+    </spdoinfo>
+    <eainfo>
+        <detailed>
+            <enttyp>
+                <enttypl>WardPly</enttypl>
+            </enttyp>
+            <attr>
+                <attrlabl>OBJECTID</attrlabl>
+                <attrdef>Internal feature number.</attrdef>
+                <attrdefs>ESRI</attrdefs>
+                <attrdomv>
+                                                  
+                    
+                    <udom>Sequential unique whole numbers that are automatically generated.</udom>
+                                                
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>SHAPE</attrlabl>
+                <attrdef>Feature geometry.</attrdef>
+                <attrdefs>ESRI</attrdefs>
+                <attrdomv>
+                                                  
+                    
+                    <udom>Coordinates defining the features.</udom>
+                                                
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>NAME</attrlabl>
+                <attrdef>Ward Name</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>GIS_ID</attrlabl>
+                <attrdef>OCTO GIS sequential ID</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>WEB_URL</attrlabl>
+                <attrdef>Ward Council Member web link</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>Ward</attrlabl>
+                <attrdef>Ward Value</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>REP_NAME</attrlabl>
+                <attrdef>Council Representative Name</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>REP_PHONE</attrlabl>
+                <attrdef>Council Representative Phone Number</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>REP_EMAIL</attrlabl>
+                <attrdef>Council Representative Email</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>AREASQMI</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>WARD_ID</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>LABEL</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_2000</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_2011_2015</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_BLACK</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_NATIVE_AMERICAN</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_ASIAN</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_HAWAIIAN</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_OTHER_RACE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>TWO_OR_MORE_RACES</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>NOT_HISPANIC_OR_LATINO</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>HISPANIC_OR_LATINO</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_MALE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_FEMALE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_0_5</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_5_9</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_10_14</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_15_17</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_18_19</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_20</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_21</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_22_24</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_25_29</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_30_34</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_35_39</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_40_44</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_45_49</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_50_54</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_55_59</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_60_61</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_65_66</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_67_69</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_70_74</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_75_79</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_80_84</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>AGE_85_PLUS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>MEDIAN_AGE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>UNEMPLOYMENT_RATE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>TOTAL_HH</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>FAMILY_HH</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_FAMILY_HH</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>NONFAMILY_HH</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_NONFAMILY_HH</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_FAM</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_WHITE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_BLACK</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_NAT_AMER</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_ASIAN</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_HAWAIIAN</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_OTHER</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_TWO_RACES</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_25_PLUS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_25_PLUS_9TH_GRADE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_25_PLUS_GRADUATE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>MARRIED_COUPLE_FAMILY</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>MALE_HH_NO_WIFE</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>FEMALE_HH_NO_HUSBAND</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>MEDIAN_HH_INCOME</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PER_CAPITA_INCOME</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_HISP</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>PCT_BELOW_POV_WHTE_NOHISP</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>NO_DIPLOMA_25_PLUS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>DIPLOMA_25_PLUS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>NO_DEGREE_25_PLUS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>ASSOC_DEGREE_25_PLUS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>BACH_DEGREE_25_PLUS</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>MED_VAL_OOU</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>POP_2010</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>REP_OFFICE</attrlabl>
+                <attrdef>Council Representative Office</attrdef>
+            </attr>
+            <attr>
+                <attrlabl>SE_ANNO_CAD_DATA</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>SHAPE.AREA</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>SHAPE.LEN</attrlabl>
+            </attr>
+        </detailed>
+    </eainfo>
+    <distinfo>
+        <distrib>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>D.C. Office of the Chief Technology Officer</cntorg>
+                    <cntper>GIS Data Coordinator</cntper>
+                </cntorgp>
+                <cntaddr>
+                    <addrtype>mailing and physical</addrtype>
+                    <address>200 I Street SE, 5th Floor</address>
+                    <city>Washington</city>
+                    <state>DC</state>
+                    <postal>20003</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntfax>(202) 727-5660</cntfax>
+                <cntemail>dcgis@dc.gov</cntemail>
+                <hours>8:30 am - 5 pm</hours>
+            </cntinfo>
+        </distrib>
+        <distliab>See access and use constraints information.</distliab>
+        <custom>DC datasets can be downloaded from "http://opendata.dc.gov".</custom>
+    </distinfo>
+    <metainfo>
+        <metd>20210108</metd>
+        <metc>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>D.C. Office of the Chief Technology Officer</cntorg>
+                    <cntper>GIS Data Coordinator</cntper>
+                </cntorgp>
+                <cntaddr>
+                    <addrtype>mailing and physical</addrtype>
+                    <address>200 I Street SE, 5th Floor</address>
+                    <city>Washington</city>
+                    <state>DC</state>
+                    <postal>20003</postal>
+                    <country>US</country>
+                </cntaddr>
+                <cntfax>(202) 727-5660</cntfax>
+                <cntemail>dcgis@dc.gov</cntemail>
+                <hours>8:30 am - 5 pm</hours>
+            </cntinfo>
+        </metc>
+        <metstdn>FGDC Content Standard for Digital Geospatial Metadata</metstdn>
+        <metstdv>FGDC-STD-001-1998</metstdv>
+        <mettc>local time</mettc>
+    </metainfo>
+</metadata>

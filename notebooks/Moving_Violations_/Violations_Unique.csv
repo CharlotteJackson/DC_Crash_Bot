@@ -1,0 +1,291 @@
+,Violations,Violations_Edit
+0,SPEED 11-15 MPH OVER THE SPEED LIMIT,speed mph speed limit
+1,OWNER OPERATE OR PERMIT OPERATION OF UNINSRD VEH,owner operate permit operation uninsured vehicle
+2,FAIL TO PAY ATTENTION WHILE OPERATING A VEHICLE,fail pay attention operating vehicle
+3,MAKING A TURN FROM THE WRONG LANE,making turn wrong lane
+4,FAIL TO KEEP IN LANE,fail keep lane
+5,FAIL TO DISPLAY PROOF OF VEHICLE INSURANCE,fail display proof vehicle insurance
+6,FAIL TO EXHIBIT DRIVER'S LICENSE OR PERMIT,fail exhibit driver license permit
+7,SPEED 16-20 MPH OVER THE SPEED LIMIT,speed mph speed limit
+8,SPEED 21-25 MPH OVER THE SPEED LIMIT,speed mph speed limit
+9,OVER 25 MPH IN EXCESS OF LIMIT ON NON-CONTROLLED A,mph excess limit non controlled
+10,FAIL TO DISPLAY CURRENT INSPECTION STICKER,fail display current inspection sticker
+11,"RIGHT TURN ON RED, VIOLATION NO TURN ON RED SIGN",right turn red violation turn red sign
+12,TURN RIGHT ON RED WHEN PROHIBITED,turn right red prohibited
+13,NO FRONT TAGS,front tag
+14,UNREGISTERED VEHICLE 30 DAYS OR LESS,unregistered vehicle day le
+15,VIOLATION OF RESTRICTION ON LEARNER'S PERMIT,violation restriction learner permit
+16,SEAT BELT REGULATION VIOLATION,seat belt regulation violation
+17,NO STOP LIGHT(S),stop light
+18,DEAD OR EXPIRED TAGS,dead expired tag
+19,FAIL TO DISPLAY CURRENT TAGS,fail display current tag
+20,USE OF UNREGISTERED VEHICLE,use unregistered vehicle
+21,FOLLOW A VEHICLE TOO CLOSELY,follow vehicle closely
+22,FAIL TO HAVE LICENSE,fail license
+23,FAIL TO CONTROL VEHICLE SPEED TO AVOID COLLIDING,fail control vehicle speed avoid colliding
+24,PASS WITHOUT CAUTION,pas without caution
+25,FAIL TO YIELD RIGHT OF WAY,fail yield right way
+26,PASSING STOP SIGN WITHOUT COMING TO A FULL STOP,passing stop sign without coming full stop
+27,PASSING A YELLOW TRAFFIC SIGNAL,passing yellow traffic signal
+28,FAIL TO CLEAR INTERSECTION,fail clear intersection
+29,SPEED 26-30 MPH OVER THE SPEED LIMIT,speed mph speed limit
+30,OBSTRUCTED TAGS,obstructed tag
+31,FAIL TO STOP OUT OF AN ALLEY,fail stop alley
+32,COLLIDING WITH FIXED OBJECT W/NO DAMAGE OR INJURY,colliding fixed object w damage injury
+33,NO LIGHTS RUNNING ON VEHICLE,light running vehicle
+34,ONE RUNNING LIGHT,one running light
+35,DISOBEY TRAFFIC CONTROL DEVICE,disobey traffic control device
+36,"DISTRACTED DRIVING USING CELL PHONE, OTHER DEVICE",distracted driving using cell phone device
+37,FAIL TO STOP PER REGULATIONS FACING RED SIGNAL,fail stop per regulation facing red signal
+38,PERMIT UNLICENSED DRIVER TO OPERATE VEHICLE,permit unlicensed driver operate vehicle
+39,FAIL TO YIELD TO ANOTHER  VEHICLE,fail yield another vehicle
+40,FAIL TO PROPERLY FASTEN TAGS TO VEHICLE,fail properly fasten tag vehicle
+41,BACK UP WITHOUT CAUTION,back without caution
+42,"CANCELLED, SUSPENDED, REVOKED, OR ALTERED PERMIT",cancelled suspended revoked altered permit
+43,VIOLATION OF TINTED WINDOWS REGULATIONS,violation tinted window regulation
+44,CHANGE LANES WITHOUT CAUTION,change lane without caution
+45,FAIL TO PROCEED W/ CAUTION AND REDUCED SPD,fail proceed w caution reduced spd
+46,IMPROPER TURN,improper turn
+47,"UNREGISTERED VEHICLE, MORE THAN 30 DAYS",unregistered vehicle day
+48,VIOLATION OF THE CHILD RESTRAINT ACT,violation child restraint act
+49,DRIVING ON THE WRONG SIDE OF THE STREET,driving wrong side street
+50,FAIL TO EXHIBIT REGISTRATION,fail exhibit registration
+51,NO PERMIT PAST EXPIRATION DATE PLUS 90 DAYS,permit past expiration date plus day
+52,FAIL TO PULL OVER FOR FIRE APPARATUS,fail pull fire apparatus
+53,DISTRACTED DRIVING,distracted driving
+54,FAIL TO PROPERLY AFFIX REGISTRATION STICKERS,fail properly affix registration sticker
+55,FAIL TO SECURE DC TAGS,fail secure dc tag
+56,OPERATING HIGH BEAM LIGHTS,operating high beam light
+57,FAIL TO REPORT FOR INSPECTION,fail report inspection
+58,FAIL TO YIELD TO AN EMERGENCY VEHICLE,fail yield emergency vehicle
+59,FAIL TO YIELD RIGHT OF WAY  PEDESTRIAN IN ROADWAY,fail yield right way pedestrian roadway
+60,NOT LICENSED FOR TYPE OF VEHICLE BEING OPERATED,licensed type vehicle operated
+61,POORLY ILLUMINATED TAGS,poorly illuminated tag
+62,NO REAR LIGHTS,rear light
+63,PASS A FLASHING YELLOW TRAFFIC SIGNAL,pas flashing yellow traffic signal
+64,TURNING LEFT WHERE LEFT TURNS ARE PROHIBITED,turning left left turn prohibited
+65,SPEED UP TO TEN MPH OVER THE SPEED LIMIT,speed ten mph speed limit
+66,FAIL TO YIELD TO PEDESTRIAN AT NON-SIGNALIZED SITE,fail yield pedestrian non signalized site
+67,NO REAR TAGS,rear tag
+68,OBSTRUCTING CROSSWALK OR INTERSECTION,obstructing crosswalk intersection
+69,PASSING  VEHICLE ON RIGHT,passing vehicle right
+70,OPEN DOOR TO APPROACHING TRAFFIC,open door approaching traffic
+71,DRIVE AT UNREASONABLE SPEED,drive unreasonable speed
+72,LITTERING FROM VEHICLE ON PRIVATE/PUBLIC PROPERTY,littering vehicle private public property
+73,PASS ON LEFT AND TURN RIGHT IN FRONT OF BUS,pas left turn right front bus
+74,FAIL TO GIVE HAND OR MECHANICAL TURN SIGNAL,fail give hand mechanical turn signal
+75,VIOLATION OF ONE WAY STREET RESTRICTION,violation one way street restriction
+76,EXPIRED PERMIT 90 DAYS,expired permit day
+77,MAKING A U TURN WHERE U TURNS ARE PROHIBITED,making u turn u turn prohibited
+78,COVERED LICENSE PLATE,covered license plate
+79,FAIL TO USE SEATBELT IN CMV,fail use seatbelt cmv
+80,FAIL TO HAVE DC TAGS,fail dc tag
+81,IMPROPER USE OF DEALER TAG(S),improper use dealer tag
+82,DEALER VEHICLE WITHOUT REGISTRATION,dealer vehicle without registration
+83,PERMIT USE OF EXPIRED TAGS,permit use expired tag
+84,DEFECTIVE WINDSHIELD,defective windshield
+85,NO FENDER(S) OR BUMPER(S),fender bumper
+86,PERMIT OPERATION OF AN UNSAFE VEHICLE,permit operation unsafe vehicle
+87,NO REAR VIEW MIRROR(S),rear view mirror
+88,LOANING TAGS,loaning tag
+89,IMPROPER DEALER TAGS,improper dealer tag
+90,OPERATING VEHICLE WITH CONDITIONAL INSPECTION,operating vehicle conditional inspection
+91,OPERATING VEHICLE LEARNER PERMIT NO LICENSE,operating vehicle learner permit license
+92,NO INSPECTION STICKER ON A TAXICAB,inspection sticker taxicab
+93,LEAVING A MOTOR RUNNING UNATTENDED,leaving motor running unattended
+94,ONE WAY STREET VIOLATION,one way street violation
+95,OVERTAKING VEHICLE STOPPED AT XWALK FOR PEDESTRIAN,overtaking vehicle stopped xwalk pedestrian
+96,FAIL TO CHANGE ADDRESS ON PERMIT,fail change address permit
+97,BAD FOOT BRAKES,bad foot brake
+98,VIOLATION OF TOWING REGULATIONS,violation towing regulation
+99,PERMIT UNAUTHORIZED PERSON TO OPERATE VEHICLE,permit unauthorized person operate vehicle
+100,OPERATING WITHOUT  WINDSHIELD WIPERS,operating without windshield wiper
+101,UNNECESSARY NOISE FROM HORN,unnecessary noise horn
+102,DRIVE OVER A SIDEWALK,drive sidewalk
+103,FAIL TO SLOW AT AN INTERSECTION,fail slow intersection
+104,EXPIRED INSPECTION STICKER,expired inspection sticker
+105,ALTERED TAGS,altered tag
+106,FAIL TO STOP FOR APPROACHING SCHOOL BUS,fail stop approaching school bus
+107,LEARNER'S  PERMIT  AGE RESTRICTION,learner permit age restriction
+108,SPEEDING IN CMV 15 MPH OVER SPEED LIMIT,speeding cmv mph speed limit
+109,INTERFERE WITH TRAFFIC WHEN PULLING FROM CURB,interfere traffic pulling curb
+110,SEAT BELT REGULATION MULTIPLE VIOLATIONS,seat belt regulation multiple violation
+111,TRUCK RESTRICTED ROUTE,truck restricted route
+112,"LICENSE/PERMIT, DISPLAY OR USING ANOTHER PERSON'S",license permit display using another person
+113,OVERWEIGHT COMMERCIAL MOTOR VEHICLE,overweight commercial motor vehicle
+114,BIKE/PMD FAIL TO YIELD RIGHT OF WAY  TO PED OR VEH,bike pmd fail yield right way pedestrian vehicle
+115,EXPIRED MEDICAL CERTIFICATE,expired medical certificate
+116,TURN RIGHT ON RED WITHOUT COMPLETE STOP,turn right red without complete stop
+117,OBSTRUCTED WINDSHIELD,obstructed windshield
+118,IMPROPER TURN AT AN INTERSECTION,improper turn intersection
+119,COLLIDING WITH PEDESTRIAN,colliding pedestrian
+120,PASSING IN AN INTERSECTION,passing intersection
+121,DRIVE OFF THE ROADWAY,drive roadway
+122,OPERATING VEHICLE WITH OPEN ALCOHOL CONTAINER,operating vehicle open alcohol container
+123,RIGHT TURN ON RED FAIL YIELD PEDESTRIAN/VEHICLE,right turn red fail yield pedestrian vehicle
+124,OPERATE UNREGISTERED MOTOR DRIVEN CYCLE,operate unregistered motor driven cycle
+125,FAIL OR REFUSE TO FOLLOW POLICE OFFICER DIRECTION,fail refuse follow police officer direction
+126,FAIL TO STOP PER REGULATIONS AT FLASHING RED LIGHT,fail stop per regulation flashing red light
+127,FAIL TO REPLACE INSPECTION STICKER,fail replace inspection sticker
+128,OVER 25 MPH IN EXCESS OF LIMIT ON CONTROLLED ACCES,mph excess limit controlled acces
+129,DRIVING AFTER BEING DECLARED OUT-OF-SERVICE,driving declared service
+130,DRIVING ON MEDIAN OR CHANNELIZING TRAFFIC ISLAND,driving median channelizing traffic island
+131,WINDSHIELD NOT IN OPERATING CONDITION,windshield operating condition
+132,OPERATE VEHICLE IN UNSAFE MECHANICAL CONDITION,operate vehicle unsafe mechanical condition
+133,FAIL TO YIELD ROW STATIONARY EMERGENCY VEHICLE,fail yield row stationary emergency vehicle
+134,FAIL TO SECURE LOAD ON VEHICLE,fail secure load vehicle
+135,CDL NOT-OUT-OF-SERVICE VIOLATION,cdl service violation
+136,FAIL TO YIELD TO PEDESTRIAN ON SIDEWALK,fail yield pedestrian sidewalk
+137,UNSAFE BUMPER,unsafe bumper
+138,CDL OUT-OF-SERVICE VIOLATION,cdl service violation
+139,DISTRACTED DRIVING WHILE OPERATING SCHOOL BUS,distracted driving operating school bus
+140,OPERATE A VEHICLE IN VIOLATION OF A RESTRICTION,operate vehicle violation restriction
+141,FAIL TO WEAR  HELMET MOTORCYCLE/MOTOR DRIVEN CYCLE,fail wear helmet motorcycle motor driven cycle
+142,TURNED OFF HEADLIGHTS,turned headlight
+143,FAIL TO YIELD WHEN EMERGING FROM AN ALLEY,fail yield emerging alley
+144,TINTED WINDOW VIOLATION FAIL TO COMPLY 1,tinted window violation fail comply
+145,DRIVE OVER MEDIAN,drive median
+146,UNLICENSED DC OPERATOR,unlicensed dc operator
+147,DISOBEYING OFFICIAL TRAFFIC CONTROL DEVICE,disobeying official traffic control device
+148,UNAUTHORIZED LIGHTS ON VEHICLE,unauthorized light vehicle
+149,NO MEDICAL CERTIFICATE IN DRIVER'S POSS - OOS,medical certificate driver po oos
+150,PROVISIONAL PERMIT PASSENGER RESTRICTION,provisional permit passenger restriction
+151,FAIL TO SECURE TRASH LOAD,fail secure trash load
+152,DRIVE TOO SLOWLY TO IMPEDE OR BLOCK TRAFFIC,drive slowly impede block traffic
+153,LEARNER'S PERMIT WITHOUT ACCOMPANYING CDL HOLDER,learner permit without accompanying cdl holder
+154,"OBSTRUCTED, REAR, FRONT OR SIDE VISION IN VEHICLE",obstructed rear front side vision vehicle
+155,VIOLATION OF NO TURN SIGN,violation turn sign
+156,DRIVE THROUGH OR PASS A BARRICADE,drive pas barricade
+157,BACKING TO TURN,backing turn
+158,ALTERING A DRIVING PERMIT,altering driving permit
+159,ILLEGIBLE TAGS,illegible tag
+160,FAIL TO APPLY DC TAG,fail apply dc tag
+161,NO OR INVALID DRIVER'S LICENSE IN CMV,invalid driver license cmv
+162,TELEVISION VISIBLE TO VEHICLE OPERATOR,television visible vehicle operator
+163,"LANE, IMPROPER USE OF RESTRICTED",lane improper use restricted
+164,OPERATE UNSAFE VEHICLE,operate unsafe vehicle
+165,PASSING ON A CURVE,passing curve
+166,SPEEDING IN CMV 11-14 MPH OVER SPEED LIMIT,speeding cmv mph speed limit
+167,IMPROPER LIGHT(S),improper light
+168,FAIL TO KEEP RIGHT,fail keep right
+169,OBSTRUCTING TRAFFIC,obstructing traffic
+170,DRIVE THROUGH OR WITHIN A SAFETY ZONE,drive within safety zone
+171,FAIL TO OBEY OFFICER'S ORDERS,fail obey officer order
+172,DRIVING OVER LAWN,driving lawn
+173,CARRY PASSENGER OR FAIL TO RIDE ON SEAT,carry passenger fail ride seat
+174,FAIL TO CHANGE ADDRESS ON REGISTRATION,fail change address registration
+175,OPERATING CMV WITH LAMPS/REFLECTORS OBSCURED,operating cmv lamp reflector obscured
+176,LESS THAN 18 YRS OLD MANDATORY SEAT BELT VIOL,le yr old mandatory seat belt violation
+177,UNSAFE TIRE(S),unsafe tire
+178,DO NOT USE,use
+179,ILLEGAL HEADLIGHT(S),illegal headlight
+180,RIDE BIKE/PMD  SIDEWALK  CENTRAL BUSINESS DISTRICT,ride bike pmd sidewalk central business district
+181,FOLLOW WITHIN FIVE HUNDRED FEET OF FIRE APPARATUS,follow within five hundred foot fire apparatus
+182,MOTOR DRIVEN CYCLE SPEED > 30 MPH,motor driven cycle speed mph
+183,WORK ZONE VIOLATION - FINE DOUBLES,work zone violation fine double
+184,EXCESSIVE IDLING,excessive idling
+185,BAD HAND BRAKES,bad hand brake
+186,PASSING WITH AN OBSTRUCTED VIEW,passing obstructed view
+187,DRIVE OVER A FIRE HOSE,drive fire hose
+188,OBJECT HANGING IN VEHICLE SO AS TO OBSTRUCT VISION,object hanging vehicle obstruct vision
+189,VEHICLE NOT PLACARDED AS REQUIRED,vehicle placarded required
+190,COMMERCIAL VEHICLE SPILT LOAD,commercial vehicle spilt load
+191,NO SPEEDOMETER,speedometer
+192,LESS THAN 18 YRS OLD NIGHT RESTRICTION,le yr old night restriction
+193,PROVISIONAL PERMIT NIGHT RESTRICTION,provisional permit night restriction
+194,OPERATE A CMV WITHOUT A CDL,operate cmv without cdl
+195,PROHIBITED/PERMISSIVE PLACARDING,prohibited permissive placarding
+196,COAST WITH GEARS UNMESHED,coast gear unmeshed
+197,OPERATE VEHICLE WITH DOORS OPEN,operate vehicle door open
+198,UNNECESSARY NOISE,unnecessary noise
+199,IMPROPERLY RIDING ON VEHICLE,improperly riding vehicle
+200,FAIL TO TURN IN DC TAGS,fail turn dc tag
+201,EXCESSIVE SMOKE,excessive smoke
+202,FAIL TO USE RUNNING LIGHT(S),fail use running light
+203,BIKE/PMD FAIL YIELD ROW TO PED SIDEWALK/CROSSWALK,bike pmd fail yield row ped sidewalk crosswalk
+204,VIOLATE BRIDGE LOAD LIMIT,violate bridge load limit
+205,REMOVE INSPECTION STICKER,remove inspection sticker
+206,UNAUTHORIZED USE OF SIREN,unauthorized use siren
+207,SOLICIT RIDE ON THE SIDE OF THE ROADWAY,solicit ride side roadway
+208,COMMERCIAL VEHICLE OPERATING WHILE IN PARK,commercial vehicle operating park
+209,FAIL TO OBEY GREEN ARROW TRAFFIC SIGNAL,fail obey green arrow traffic signal
+210,OVERHEIGHT VEHICLE,overheight vehicle
+211,NO REAR MIRROR ON A MOTORCYCLE,rear mirror motorcycle
+212,DRIVING A TRUCK THROUGH A RESTRICTED STREET,driving truck restricted street
+213,BIKE GIVE FALSE INFORMATION,bike give false information
+214,LESS THAN 18 YRS OLD PASSENGER RESTRAINT VIOL,le yr old passenger restraint violation
+215,FAIL TO REMOVE EXPIRED TAXICAB INSPECTION STICKER,fail remove expired taxicab inspection sticker
+216,FAIL TO BACK INTO PARKING SPACE,fail back parking space
+217,"BUS LANE, UNAUTHRIZED DRIVING IN A",bus lane unauthrized driving
+218,DRIVING A BUS THROUGH A RESTRICTED STREET,driving bus restricted street
+219,RECKLESS DRIVING,reckless driving
+220,FAIL TO OBEY TRAFFIC CONTROL DEVICE COMM VEHICLE,fail obey traffic control device comm vehicle
+221,OPERATING WITH A TORN FENDER,operating torn fender
+222,OVERHEIGHT COMMERCIAL MOTOR VEHICLE,overheight commercial motor vehicle
+223,OPERATING AN OUT OF SERVICE VEHICLE,operating service vehicle
+224,NO VALID MEDICAL WAIVER IN DRIVER'S POSSESSION,valid medical waiver driver possession
+225,DRIVING CMV (CDL) WHILE DISQUALIFIED - OOS,driving cmv cdl disqualified oos
+226,FAIL TO HAVE MOTORCYCLE PERMIT,fail motorcycle permit
+227,OPERATING STEAM SHOVEL DURING RESTRICTED HOURS,operating steam shovel restricted hour
+228,BOARD A VEHICLE WHILE IT IS IN MOTION,board vehicle motion
+229,FAIL TO TRANSFER DC TITLE,fail transfer dc title
+230,TINTED WINDOW VIOLATION FAIL TO COMPLY 2,tinted window violation fail comply
+231,OVERWEIGHT UP TO 5000 POUNDS OVER LIMIT,overweight pound limit
+232,DRIVER'S RECORD OF DUTY STATUS NOT CURRENT,driver record duty status current
+233,ENTER A BLOCK WITH FIRE APPARATUS PRESENT,enter block fire apparatus present
+234,INTERFERE WITH A TRAFFIC SIGNAL DEVICE,interfere traffic signal device
+235,OPERATING A MINIBIKE WHILE UNLICENSED,operating minibike unlicensed
+236,SCHOOL ZONE VIOLATION - FINE DOUBLES,school zone violation fine double
+237,OVERLENGTH COMMERCIAL MOTOR VEHICLE,overlength commercial motor vehicle
+238,TOWING WITHOUT SAFETY CHAIN,towing without safety chain
+239,DEFECTIVE MUFFLER,defective muffler
+240,FAIL TO FILE OR INCOMPLETE ACCIDENT REPORT,fail file incomplete accident report
+241,FAIL TO FILE AN ACCIDENT REPORT,fail file accident report
+242,FAIL TO OBEY CIVILIAN TRAFFIC OFFICER,fail obey civilian traffic officer
+243,NO COPY OF USDOT HM REGISTRATION NUMBER,copy usdot hm registration number
+244,SPEEDING IN CMV UP TO 10 MPH OVER SPEED LIMIT,speeding cmv mph speed limit
+245,DRIVE THROUGH A FUNERAL PROCESSION,drive funeral procession
+246,PERMIT BAD BRAKES,permit bad brake
+247,DEFECTIVE SPEEDOMETER,defective speedometer
+248,NO REAR VIEW MIRROR ON MINIBIKE,rear view mirror minibike
+249,FAIL TO TURN WHEEL TO CURB,fail turn wheel curb
+250,UNAPPROVED VEHICLE OPERATOR,unapproved vehicle operator
+251,NOT FOR HIRE TAXICAB ON TAXICAB STAND,hire taxicab taxicab stand
+252,SPEEDING TO PREVENT A VEHICLE FROM PASSING,speeding prevent vehicle passing
+254,FAILURE TO YEILD ROW  TO TRANSIT BUS,failure yield row transit bus
+255,DRIVE CMV W/O PROPER CLASS OR ENDORSEMENTS ON DL,drive cmv w proper class endorsement dl
+256,REFUSING TO PAY A TAXICAB FARE,refusing pay taxicab fare
+257,SMOKE SCREEN,smoke screen
+258,DRIVE VEHICLE ON THE WHEEL RIM WITHOUT A TIRE,drive vehicle wheel rim without tire
+259,UNAUTHORIZED PERSON -PASSENGER VEHICLE,unauthorized person passenger vehicle
+260,PERMIT USE OF LICENSE BY ANOTHER PERSON,permit use license another person
+261,NO SNOW TIRE OR CHAIN,snow tire chain
+262,FAILURE TO MAKE REQUIRED PAYMENT OF FINE,failure make required payment fine
+263,VIOLATION OF SNOW EMERGENCY PARKING REGULATIONS,violation snow emergency parking regulation
+264,FAIL TO PROCEED WITH CAUTION THROUGH AN INCIDENT,fail proceed caution incident
+265,FAIL TO USE HAND BRAKE,fail use hand brake
+266,10 HOUR RULE VIOLATION (PASSENGER),hour rule violation passenger
+267,MOTORCYCLE PASSING IN TANDEM,motorcycle passing tandem
+268,MOTORCYCLE/ MOTOR DRIVEN CYCLE IMPROPER RIDING  ON,motorcycle motor driven cycle improper riding
+269,FAIL TO REGISTER BIKE,fail register bike
+270,LOG VIOLATION (GENERAL / FORM AND MANNER) CMV,log violation general form manner cmv
+271,LOAD OVER FENDER(S),load fender
+272,LENGTH OVER 40'/55',length
+273,NO RED FLAG ON END OF LOAD,red flag end load
+274,PASS ON A HILL,pas hill
+275,PERMIT PASSENGER TO RIDE ON VEHICLE,permit passenger ride vehicle
+276,NON-ENGLISH SPEAKING DRIVER - CMV - OOS,non english speaking driver cmv oos
+277,NO AUTO INSURANCE,auto insurance
+278,GREATER VEHICLE WIDTH THAN PERMITTED,greater vehicle width permitted
+279,FALSE REPORT OF DRIVER'S DUTY STATUS,false report driver duty status
+280,DRIVER FAILS TO MAINTAIN PREVIOUS 7 DAYS LOGS,driver fails maintain previous day log
+281,PASSING APPROACHING FIRE APPARATUS,passing approaching fire apparatus
+282,NO SHIPPING PAPER,shipping paper
+283,HAZMAT OUT-OF-SERVICE VIOLATION,hazmat service violation
+284,FAIL TO DISPLAY PSC LICENSE IN TAXICAB,fail display psc license taxicab
+285,VIOLATION OF TUNNEL RESTRICTIONS,violation tunnel restriction
+286,"UNAUTHORIZED ITEM ON WINDOW, MIRROR, OR FRAME",unauthorized item window mirror frame
+287,DRIVE TRUCK WITH RESTRICTED PERMIT,drive truck restricted permit
+288,UNAUTHORIZED USE OF EMERGENCY PARKING PERMIT,unauthorized use emergency parking permit
+289,INTERSTATE DRIVER UNDER 21 YEARS OF AGE OOS,interstate driver year age oos
+290,MOTOR DRIVEN CYCLE SPEED OPERATING >30 MPH,motor driven cycle speed operating mph
