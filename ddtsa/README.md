@@ -10,7 +10,7 @@ To run locally
 
 ``` 
 pip install -r requirements.txt
-streamlit run pdf_extract_demo.py
+streamlit run ddtsa.py
 ```
 
 TODO insert video in action
