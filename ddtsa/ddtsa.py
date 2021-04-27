@@ -184,7 +184,16 @@ def generate_report(address: str):
         N/A
     """
     st.header(f"Generating report for {address}")
+    # TODO may want to check if address is in DC
     location_data(address)
+    safety_concerns(address)
+    time_of_day_concerns(address)
+    existing_traffic_calms(address)
+    get_neighborhood_uses(address)
+    get_multi_modal(address)
+    get_vehicle_types(address)
+    get_prev_concerns(address)
+    get_extra_info(address)
 
 
 def sidebar():
@@ -231,14 +240,6 @@ def app():
         with st.spinner():
             # Run everything !!!!
             generate_report(address)
-            safety_concerns(address)
-            time_of_day_concerns(address)
-            existing_traffic_calms(address)
-            get_neighborhood_uses(address)
-            get_multi_modal(address)
-            get_vehicle_types(address)
-            get_prev_concerns(address)
-            get_extra_info(address)
 
         # Done and Done
         st.balloons()
