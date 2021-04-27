@@ -32,7 +32,7 @@ db_user = os.environ["DB_USER"]
 db_name = os.environ["DB_NAME"]
 
 # Current query we are using
-curr_query = "select date_trunc('month', reportdate) as reportdate, sum(bicycle_fatalities) as fatal_bicyclist, sum(vehicle_fatalities) as fatal_driver, sum(pedestrian_fatalities) as fatal_pedestrian, sum(total_bicyclists) as total_bicycles, sum(total_pedestrians) as total_pedestrians, blockkey, smd_id, count(*) crash_count , avg(st_X(geography)) x_coord, avg(st_Y(geography)) y_coord from analysis_data.dc_crashes_w_details where reportdate between date '2015-01-01 00:00:01' and current_date group by date_trunc('month', reportdate), blockkey, smd_id order by reportdate desc"
+curr_query = "select reportdate, bicycle_fatalities as fatal_bicyclist, vehicle_fatalities as fatal_driver, pedestrian_fatalities as fatal_pedestrian, total_bicyclists as total_bicycles, total_pedestrians, drivers_impaired as driversimipared, drivers_speeding as speeding_involved, blockkey, 0 fatalpassenger, left(smd_id, 2) anc_id, smd_id , st_X(geography) x_coord, st_Y(geography) y_coord, intersectionid from analysis_data.dc_crashes_w_details --where reportdate between date '2021-04-15 03:35:31' and current_date where reportdate between date '2015-01-01 00:00:01' and current_date order by reportdate desc"
 
 # Needed to upload to google drive
 scope = [
@@ -114,6 +114,7 @@ def upload_file_to_s3(file_name: str, bucket: str, object_name: str = None) -> b
         return False
     return True
 
+
 # TODO cleaup since we dont use google drive anymore
 def main():
     """
@@ -136,8 +137,11 @@ def main():
         # keep as string
         df["reportdate"] = df["reportdate"].astype(str)
 
+        # fill na
+        df["intersectionid"].fillna("", inplace=True)
+
         # save csv
-        #df.to_csv("gdrive_test.csv", index=False)
+        # df.to_csv("gdrive_test.csv", index=False)
 
         # upload csv to gdrive
         # upload_to_goole_sheets("gdrive_test.csv")
