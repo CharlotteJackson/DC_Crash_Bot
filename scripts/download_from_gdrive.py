@@ -8,6 +8,7 @@
 # Python imports
 import os
 import logging
+import csv
 
 # postgress imports
 import pandas as pd
@@ -28,10 +29,10 @@ from botocore.exceptions import ClientError
 # pip install gspread pandas psycopg2 oauth2client boto3
 
 # Needed to connect to database
-db_host = os.environ["DB_HOST"]
-db_pass = os.environ["DB_PASS"]
-db_user = os.environ["DB_USER"]
-db_name = os.environ["DB_NAME"]
+# db_host = os.environ["DB_HOST"]
+# db_pass = os.environ["DB_PASS"]
+# db_user = os.environ["DB_USER"]
+# db_name = os.environ["DB_NAME"]
 
 
 # Needed to upload to google drive
@@ -110,7 +111,7 @@ def clean_data() -> None:
 
     # TODO clean up inputs, they have fields like "Adult" in the Age column
     # df["Age"] = pd.to_numeric(df["Age"])
-    df.to_csv("dc_fss.csv", index=False)
+    df.to_csv("dc_fss.csv", index=False, quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
 
     # TODO need write access to db
     # write_to_table(df)
@@ -121,16 +122,16 @@ def clean_data() -> None:
     )
 
 
-def write_to_table(df) -> None:
-    """
-    Writes data to database
-    Args:
-        N/a
-    Returns:
-        N/A
-    """
-    engine = create_engine(f"postgresql://{db_user}:{db_pass}@{db_host}:5432/{db_name}")
-    df.to_sql("dc_fss", engine)
+# def write_to_table(df) -> None:
+#     """
+#     Writes data to database
+#     Args:
+#         N/a
+#     Returns:
+#         N/A
+#     """
+#     engine = create_engine(f"postgresql://{db_user}:{db_pass}@{db_host}:5432/{db_name}")
+#     df.to_sql("dc_fss", engine)
 
 
 def main():
