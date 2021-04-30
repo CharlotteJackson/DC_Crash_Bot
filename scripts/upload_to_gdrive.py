@@ -32,7 +32,7 @@ db_user = os.environ["DB_USER"]
 db_name = os.environ["DB_NAME"]
 
 # Current query we are using
-curr_query = "select reportdate, bicycle_fatalities as fatal_bicyclist, vehicle_fatalities as fatal_driver, pedestrian_fatalities as fatal_pedestrian, total_bicyclists as total_bicycles, total_pedestrians, drivers_impaired as driversimipared, drivers_speeding as speeding_involved, blockkey, 0 fatalpassenger, left(smd_id, 2) anc_id, smd_id , st_X (geography) x_coord, st_Y(geography) y_coord, intersectionid from analysis_data.dc_crashes_w_details where reportdate between date '2015-01-01 00:00:01' and current_date order by reportdate desc"
+curr_query = "select reportdate, bicycle_fatalities as fatal_bicyclist, vehicle_fatalities as fatal_driver, pedestrian_fatalities as fatal_pedestrian, total_bicyclists as total_bicycles, total_pedestrians, drivers_impaired as driversimipared, drivers_speeding as speeding_involved, blockkey, 0 fatalpassenger, left(smd_id, 2) anc_id, smd_id , st_X(geography) x_coord, st_Y(geography) y_coord, intersectionid , to_char(reportdate, 'YYYYMMDD HH24:MI:SS') report_date_string from analysis_data.dc_crashes_w_details --where reportdate between date '2021-04-15 03:35:31' and current_date where reportdate between date '2015-01-01 00:00:01' and current_date order by reportdate desc"
 
 # Needed to upload to google drive
 scope = [
