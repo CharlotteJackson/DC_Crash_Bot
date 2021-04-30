@@ -7,7 +7,7 @@ import sys
 import argparse
 import urllib
 
-def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:str, mode:str,move_after_loading:str,move_to_folder:str):
+def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, header:str, mode:str,move_after_loading:str,move_to_folder:str):
 
     # set up S3 and RDS connections
     s3_resource = boto3.resource('s3'
@@ -32,7 +32,7 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
     # grab list of all files in target folder that have a target table
     # url encode the file key so the ones with semicolons don't throw an error
     # update january 2021: the script now throws an error if i try to feed it URL-encoded object keys, so just using the plain text one now
-    files_to_load = [(urllib.parse.quote(obj.key), obj.key, obj.Object().metadata['target_schema'],obj.Object().metadata['target_table']) for obj in bucket.objects.filter(Prefix=folder_to_load) if 'target_table' in obj.Object().metadata.keys() if format in obj.key]
+    files_to_load = [(urllib.parse.quote(obj.key), obj.key, obj.Object().metadata['target_schema'],obj.Object().metadata['target_table']) for obj in bucket.objects.filter(Prefix=folder_to_load) if 'target_table' in obj.Object().metadata.keys() if '.csv' in obj.key]
     # generate distinct list of target tables so they're all only dropped and recreated/truncated one time
     target_tables = [(target_schema, target_table) for (file_name, file_name_native, target_schema, target_table) in files_to_load]
     target_tables_distinct = set(target_tables)
@@ -43,7 +43,7 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
         generate_table(engine=engine, target_schema=target_schema,target_table=target_table,mode=mode)
 
     # set table import parameters that are the same for every file
-    copy_parameters = '\'(FORMAT {}, HEADER {})\''.format(format, header)
+    copy_parameters = '\'(FORMAT CSV, HEADER {})\''.format(header)
     columns_to_copy = '\'\''
     aws_credentials_param = '\'{}\', \'{}\',\'\''.format(AWS_Credentials['aws_access_key_id'],AWS_Credentials['aws_secret_access_key'])
 
@@ -80,15 +80,10 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, format:str, header:
 # python s3_to_postgis.py --folders source-data/dc-open-data/crash --format csv --mode replace --header true --move_after_loading no --move_to_folder ""
 CLI=argparse.ArgumentParser()
 CLI.add_argument(
-"--folders",  
+"folders",  
 nargs="*",  
 type=str,
 default=['source-data/dc-open-data/crashes_raw/','source-data/dc-open-data/crash_details/'],  # default - load the two main crash datasets
-)
-CLI.add_argument(
-"--format",
-type=str, 
-default='csv', # default is to only load csvs
 )
 CLI.add_argument(
 "--header",
@@ -114,7 +109,6 @@ default='' # default is to append new records instead of dropping and reloading 
 # parse the command line
 args = CLI.parse_args()
 folders_to_load = args.folders
-format = args.format.lower()
 header = args.header.lower()
 mode=args.mode.lower()
 move_after_loading = args.move_after_loading.lower()
@@ -122,4 +116,4 @@ move_to_folder = args.move_to_folder.lower()
 
 # call function with command line arguments
 for folder in folders_to_load:
-    s3_to_postGIS(folder_to_load=folder, AWS_Credentials=get_connection_strings("AWS_DEV"), format=format, header=header, mode=mode,move_after_loading=move_after_loading,move_to_folder=move_to_folder)
+    s3_to_postGIS(folder_to_load=folder, AWS_Credentials=get_connection_strings("AWS_DEV"), header=header, mode=mode,move_after_loading=move_after_loading,move_to_folder=move_to_folder)

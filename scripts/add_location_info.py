@@ -1,5 +1,96 @@
 import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
+from get_address import GeoLoc
+
+def geocode_text(engine, records_to_geocode:list, administrative_area:str, **kwargs):
+
+    text_type = kwargs.get('text_type', 'Unknown')
+
+    # create tables if they don't already exist 
+    create_geocodes_location_table = """
+    CREATE TABLE IF NOT EXISTS source_data.geocoded_text (
+        GET_DATETIME TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        ,text varchar null
+        ,text_type varchar null
+        ,point_type varchar null
+        ,point_geography geography null
+        ,polygon_geography geography null
+        ,administrative_area varchar null
+    )
+    """
+    engine.execute(create_geocodes_location_table)
+
+    create_missing_geocodes_location_table = """
+    CREATE TABLE IF NOT EXISTS source_data.geocoded_text_fails (
+        GET_DATETIME TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        ,text varchar null
+        ,text_type varchar null
+        ,administrative_area varchar null
+    )
+    """
+    engine.execute(create_missing_geocodes_location_table)
+
+    # grab the google API key 
+    GOOGLE_API_KEY = get_connection_strings("GOOGLE_MAPS")["API_Key"]
+
+    # pull records that were already geocoded and either succeeded or failed
+    already_geocoded_records = [r for (r,) in engine.execute("select distinct text from source_data.geocoded_text").fetchall()]
+    already_failed_records = [r for (r,) in engine.execute("select distinct text from source_data.geocoded_text_fails").fetchall()]
+
+    # limit records to only those that haven't already been checked
+    new_records = [r for r in records_to_geocode if r not in already_failed_records if r not in already_geocoded_records]
+    print(len(records_to_geocode)," records provided, ",len(new_records)," of them need to be geocoded")
+
+    # then using the google maps API, add a lat and long for addresses that don't have them
+    for record  in new_records:
+        address = str(record)
+        try:
+            geo_loc_instance = GeoLoc(GOOGLE_API_KEY)
+            geocode_location = geo_loc_instance.GetGeoLoc(test_address=address, test_administrative_area=administrative_area)
+            # insert into the table
+            point_lat = geocode_location['geometry']['location']['lat']
+            point_long = geocode_location['geometry']['location']['lng']
+            point_type = geocode_location['geometry']['location_type']
+            ne_lat = geocode_location['geometry']['viewport']['northeast']['lat']
+            ne_long = geocode_location['geometry']['viewport']['northeast']['lng']
+            sw_lat = geocode_location['geometry']['viewport']['southwest']['lat']
+            sw_long = geocode_location['geometry']['viewport']['southwest']['lng']
+
+            insert_record_query = """
+                INSERT INTO source_data.geocoded_text (text,text_type, point_type,point_geography,polygon_geography,administrative_area)
+                SELECT '{address}', '{text_type}', '{point_type}'
+                ,ST_SetSRID(ST_MakePoint({point_long}, {point_lat}),4326)::geography
+                ,ST_Polygonize(results)::geography
+                ,'{administrative_area}'
+                FROM 
+                (SELECT
+                    ST_MakeLine(
+                        ST_SetSRID(ST_MakePoint({sw_long},{sw_lat}), 4326), ST_SetSRID(ST_MakePoint({ne_long},{sw_lat}),4326)
+                        ) AS results
+                UNION
+                SELECT
+                    ST_MakeLine(
+                        ST_SetSRID(ST_MakePoint({ne_long},{sw_lat}), 4326), ST_SetSRID(ST_MakePoint({ne_long},{ne_lat}),4326)
+                        )
+                UNION
+                SELECT    
+                    ST_MakeLine(
+                        ST_SetSRID(ST_MakePoint({ne_long},{ne_lat}), 4326), ST_SetSRID(ST_MakePoint({sw_long},{ne_lat}),4326)
+                        )   
+                UNION
+                SELECT    
+                    ST_MakeLine(
+                        ST_SetSRID(ST_MakePoint({sw_long},{ne_lat}), 4326), ST_SetSRID(ST_MakePoint({sw_long},{sw_lat}),4326)
+                        )   ) as tmp;
+
+                """.format(address = address, text_type = text_type, point_type=point_type, point_long=point_long,
+                 point_lat=point_lat, sw_lat=sw_lat, sw_long=sw_long, ne_lat = ne_lat, ne_long = ne_long, administrative_area=administrative_area)
+            engine.execute(insert_record_query)
+        except Exception as error:
+            print("could not geocode record ", address)
+            # replace single quotes to avoid insertion errors
+            address=address.replace('\'','')
+            engine.execute("INSERT INTO source_data.geocoded_text_fails (text, text_type,administrative_area) SELECT '{address}', '{text_type}','{administrative_area}'".format(address=address, text_type=text_type, administrative_area=administrative_area))
 
 def add_location_info(engine, from_schema:str, from_table:str, target_schema:str, target_table:str, partition_by_field:str):
 

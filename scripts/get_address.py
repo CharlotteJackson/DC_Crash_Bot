@@ -10,14 +10,14 @@ class GeoLoc:
     def __init__(self, token):
         self.google_key = token
 
-    def GetGeoLoc(self, test_address):
-        url = "https://maps.googleapis.com/maps/api/geocode/json?address={final_address}&key={GOOGLE_KEY}".format(
-            final_address=test_address, GOOGLE_KEY=self.google_key)
+    def GetGeoLoc(self, test_address,test_administrative_area):
+        url = "https://maps.googleapis.com/maps/api/geocode/json?address={final_address}&components=administrative_area:{final_administrative_area}&key={GOOGLE_KEY}".format(
+            final_address=urllib.parse.quote(test_address), final_administrative_area = urllib.parse.quote(test_administrative_area), GOOGLE_KEY=self.google_key)
         # print(url)
 
         r = requests.get(url)
         # print(r.json())
-        return r.json()['results'][0]['geometry']['location']
+        return r.json()['results'][0]
 
 
 # TODO Use Env vars instead for the Google geolocation API
