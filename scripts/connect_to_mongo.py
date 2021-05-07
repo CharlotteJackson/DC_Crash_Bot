@@ -41,7 +41,7 @@ def MongoDB_Client(destination: str, env:str, dbName = None):
     credentials['PWD'] = urllib.parse.quote(credentials['PWD'])
     credentials['URL'] = urllib.parse.quote(credentials['mydbcluster'])
 
-    client = pymongo.MongoClient("mongodb://{}:{}@{}.us-east-1.docdb.amazonaws.com:27017/?ssl=true&ssl_ca_certs=rds-combined-ca-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false".format(credentials['UID'], credentials['PWD'],credentials['mydbcluster'])
+    client = pymongo.MongoClient(f"mongodb://{credentials['UID']}:{credentials['PWD']}@{credentials['mydbcluster']}.us-east-1.docdb.amazonaws.com:27017/?ssl=true&ssl_ca_certs=rds-combined-ca-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
     )
     if dbName is None:
         return client

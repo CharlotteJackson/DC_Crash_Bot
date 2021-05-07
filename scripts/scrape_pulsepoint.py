@@ -19,7 +19,7 @@ dataset = 'pulsepoint'
 
 def main(agency:str):
 
-    url = "https://web.pulsepoint.org/DB/giba.php?agency_id={}".format(agency)
+    url = f"https://web.pulsepoint.org/DB/giba.php?agency_id={agency}"
 
     current_time = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00:00")
 

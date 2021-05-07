@@ -35,7 +35,7 @@ for state_code, state_abbrev in states.items():
 
     census_params={"get":variables
                 ,"for":"tract:*"
-                ,"in":"state:{}".format(state_code)
+                ,"in":f"state:{state_code}"
                 ,"key":Census_API_Key
                 }
     response = requests.get(census_endpoint, params = census_params)
@@ -45,5 +45,5 @@ for state_code, state_abbrev in states.items():
         for line in response.text.split('\n'):
             output.write(line.replace("[","").replace("],","") + '\n')
     data = open(filename, 'rb')
-    s3.Bucket(bucket_name).put_object(Key='source-data/census/acs/acs2019_{}.csv'.format(state_abbrev), Body=data, Metadata =metadata)
+    s3.Bucket(bucket_name).put_object(Key=f'source-data/census/acs/acs2019_{state_abbrev}.csv', Body=data, Metadata =metadata)
 

@@ -79,7 +79,7 @@ for record in records:
         bikescore=content['bike']['score']
         transitscore=content['transit']['score']
         # insert into the table
-        insert_record_query = "INSERT INTO source_data.address_walkscores VALUES (\'{0}\',\'{1}\',{2},{3},{4},{5},{6},{7})".format(address, census_block, geography, lat, long, walkscore, bikescore, transitscore)
+        insert_record_query = f"INSERT INTO source_data.address_walkscores VALUES (\'{address}\',\'{census_block}\',{geography},{lat},{long},{walkscore},{bikescore},{transitscore})"
         engine.execute(insert_record_query)
     except Exception as error:
         print("could not find location for address ", address)

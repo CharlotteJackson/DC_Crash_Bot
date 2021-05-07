@@ -61,12 +61,12 @@ for record in records:
         geo_loc_instance = GeoLoc(GOOGLE_API_KEY)
         lat_long = geo_loc_instance.GetGeoLoc(address_url_enc)
         # insert into the table
-        insert_record_query = "INSERT INTO source_data.mv_geocodes VALUES (\'{0}\',{1},{2})".format(address, lat_long["lat"], lat_long["lng"])
+        insert_record_query = f"INSERT INTO source_data.mv_geocodes VALUES (\'{address}\',{lat_long["lat"]},{lat_long["lng"]})"
         engine.execute(insert_record_query)
     except Exception as error:
         print("could not find location for address ", address)
         # insert into the missing values table
-        insert_missing_record_query = "INSERT INTO source_data.mv_location_no_geocodes VALUES (\'{0}\')".format(address)
+        insert_missing_record_query = f"INSERT INTO source_data.mv_location_no_geocodes VALUES (\'{address}\')"
         try:
             engine.execute(insert_missing_record_query)
         except:

@@ -31,27 +31,27 @@ geography_levels = {
 }
 
 for geo_level in geography_levels.keys():
-    query = """
-    drop table if exists viz.{0}_boundaries;
-    create table viz.{0}_boundaries as
-    SELECT a.{1} as {0},
+    query = f"""
+    drop table if exists viz.{geo_level}_boundaries;
+    create table viz.{geo_level}_boundaries as
+    SELECT a.{geography_levels[geo_level]['orig_field_name']} as {geo_level},
         (ST_Dumppoints(a.geography::geometry)).path[2] as POINT_ORDER
         ,ST_X((ST_Dumppoints(a.geography::geometry)).geom) as Longitude
         ,ST_Y((ST_Dumppoints(a.geography::geometry)).geom) as Latitude
-    FROM {2} a;
+    FROM {geography_levels[geo_level]['geo_boundaries_source_table'])} a;
 
-    drop table if exists {0};
-    create temp table {0} on commit preserve rows as (
+    drop table if exists {geo_level};
+    create temp table {geo_level} on commit preserve rows as (
     select 
-		{1} as {0}
+		{geography_levels[geo_level]['orig_field_name']} as {geo_level}
 		,geography
 		,st_area(geography::geography)/(1000.0^2) as area_in_km2
 		,st_area(geography::geography) as area_in_m2
-    from {2}
+    from {geography_levels[geo_level]['geo_boundaries_source_table'])}
 	) with data;
 
-    drop table if exists {0}_2;
-    create temp table {0}_2 on commit preserve rows as (
+    drop table if exists {geo_level}_2;
+    create temp table {geo_level}_2 on commit preserve rows as (
     select 
             a.*
             ,case when c.total_pop_2010 is null then 0 else c.total_pop_2010 end as total_pop_2010
@@ -64,15 +64,15 @@ for geo_level in geography_levels.keys():
             ,b.num_households_w_car
             ,b.num_households_w_car/(b.num_households*1.00) as pct_households_w_car
             ,b.fagi_per_capita_2015
-    from {0} a
-        inner join (select {0}
+    from {geo_level} a
+        inner join (select {geo_level}
                     , sum(total_pop) as total_pop_2019
                     , sum(total_households) as num_households
                     , sum(num_households_w_car) as num_households_w_car
                     ,sum(fagi_total_2015)/sum(total_pop*1.00) as fagi_per_capita_2015
                     from analysis_data.acs_2019_by_tract
-                    group by {0}) b on b.{0}=a.{0}
-        left join (select {0}
+                    group by {geo_level}) b on b.{geo_level}=a.{geo_level}
+        left join (select {geo_level}
                     , sum(total_pop) as total_pop_2010
                     , sum(pop_white_non_hispanic)/sum(total_pop*1.00) as pct_white
                     , sum(pop_non_hispanic_black)/sum(total_pop*1.00) as pct_black
@@ -80,29 +80,29 @@ for geo_level in geography_levels.keys():
                     , sum(pop_non_hispanic_asian)/sum(total_pop*1.00) as pct_asian
                     from analysis_data.census_blocks
                     where total_pop > 0
-                    group by {0}) c on c.{0}=a.{0}
+                    group by {geo_level}) c on c.{geo_level}=a.{geo_level}
         ) with data;
 
-    drop table if exists {0}_3;
-    create temp table {0}_3 on commit preserve rows as (
+    drop table if exists {geo_level}_3;
+    create temp table {geo_level}_3 on commit preserve rows as (
     select a.*
         ,cast(b.daily_riders as decimal(10,2)) as daily_riders 
-    from {0}_2 a
+    from {geo_level}_2 a
     left join (select 
-                    {0}
+                    {geo_level}
                     ,sum(avg_2015_2018) as daily_riders 
                 from analysis_data.metro_stations_ridership 
-                group by {0} ) b on b.{0}= a.{0} 
+                group by {geo_level} ) b on b.{geo_level}= a.{geo_level} 
     ) with data;
 
 
-    drop table if exists {0}_4;
-    create temp table {0}_4 on commit preserve rows as (
+    drop table if exists {geo_level}_4;
+    create temp table {geo_level}_4 on commit preserve rows as (
     select a.*
         ,b.*
-        from {0}_3 a
+        from {geo_level}_3 a
         inner join (select 
-					{0} as {0}_extra1
+					{geo_level} as {geo_level}_extra1
 					--Pedestrians stats
 					,sum(total_pedestrians) as num_peds_struck
 					,sum(pedestrian_fatalities) as num_peds_killed
@@ -155,32 +155,32 @@ for geo_level in geography_levels.keys():
                     ,sum(case when dcfunctionalclass_desc in ('Principal Arterial','Minor Arterial') and intersectionid is null then total_bicyclists else 0 end) as bikers_struck_on_any_arterial_outside_intersections
 				from analysis_data.dc_crashes_w_details 
 				where date_part('year', fromdate) between 2015 and 2020
-				group by {0}
-			   ) b on b.{0}_extra1= a.{0}
+				group by {geo_level}
+			   ) b on b.{geo_level}_extra1= a.{geo_level}
             ) with data;
 
-            drop table if exists {0}_5;
-            create temp table {0}_5 on commit preserve rows as (
+            drop table if exists {geo_level}_5;
+            create temp table {geo_level}_5 on commit preserve rows as (
             select a.*
                 ,b.num_311_requests
                 ,b.num_311_requests_granted
-            from {0}_4 a
+            from {geo_level}_4 a
             left join (select 
-                            {0}
+                            {geo_level}
                             ,count(*) as num_311_requests
                             ,sum(case when cwo_objectid is not null then 1 else 0 end) as num_311_requests_granted
                         from analysis_data.all311 
-                        group by {0}) b on b.{0}= a.{0} 
+                        group by {geo_level}) b on b.{geo_level}= a.{geo_level} 
             ) with data;
 
         
-        drop table if exists {0}_6;
-        create temp table {0}_6 on commit preserve rows as (
+        drop table if exists {geo_level}_6;
+        create temp table {geo_level}_6 on commit preserve rows as (
         select a.*
             ,b.*
-        from {0}_5 a
+        from {geo_level}_5 a
         left join (select 
-                        {0} as {0}_extra2
+                        {geo_level} as {geo_level}_extra2
                         ,sum(ST_Length(geography)/1000.00) as total_road_km
                         ,avg(aadt) as avg_aadt
                         ,avg(totalcrosssectionwidth) as avg_road_width
@@ -202,17 +202,16 @@ for geo_level in geography_levels.keys():
                         ,sum(case when dcfunctionalclass_desc = 'Principal Arterial' then ST_Length(geography)/1000.00 else 0 end) as principal_arterial_blocks_km
                         ,sum(case when dcfunctionalclass_desc in ('Principal Arterial','Minor Arterial') then ST_Length(geography)/1000.00 else 0 end) as arterial_blocks_km
                     from analysis_data.roadway_blocks 
-                    group by {0} ) b on b.{0}_extra2= a.{0} 
+                    group by {geo_level} ) b on b.{geo_level}_extra2= a.{geo_level} 
         ) with data;
 
-        drop table if exists viz.{0}_statistics;
-        create table viz.{0}_statistics as 
-        select * from {0}_6;
+        drop table if exists viz.{geo_level}_statistics;
+        create table viz.{geo_level}_statistics as 
+        select * from {geo_level}_6;
 
-        alter table viz.{0}_statistics drop column {0}_extra2;
-        alter table viz.{0}_statistics drop column {0}_extra1;
-
-    """.format(geo_level, geography_levels[geo_level]['orig_field_name'], geography_levels[geo_level]['geo_boundaries_source_table'])
+        alter table viz.{geo_level}_statistics drop column {geo_level}_extra2;
+        alter table viz.{geo_level}_statistics drop column {geo_level}_extra1;
+    """
 
     engine.execute(query)
     print("tables created for geo ", geo_level)

@@ -81,19 +81,19 @@ for table in datasets_scripts.keys():
     else:
         schema='tmp'
 
-    create_schema_query="""
-        CREATE SCHEMA IF NOT EXISTS {0};
-        GRANT ALL PRIVILEGES ON SCHEMA {0} TO PUBLIC;
-    """.format(schema)
+    create_schema_query=f"""
+        CREATE SCHEMA IF NOT EXISTS {schema};
+        GRANT ALL PRIVILEGES ON SCHEMA {schema} TO PUBLIC;
+    """
 
-    create_table_query ="""
-    DROP TABLE IF EXISTS {0}.{1};
-    CREATE TABLE {0}.{1} 
+    create_table_query =f"""
+    DROP TABLE IF EXISTS {schema}.{table};
+    CREATE TABLE {schema}.{table} 
     AS (
-        {2}
+        {datasets_scripts[table]}
     );
-    GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
-    """.format(schema, table, datasets_scripts[table])
+    GRANT ALL PRIVILEGES ON {schema}.{table} TO PUBLIC;
+    """
 
     engine.execute(create_schema_query)
     engine.execute(create_table_query)

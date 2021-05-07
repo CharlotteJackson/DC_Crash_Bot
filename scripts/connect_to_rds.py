@@ -29,12 +29,12 @@ def create_postgres_engine(destination: str, target_db: str, env: str):
     credentials = get_connection_strings(destination)
     env = env.upper()
 
-    uid =urllib.parse.quote("{}".format(credentials[env]['UID']))
-    pwd = urllib.parse.quote("{}".format(credentials[env]['PWD']))
-    host=urllib.parse.quote("{}".format(credentials[env]['HOST']))
-    port=urllib.parse.quote("{}".format(credentials[env]['PORT']))
+    uid =urllib.parse.quote(f"{credentials[env]['UID']}")
+    pwd = urllib.parse.quote(f"{credentials[env]['PWD']}")
+    host=urllib.parse.quote(f"{credentials[env]['HOST']}")
+    port=urllib.parse.quote(f"{credentials[env]['PORT']}")
     
-    connection_string = "postgresql://{}:{}@{}:{}/{}".format(uid, pwd, host, port, target_db)
+    connection_string = f"postgresql://{uid}:{pwd}@{host}:{port}/{target_db}"
 
     engine = sqlalchemy.create_engine(connection_string)
 

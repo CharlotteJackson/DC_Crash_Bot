@@ -27,7 +27,7 @@ SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'analysis_
 tables_to_download = [r for (r,) in engine.execute(get_tables_query).fetchall()]
 
 for table in tables_to_download:
-    df = pd.read_sql('select * from analysis_data.{} limit 1000'.format(table), engine, coerce_float=False)
-    download_path = os.path.join(data_folder, 'analysis_data_'+table+'.csv')
+    df = pd.read_sql(f'select * from analysis_data.{table} limit 1000', engine, coerce_float=False)
+    download_path = os.path.join(data_folder, f'analysis_data_{table}.csv')
     df.to_csv(download_path, index=False)
-    print('downloaded table ', table,' with ',len(df),' records')
+    print(f'downloaded table {table} with {len(df)} records')

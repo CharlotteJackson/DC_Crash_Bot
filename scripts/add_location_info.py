@@ -4,23 +4,23 @@ from connect_to_rds import get_connection_strings, create_postgres_engine
 def add_location_info(engine, from_schema:str, from_table:str, target_schema:str, target_table:str, partition_by_field:str):
 
     # check whether the target table has a geography field
-    check_geo_field_type_query = """
-    SELECT ST_GeometryType(geography::geometry) from {0}.{1} WHERE geography IS NOT NULL LIMIT 1
-    """.format(from_schema, from_table)
+    check_geo_field_type_query = f"""
+    SELECT ST_GeometryType(geography::geometry) from {from_schema}.{from_table} WHERE geography IS NOT NULL LIMIT 1
+    """
 
     # depending on whether the geo type is a line, point, or polygon, execute appropriate query
     geo_field_type = engine.execute(check_geo_field_type_query).fetchone()[0]
     print(geo_field_type)
     if 'ST_Point' in geo_field_type:
     # build the query for point-level comparisons
-        point_location_query="""
+        point_location_query=f"""
             DROP TABLE IF EXISTS anc_boundaries;
             CREATE TEMP TABLE anc_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 c.anc_id
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5}) as ANC_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field}) as ANC_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
             LEFT JOIN source_data.anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
             ) WITH DATA;
             
@@ -31,9 +31,9 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
                 SELECT 
                 d.name as nbh_cluster
                 ,d.nbh_names as nbh_cluster_names
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5}) as NBH_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field}) as NBH_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
             LEfT JOIN source_data.neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
@@ -43,9 +43,9 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE smd_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 e.smd_id
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5}) as SMD_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field}) as SMD_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
             LEFT JOIN source_data.smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
@@ -55,9 +55,9 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE ward_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 f.name as ward_name 
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5}) as Ward_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field}) as Ward_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
             LEFT JOIN source_data.ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
@@ -67,9 +67,9 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE census_tract_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 g.tract as census_tract
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5}) as Tract_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field}) as Tract_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
             LEFT JOIN source_data.census_tracts g ON ST_Intersects(g.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
@@ -79,16 +79,16 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE comp_plan_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 h.name as comp_plan_area 
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5}) as CompPlan_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field}) as CompPlan_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
             LEFT JOIN source_data.comp_plan_areas h ON ST_Intersects(h.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
             DELETE FROM comp_plan_boundaries WHERE CompPlan_Rank >1;
             
-            DROP TABLE IF EXISTS {0}.{1};
-            CREATE TABLE {0}.{1}
+            DROP TABLE IF EXISTS {target_schema}.{target_table};
+            CREATE TABLE {target_schema}.{target_table}
             AS (
 
             SELECT DISTINCT
@@ -100,17 +100,17 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
                 ,f.census_tract
                 ,g.comp_plan_area
                 ,a.*
-            FROM {2}.{3} a
-            LEFT JOIN anc_boundaries b on a.{5} = b.{5}
-            LEFT JOIN nbh_boundaries c on a.{5} = c.{5}
-            LEFT JOIN smd_boundaries d on a.{5} = d.{5}
-            LEFT JOIN ward_boundaries e on a.{5} = e.{5}
-            LEFT JOIN census_tract_boundaries f on a.{5} = f.{5}
-            LEFT JOIN comp_plan_boundaries g on a.{5} = g.{5}
+            FROM {from_schema}.{from_table} a
+            LEFT JOIN anc_boundaries b on a.{partition_by_field} = b.{partition_by_field}
+            LEFT JOIN nbh_boundaries c on a.{partition_by_field} = c.{partition_by_field}
+            LEFT JOIN smd_boundaries d on a.{partition_by_field} = d.{partition_by_field}
+            LEFT JOIN ward_boundaries e on a.{partition_by_field} = e.{partition_by_field}
+            LEFT JOIN census_tract_boundaries f on a.{partition_by_field} = f.{partition_by_field}
+            LEFT JOIN comp_plan_boundaries g on a.{partition_by_field} = g.{partition_by_field}
             );
 
-            CREATE INDEX {4} ON {0}.{1} USING GIST (geography);
-        """.format(target_schema, target_table, from_schema, from_table, target_schema+'_'+target_table+'_index',partition_by_field)
+            CREATE INDEX {target_schema}_{target_table}_index ON {target_schema}.{target_table} USING GIST (geography);
+        """
     
     # execute the query for point-level comparisons
         engine.execute(point_location_query)    
@@ -126,16 +126,16 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
 
         print(overlap_variable)
 
-        non_point_location_query="""
+        non_point_location_query=f"""
             
             DROP TABLE IF EXISTS anc_boundaries;
             CREATE TEMP TABLE anc_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 c.anc_id
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5} order by {6}(ST_Intersection(c.geography::geometry, a.geography::geometry)::geometry) desc) as ANC_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
-            {7} JOIN source_data.anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field} order by {overlap_variable}(ST_Intersection(c.geography::geometry, a.geography::geometry)::geometry) desc) as ANC_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
+            {join_type} JOIN source_data.anc_boundaries c ON ST_Intersects(c.geography::geometry, a.geography::geometry)
             ) WITH DATA;
             
             DELETE FROM anc_boundaries WHERE ANC_Rank > 1;
@@ -145,10 +145,10 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
                 SELECT 
                 d.name as nbh_cluster
                 ,d.nbh_names as nbh_cluster_names
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5} order by {6}(ST_Intersection(d.geography::geometry, a.geography::geometry)::geometry) desc) as NBH_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
-            {7} JOIN source_data.neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field} order by {overlap_variable}(ST_Intersection(d.geography::geometry, a.geography::geometry)::geometry) desc) as NBH_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
+            {join_type} JOIN source_data.neighborhood_clusters d ON ST_Intersects(d.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
             DELETE FROM nbh_boundaries WHERE NBH_Rank > 1;
@@ -157,10 +157,10 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE smd_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 e.smd_id
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5} order by {6}(ST_Intersection(e.geography::geometry, a.geography::geometry)::geometry) desc) as SMD_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
-            {7}  JOIN source_data.smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field} order by {overlap_variable}(ST_Intersection(e.geography::geometry, a.geography::geometry)::geometry) desc) as SMD_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
+            {join_type}  JOIN source_data.smd_boundaries e ON ST_Intersects(e.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
             DELETE FROM smd_boundaries WHERE SMD_Rank >1;
@@ -169,10 +169,10 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE ward_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 f.name as ward_name 
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5} order by {6}(ST_Intersection(f.geography::geometry, a.geography::geometry)::geometry) desc) as Ward_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
-            {7}  JOIN source_data.ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field} order by {overlap_variable}(ST_Intersection(f.geography::geometry, a.geography::geometry)::geometry) desc) as Ward_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
+            {join_type}  JOIN source_data.ward_boundaries f ON ST_Intersects(f.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
             DELETE FROM ward_boundaries WHERE Ward_Rank >1;
@@ -181,10 +181,10 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE census_tract_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 g.tract as census_tract
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5} order by {6}(ST_Intersection(g.geography::geometry, a.geography::geometry)::geometry) desc) as Tract_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
-            {7}  JOIN source_data.census_tracts g ON ST_Intersects(g.geography::geometry, a.geography::geometry)
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field} order by {overlap_variable}(ST_Intersection(g.geography::geometry, a.geography::geometry)::geometry) desc) as Tract_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
+            {join_type}  JOIN source_data.census_tracts g ON ST_Intersects(g.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
             DELETE FROM census_tract_boundaries WHERE Tract_Rank >1;
@@ -193,16 +193,16 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
             CREATE TEMP TABLE comp_plan_boundaries ON COMMIT PRESERVE ROWS AS (
                 SELECT 
                 h.name as comp_plan_area 
-                ,ROW_NUMBER() OVER (PARTITION BY a.{5} order by {6}(ST_Intersection(h.geography::geometry, a.geography::geometry)::geometry) desc) as CompPlan_Rank 
-                ,a.{5} 
-            FROM {2}.{3} a
-            {7}  JOIN source_data.comp_plan_areas h ON ST_Intersects(h.geography::geometry, a.geography::geometry)
+                ,ROW_NUMBER() OVER (PARTITION BY a.{partition_by_field} order by {overlap_variable}(ST_Intersection(h.geography::geometry, a.geography::geometry)::geometry) desc) as CompPlan_Rank 
+                ,a.{partition_by_field} 
+            FROM {from_schema}.{from_table} a
+            {join_type}  JOIN source_data.comp_plan_areas h ON ST_Intersects(h.geography::geometry, a.geography::geometry)
             ) WITH DATA;
 
             DELETE FROM comp_plan_boundaries WHERE CompPlan_Rank >1;
             
-            DROP TABLE IF EXISTS {0}.{1};
-            CREATE TABLE {0}.{1}
+            DROP TABLE IF EXISTS {target_schema}.{target_table};
+            CREATE TABLE {target_schema}.{target_table}
             AS (
 
             SELECT DISTINCT
@@ -214,17 +214,17 @@ def add_location_info(engine, from_schema:str, from_table:str, target_schema:str
                 ,f.census_tract
                 ,g.comp_plan_area
                 ,a.*
-            FROM {2}.{3} a
-            LEFT JOIN anc_boundaries b on a.{5} = b.{5}
-            LEFT JOIN nbh_boundaries c on a.{5} = c.{5}
-            LEFT JOIN smd_boundaries d on a.{5} = d.{5}
-            LEFT JOIN ward_boundaries e on a.{5} = e.{5}
-            LEFT JOIN census_tract_boundaries f on a.{5} = f.{5}
-            LEFT JOIN comp_plan_boundaries g on a.{5} = g.{5}
+            FROM {from_schema}.{from_table} a
+            LEFT JOIN anc_boundaries b on a.{partition_by_field} = b.{partition_by_field}
+            LEFT JOIN nbh_boundaries c on a.{partition_by_field} = c.{partition_by_field}
+            LEFT JOIN smd_boundaries d on a.{partition_by_field} = d.{partition_by_field}
+            LEFT JOIN ward_boundaries e on a.{partition_by_field} = e.{partition_by_field}
+            LEFT JOIN census_tract_boundaries f on a.{partition_by_field} = f.{partition_by_field}
+            LEFT JOIN comp_plan_boundaries g on a.{partition_by_field} = g.{partition_by_field}
             );
 
-            CREATE INDEX {4} ON {0}.{1} USING GIST (geography);
-        """.format(target_schema, target_table, from_schema, from_table, target_schema+'_'+target_table+'_index',partition_by_field, overlap_variable,join_type)
+            CREATE INDEX {target_schema}_{target_table}_index ON {target_schema}.{target_table} USING GIST (geography);
+        """
     
         print("executing non-point location query")
         engine.execute(non_point_location_query)
@@ -238,9 +238,9 @@ def add_walkscore_info(engine, from_schema:str, from_table:str, target_schema:st
     columns_string =''
 
     # get column names of source table
-    get_columns_query = """
-    SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{0}' AND TABLE_NAME = '{1}'
-    """.format(from_schema, from_table)
+    get_columns_query = f"""
+    SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{from_schema}' AND TABLE_NAME = '{from_table}'
+    """
 
     # put column names of source table in list
     columns = [r for (r,) in engine.execute(get_columns_query).fetchall()]
@@ -248,9 +248,9 @@ def add_walkscore_info(engine, from_schema:str, from_table:str, target_schema:st
     for column in columns[1:]:
         columns_string+=' ,a.'+column
 
-    add_walkscore_query="""
-        DROP TABLE IF EXISTS {0}.{1};
-        CREATE TABLE {0}.{1}
+    add_walkscore_query=f"""
+        DROP TABLE IF EXISTS {target_schema}.{target_table};
+        CREATE TABLE {target_schema}.{target_table}
         AS (
 
         SELECT 
@@ -258,13 +258,13 @@ def add_walkscore_info(engine, from_schema:str, from_table:str, target_schema:st
           ,AVG(b.bikescore)::decimal(10,2) AS Bikescore
           ,AVG(b.transitscore)::decimal(10,2) AS Transitscore
         , a.* 
-        FROM {2}.{3} a
+        FROM {from_schema}.{from_table} a
         LEFT JOIN source_data.address_walkscores b on ST_Intersects(a.geography::geometry, b.geography::geometry)
-        GROUP BY {5}
+        GROUP BY {columns_string}
         ) ;
 
-        CREATE INDEX {4} ON {0}.{1} USING GIST (geography);
-    """.format(target_schema, target_table, from_schema, from_table, target_schema+'_'+target_table+'_index', columns_string)
+        CREATE INDEX {target_schema}_{target_table}_index ON {target_schema}.{target_table} USING GIST (geography);
+    """
     
     engine.execute(add_walkscore_query)
 
@@ -277,9 +277,9 @@ def add_school_info(engine, from_schema:str, from_table:str, target_schema:str, 
     columns_string =''
 
     # get column names of source table
-    get_columns_query = """
-    SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{0}' AND TABLE_NAME = '{1}'
-    """.format(from_schema, from_table)
+    get_columns_query = f"""
+    SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{from_schema}' AND TABLE_NAME = '{from_table}'
+    """
 
     # put column names of source table in list
     columns = [r for (r,) in engine.execute(get_columns_query).fetchall()]
@@ -287,9 +287,9 @@ def add_school_info(engine, from_schema:str, from_table:str, target_schema:str, 
     for column in columns[1:]:
         columns_string+=' ,a.'+column
 
-    add_school_query="""
-        DROP TABLE IF EXISTS {0}.{1};
-        CREATE TABLE {0}.{1}
+    add_school_query=f"""
+        DROP TABLE IF EXISTS {target_schema}.{target_table};
+        CREATE TABLE {target_schema}.{target_table}
         AS (
 
         SELECT 
@@ -300,13 +300,13 @@ def add_school_info(engine, from_schema:str, from_table:str, target_schema:str, 
         , MAX(b.public_school) as public_school
         , MAX(b.charter_school) as charter_school
         , a.* 
-        FROM {2}.{3} a
+        FROM {from_schema}.{from_table} a
         LEFT JOIN analysis_data.all_schools b on ST_DWithin(b.geography,a.geography,200)
-        GROUP BY {5}
+        GROUP BY {columns_string}
         ) ;
 
-        CREATE INDEX {4} ON {0}.{1} USING GIST (geography);
-    """.format(target_schema, target_table, from_schema, from_table, target_schema+'_'+target_table+'_index', columns_string)
+        CREATE INDEX {target_schema}_{target_table}_index ON {target_schema}.{target_table} USING GIST (geography);
+    """
     
     engine.execute(add_school_query)
 
@@ -315,12 +315,12 @@ def add_school_info(engine, from_schema:str, from_table:str, target_schema:str, 
 
 def add_roadway_info(engine, from_schema:str, from_table:str, target_schema:str, target_table:str, within_distance:float, partition_by_field:str):
 
-    roadway_info_query="""
-        DROP TABLE IF EXISTS {0}.{1};
-        CREATE TABLE {0}.{1}
+    roadway_info_query=f"""
+        DROP TABLE IF EXISTS {target_schema}.{target_table};
+        CREATE TABLE {target_schema}.{target_table}
         AS (
             SELECT DISTINCT a.*
-            ,ROW_NUMBER() over (partition by a.{4} order by ST_Distance(a.geography,b.geography)) as row_num
+            ,ROW_NUMBER() over (partition by a.{partition_by_field} order by ST_Distance(a.geography,b.geography)) as row_num
             ,ST_Distance(a.geography,b.geography) AS distance_to_nearest_block
             ,b.aadt
             ,b.totaltravellanes
@@ -347,14 +347,14 @@ def add_roadway_info(engine, from_schema:str, from_table:str, target_schema:str,
                 when '17.0' then 'Collector'
                 when '19.0' then 'Local'
                 end as dcfunctionalclass_desc
-            FROM {2}.{3} a
-            LEFT JOIN source_data.roadway_blocks b on ST_DWithin(b.geography, a.geography,{5})
+            FROM {from_schema}.{from_table} a
+            LEFT JOIN source_data.roadway_blocks b on ST_DWithin(b.geography, a.geography,{within_distance})
         ) ;
-        DELETE FROM {0}.{1} WHERE row_num >1;
+        DELETE FROM {target_schema}.{target_table} WHERE row_num >1;
 
-        ALTER TABLE {0}.{1}  DROP COLUMN row_num;
+        ALTER TABLE {target_schema}.{target_table}  DROP COLUMN row_num;
 
-    """.format(target_schema, target_table, from_schema, from_table, partition_by_field, str(within_distance))
+    """
 
     engine.execute(roadway_info_query)
 
@@ -363,26 +363,26 @@ def add_roadway_info(engine, from_schema:str, from_table:str, target_schema:str,
 
 def add_intersection_info(engine, from_schema:str, from_table:str, target_schema:str, target_table:str, within_distance:float, partition_by_field:str):
 
-    intersection_info_query="""
-        DROP TABLE IF EXISTS {0}.{1};
-        CREATE TABLE {0}.{1}
+    intersection_info_query=f"""
+        DROP TABLE IF EXISTS {target_schema}.{target_table};
+        CREATE TABLE {target_schema}.{target_table}
         AS (
             SELECT DISTINCT a.*
-            ,ROW_NUMBER() over (partition by a.{4} order by ST_Distance(a.geography,b.geography)) as row_num
+            ,ROW_NUMBER() over (partition by a.{partition_by_field} order by ST_Distance(a.geography,b.geography)) as row_num
             ,ST_Distance(a.geography,b.geography) AS distance_to_nearest_intersection
             ,b.intersectionid
             ,b.intersection_type
             ,b.int_road_types
             ,b.int_road_block_ids
             ,b.street_names
-            FROM {2}.{3} a
-            LEFT JOIN analysis_data.intersection_points b on ST_DWithin(b.geography, a.geography,{5})
+            FROM {from_schema}.{from_table} a
+            LEFT JOIN analysis_data.intersection_points b on ST_DWithin(b.geography, a.geography,{within_distance})
         ) ;
-        DELETE FROM {0}.{1} WHERE row_num >1;
+        DELETE FROM {target_schema}.{target_table} WHERE row_num >1;
 
-        ALTER TABLE {0}.{1}  DROP COLUMN row_num;
+        ALTER TABLE {target_schema}.{target_table}  DROP COLUMN row_num;
 
-    """.format(target_schema, target_table, from_schema, from_table, partition_by_field, str(within_distance))
+    """
 
     engine.execute(intersection_info_query)
 
@@ -391,17 +391,17 @@ def add_intersection_info(engine, from_schema:str, from_table:str, target_schema
 
 def is_national_park(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
 
-    check_national_park_query="""
-        DROP TABLE IF EXISTS {0}.{1};
-        CREATE TABLE {0}.{1}
+    check_national_park_query=f"""
+        DROP TABLE IF EXISTS {target_schema}.{target_table};
+        CREATE TABLE {target_schema}.{target_table}
         AS (
             SELECT DISTINCT a.*
             ,case when b.objectid is not null then 1 else 0 end as national_park
-            FROM {2}.{3} a
+            FROM {from_schema}.{from_table} a
             LEFT JOIN source_data.national_parks b on ST_Intersects(b.geography, a.geography)
         ) ;
 
-    """.format(target_schema, target_table, from_schema, from_table)
+    """
 
     engine.execute(check_national_park_query)
 
@@ -410,18 +410,18 @@ def is_national_park(engine, from_schema:str, from_table:str, target_schema:str,
 
 def create_final_table(engine, from_schema:str, from_table:str, target_schema:str, target_table:str):
 
-    final_query="""
-    DROP TABLE IF EXISTS {0}.{1};
+    final_query=f"""
+    DROP TABLE IF EXISTS {target_schema}.{target_table};
 
-    CREATE TABLE {0}.{1} AS 
-        SELECT * FROM {2}.{3};
-    CREATE INDEX {0}_{1}_index ON {0}.{1} USING GIST (geography);
-    GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
-    """.format(target_schema, target_table, from_schema, from_table)
+    CREATE TABLE {target_schema}.{target_table} AS 
+        SELECT * FROM {from_schema}.{from_table};
+    CREATE INDEX {target_schema}_{target_table}_index ON {target_schema}.{target_table} USING GIST (geography);
+    GRANT ALL PRIVILEGES ON {target_schema}.{target_table} TO PUBLIC;
+    """
 
     engine.execute(final_query)
     
-    count_query = 'SELECT COUNT(*) FROM {}.{}'.format(target_schema, target_table)
+    count_query = f'SELECT COUNT(*) FROM {target_schema}.{target_table}'
     
     row_count = engine.execute(count_query).fetchone()[0]
 

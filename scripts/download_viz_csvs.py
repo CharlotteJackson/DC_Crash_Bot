@@ -27,7 +27,7 @@ SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'viz'
 tables_to_download = [r for (r,) in engine.execute(get_tables_query).fetchall()]
 
 for table in tables_to_download:
-    df = pd.read_sql('select * from viz.{}'.format(table), engine, coerce_float=False)
+    df = pd.read_sql(f'select * from viz.{table}', engine, coerce_float=False)
     download_path = os.path.join(data_folder, table+'.csv')
     df.to_csv(download_path, index=False)
     print('downloaded table ', table,' with ',len(df),' records')

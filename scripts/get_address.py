@@ -11,8 +11,7 @@ class GeoLoc:
         self.google_key = token
 
     def GetGeoLoc(self, test_address):
-        url = "https://maps.googleapis.com/maps/api/geocode/json?address={final_address}&key={GOOGLE_KEY}".format(
-            final_address=test_address, GOOGLE_KEY=self.google_key)
+        url = f"https://maps.googleapis.com/maps/api/geocode/json?address={test_address}&key={self.google_key}"
         # print(url)
 
         r = requests.get(url)

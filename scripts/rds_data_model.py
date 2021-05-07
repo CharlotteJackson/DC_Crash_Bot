@@ -3,25 +3,25 @@ import sqlalchemy
 
 def generate_table(engine, target_schema:str, target_table:str,mode:str):
 
-    schema_query = """
-        CREATE SCHEMA IF NOT EXISTS {0};
-        GRANT ALL PRIVILEGES ON SCHEMA {0} TO PUBLIC;
-    """.format(target_schema)
+    schema_query = f"""
+        CREATE SCHEMA IF NOT EXISTS {target_schema};
+        GRANT ALL PRIVILEGES ON SCHEMA {target_schema} TO PUBLIC;
+    """
 
-    drop_table_query = """
-        DROP TABLE IF EXISTS {}.{};
-    """.format(target_schema, target_table)
+    drop_table_query = f"""
+        DROP TABLE IF EXISTS {target_schema}.{target_table};
+    """
 
-    create_table_query = """
-        CREATE TABLE IF NOT EXISTS {0}.{1} (
-            {2}
+    create_table_query = f"""
+        CREATE TABLE IF NOT EXISTS {target_schema}.{target_table} (
+            {get_table_definition(target_table)}
         );
-        GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
-    """.format(target_schema, target_table, get_table_definition(target_table))
+        GRANT ALL PRIVILEGES ON {target_schema}.{target_table} TO PUBLIC;
+    """
 
-    truncate_table_query = """
-        TRUNCATE {}.{};
-    """.format(target_schema, target_table)
+    truncate_table_query = f"""
+        TRUNCATE {target_schema}.{target_table};
+    """
 
     # always run the create schema query
     engine.execute(schema_query)
@@ -36,22 +36,22 @@ def generate_table(engine, target_schema:str, target_table:str,mode:str):
 def correct_geo(engine, target_schema:str, target_table:str,mode:str):
 
     # check whether the target table has a geography field
-    check_geo_field_query = """
+    check_geo_field_query = f"""
     SELECT CASE WHEN EXISTS
-	(SELECT 1 from information_schema.columns WHERE table_schema = '{}' AND table_name = '{}' AND column_name = 'geography') 
+	(SELECT 1 from information_schema.columns WHERE table_schema = '{target_schema}' AND table_name = '{target_table}' AND column_name = 'geography') 
 	THEN 1 ELSE 0 END
-    """.format(target_schema, target_table)
+    """
 
-    create_geo_index_query = """
-        DROP INDEX IF EXISTS {0};
-        CREATE INDEX {0}
-        ON {1}.{2}
+    create_geo_index_query = f"""
+        DROP INDEX IF EXISTS {target_table}_index;
+        CREATE INDEX {target_table}_index
+        ON {target_schema}.{target_table}
         USING GIST (geography);
-    """.format(target_table+'_index',target_schema, target_table)
+    """
 
-    update_geography_query = """
-    UPDATE {}.{}  SET geography=ST_Force2D(geography::geometry)::geography
-    """.format(target_schema, target_table)
+    update_geography_query = f"""
+    UPDATE {target_schema}.{target_table}  SET geography=ST_Force2D(geography::geometry)::geography
+    """
 
     # check to see if table has a geography field, if yes, make sure it's the right format and create an index
     geo_field_exists = engine.execute(check_geo_field_query).fetchone()[0]

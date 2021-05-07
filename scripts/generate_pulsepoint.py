@@ -76,14 +76,14 @@ AS (
     ) WITH DATA; 
 """
 
-final_query="""
-DROP TABLE IF EXISTS {0}.{1};
+final_query=f"""
+DROP TABLE IF EXISTS {target_schema}.{target_table};
 
-CREATE TABLE {0}.{1} AS 
+CREATE TABLE {target_schema}.{target_table} AS 
     SELECT * FROM tmp_pulsepoint_units_join;
 
-GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
-""".format(target_schema, target_table)
+GRANT ALL PRIVILEGES ON {target_schema}.{target_table} TO PUBLIC;
+"""
 
 engine.execute(step1_query)
 engine.execute(step_2_query)
