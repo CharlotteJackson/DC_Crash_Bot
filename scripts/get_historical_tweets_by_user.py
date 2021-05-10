@@ -80,7 +80,7 @@ def get_all_tweets(screen_name):
 
 
 # set up ability to call with lists from the command line as follows:
-# python get_historical_tweets_by_user.py --users alanhenney realtimenews10
+# python get_historical_tweets_by_user.py users "alanhenney,realtimenews10"
 CLI=argparse.ArgumentParser()
 CLI.add_argument(
 "users",  
@@ -92,6 +92,7 @@ default=['alanhenney','realtimenews10'],  # default - the two main twitter accou
 # parse the command line
 args = CLI.parse_args()
 users = args.users
+print(users)
 
 for user in users:
     get_all_tweets(user)

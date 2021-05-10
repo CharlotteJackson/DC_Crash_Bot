@@ -1,16 +1,24 @@
-import sqlalchemy
 from connect_to_rds import get_connection_strings, create_postgres_engine
 from json_to_postgis import json_to_postGIS
+import argparse
 
+def extract_citizen_json (target_schema:str, source_table:str, target_table:str, AWS_Credentials:dict, **kwargs):
 
-def extract_citizen_json (source_schema:str, target_schema:str, source_table:str, target_table:str, AWS_Credentials:dict):
+    # assign optional arguments
+    source_schema=kwargs.get('source_schema', None)
+    if source_schema == None:
+        source_schema='stg'
+    # if no environment is specified default to dev 
+    env=kwargs.get('env', None)
+    if env == None:
+        env='DEV'
+    env=env.upper()
 
     # set up RDS and S3 connections, engines, cursors
     region=AWS_Credentials['region']
-    env="DEV"
     engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
 
-# extract the json info
+    # extract the json info
     step1_query ="""
     DROP TABLE IF EXISTS tmp.citizen;
     CREATE TABLE tmp.citizen
@@ -32,6 +40,7 @@ def extract_citizen_json (source_schema:str, target_schema:str, source_table:str
             ,(data->'key')::varchar as incident_key
             ,(data->'raw')::varchar as incident_desc_raw
             ,(data->'source')::varchar as incident_source
+            ,(data->'categories') as incident_categories
             ,source_file
             ,load_datetime
             ,data 
@@ -69,7 +78,29 @@ def extract_citizen_json (source_schema:str, target_schema:str, source_table:str
     drop_table_query = 'DROP TABLE IF EXISTS {}."{}"'.format(source_schema, source_table)
     engine.execute(drop_table_query)
 
+
+CLI=argparse.ArgumentParser()
+CLI.add_argument(
+"--env",
+type=str
+)
+CLI.add_argument(
+"--source_schema",
+type=str
+)
+
+# parse the command line
+args = CLI.parse_args()
+env=args.env
+source_schema=args.source_schema
+
 if __name__ == "__main__":
-    tables_to_extract = json_to_postGIS(folder_to_load='source-data/citizen/unparsed/', move_to_folder = 'source-data/citizen/loaded_to_postgis/', AWS_Credentials=get_connection_strings("AWS_DEV"))
-    for schema, table in tables_to_extract:
-        extract_citizen_json(source_schema=schema, source_table=table, target_table='citizen_stream', target_schema='source_data',AWS_Credentials=get_connection_strings("AWS_DEV"))
+    if env == None:
+        env = 'DEV'
+    env = env.upper()
+    # tables_to_extract = json_to_postGIS(folder_to_load='source-data/citizen/unparsed/', move_to_folder = 'source-data/citizen/loaded_to_postgis/', AWS_Credentials=get_connection_strings("AWS_DEV"))
+    engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
+    tables_to_extract = [r for (r,) in engine.execute("select distinct table_name from information_schema.tables where table_schema = 'stg' and table_name like '%%citizen%%'")]
+    for table in tables_to_extract:
+        extract_citizen_json(source_table=table, target_table='citizen_stream'
+        , target_schema='source_data',AWS_Credentials=get_connection_strings("AWS_DEV"), env=env)

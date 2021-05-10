@@ -30,7 +30,7 @@ def main():
     json_response=json.loads(response.text)
 
     # limit to just traffic incidents
-    json_response['results'] = [result for result in json_response['results']  if 'categories' in result.keys() if 'Traffic Related' in result['categories']]
+    json_response['results'] = [result for result in json_response['results']]
 
     json_response['scrape_datetime']=current_time
 

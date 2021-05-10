@@ -8,6 +8,9 @@ import json
 import datetime 
 import os
 import argparse
+import pprint
+import re 
+
 
 def json_to_postGIS (folder_to_load:str, AWS_Credentials:dict, **kwargs):
 
@@ -18,6 +21,10 @@ def json_to_postGIS (folder_to_load:str, AWS_Credentials:dict, **kwargs):
     print(target_schema)
     move_to_folder = kwargs.get('move_to_folder', None)
     print(move_to_folder)
+    env=kwargs.get('env', None)
+    if env == None:
+        env='DEV'
+    env=env.upper()
 
     # list of all loaded tables
     tables_created = []
@@ -31,7 +38,7 @@ def json_to_postGIS (folder_to_load:str, AWS_Credentials:dict, **kwargs):
     client=boto3.client('s3',aws_access_key_id=AWS_Credentials['aws_access_key_id']
     ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
     region=AWS_Credentials['region']
-    env="DEV"
+    env="PROD"
     connection = create_psycopg2_connection(destination="AWS_PostGIS", env=env)
 
     files_to_load = [obj.key for obj in bucket.objects.filter(Prefix=folder_to_load) if '.json' in obj.key]
@@ -44,10 +51,20 @@ def json_to_postGIS (folder_to_load:str, AWS_Credentials:dict, **kwargs):
         f = client.get_object(Bucket = bucket_name, Key=object_key)
         # decode it as string 
         f2 = f['Body'].read().decode('utf-8')
+
+        # delete escaped quotes and newlines
+        f2 = f2.replace('\\"','')
+        f2 = f2.replace('\\n','')
+        f2 = f2.replace('\\','')
+
         # load back into dictionary format 
         f3 = json.loads(f2)
+
         # add the source file name to the json
-        f3['source_file'] = object_key
+        if isinstance(f3,dict):
+            f3['source_file'] = object_key
+        elif isinstance(f3,list):
+            f3={'data':f3, 'source_file':object_key}
 
         #create table shell script
         create_table_query = """
@@ -93,14 +110,19 @@ CLI.add_argument(
 "--target_schema",
 type=str
 )
+CLI.add_argument(
+"--env",
+type=str
+)
 
 # parse the command line
 args = CLI.parse_args()
 folders_to_load = args.folders
 move_to_folder = args.move_to_folder
 target_schema = args.target_schema
+env = args.env
 
 # call function with command line arguments
 if __name__ == "__main__":
     for folder in folders_to_load:
-        json_to_postGIS(folder_to_load=folder, AWS_Credentials=get_connection_strings("AWS_DEV"), move_to_folder=move_to_folder, target_schema=target_schema)
+        json_to_postGIS(folder_to_load=folder, AWS_Credentials=get_connection_strings("AWS_DEV"), move_to_folder=move_to_folder, target_schema=target_schema, env=env)

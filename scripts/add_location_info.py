@@ -87,7 +87,7 @@ def geocode_text(engine, records_to_geocode:list, administrative_area:str, **kwa
                  point_lat=point_lat, sw_lat=sw_lat, sw_long=sw_long, ne_lat = ne_lat, ne_long = ne_long, administrative_area=administrative_area)
             engine.execute(insert_record_query)
         except Exception as error:
-            print("could not geocode record ", address)
+            # print("could not geocode record ", address)
             # replace single quotes to avoid insertion errors
             address=address.replace('\'','')
             engine.execute("INSERT INTO source_data.geocoded_text_fails (text, text_type,administrative_area) SELECT '{address}', '{text_type}','{administrative_area}'".format(address=address, text_type=text_type, administrative_area=administrative_area))
