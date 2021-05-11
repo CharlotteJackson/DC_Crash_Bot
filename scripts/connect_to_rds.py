@@ -4,6 +4,7 @@ import sqlalchemy
 import urllib
 from sqlalchemy import create_engine
 from sqlalchemy.dialects import postgresql
+import psycopg2
 
 
 def get_connection_strings(destination: str):
@@ -24,7 +25,7 @@ def get_connection_strings(destination: str):
 
     return connection_info
 
-def create_postgres_engine(destination: str, target_db: str, env: str):
+def create_postgres_engine(destination: str, env: str):
 
     credentials = get_connection_strings(destination)
     env = env.upper()
@@ -33,6 +34,7 @@ def create_postgres_engine(destination: str, target_db: str, env: str):
     pwd = urllib.parse.quote("{}".format(credentials[env]['PWD']))
     host=urllib.parse.quote("{}".format(credentials[env]['HOST']))
     port=urllib.parse.quote("{}".format(credentials[env]['PORT']))
+    target_db=urllib.parse.quote("{}".format(credentials[env]['DB']))
     
     connection_string = "postgresql://{}:{}@{}:{}/{}".format(uid, pwd, host, port, target_db)
 
@@ -40,8 +42,25 @@ def create_postgres_engine(destination: str, target_db: str, env: str):
 
     return engine
 
+def create_psycopg2_connection(destination: str, env: str):
+
+    credentials = get_connection_strings(destination)
+    env = env.upper()
+
+    uid =urllib.parse.quote("{}".format(credentials[env]['UID']))
+    pwd = urllib.parse.quote("{}".format(credentials[env]['PWD']))
+    host=urllib.parse.quote("{}".format(credentials[env]['HOST']))
+    port=urllib.parse.quote("{}".format(credentials[env]['PORT']))
+    target_db=urllib.parse.quote("{}".format(credentials[env]['DB']))
+    
+    connection_string = "postgresql://{}:{}@{}:{}/{}".format(uid, pwd, host, port, target_db)
+
+    connection = psycopg2.connect(connection_string)
+
+    return connection
+
 if __name__ == "__main__":
-    engine=create_postgres_engine("AWS_PostGIS", "postgres", "DEV")
+    engine=create_postgres_engine("AWS_PostGIS", "DEV")
     query = 'select distinct TABLE_NAME from postgres.INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA = \'public\''
     tables = [r.lower() for (r,) in list(engine.execute(query).fetchall())]
     for table in tables:

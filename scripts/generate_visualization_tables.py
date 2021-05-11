@@ -3,9 +3,8 @@ from connect_to_rds import get_connection_strings, create_postgres_engine
 from add_location_info import add_location_info,add_school_info,create_final_table
 
 
-dbname='postgres'
 env="DEV"
-engine = create_postgres_engine(destination="AWS_PostGIS", target_db=dbname, env=env)
+engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
 db_credentials = get_connection_strings("AWS_PostGIS")
 
 geography_levels = {

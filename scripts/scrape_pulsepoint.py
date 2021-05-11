@@ -32,7 +32,7 @@ def main(agency:str):
     record_status_types = [i for i in data['incidents'].keys() if i != 'alerts']
 
     for status in record_status_types:
-        data['incidents'][status] = [i for i in data['incidents'][status] if "IsShareable" in i.keys() if i["IsShareable"]=="1" if "PulsePointIncidentCallType" in i.keys() if i["PulsePointIncidentCallType"] in ["TC", "TCE", "TCS", "RES"]]
+        data['incidents'][status] = [i for i in data['incidents'][status]]
 
     # create file key variable
     s3_key = prefix+dataset+current_time+agency+'.json'
