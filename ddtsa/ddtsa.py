@@ -21,7 +21,7 @@ try:
     GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
     geo_loc_instance = GeoLoc(GOOGLE_API_KEY)
 except Exception as error:
-    st.error(error)
+    st.error("No GOOGLE API KEY detected")
 
 
 # Full results from Geocoding API for 14th St NW & Columbia Rd NW, Washington, DC 20009
@@ -228,7 +228,7 @@ def location_data(address: str):
     lat = test_data["results"][0]["geometry"]["location"]["lat"]
     lng = test_data["results"][0]["geometry"]["location"]["lng"]
 
-    # TODO format to be readable 
+    # TODO format to be readable
     st.write(get_open_work_orders(lat, lng))
 
 
