@@ -338,7 +338,7 @@ def add_roadway_info(engine, from_schema:str, from_table:str, target_schema:str,
             ,b.nhstype
             ,b.routename 
             ,b.objectid as block_objectid
-            ,b.blockkey
+            ,b.blockkey as roadway_blockkey
             ,case dcfunctionalclass
                 when '11.0' then 'Interstate'
                 when '12.0' then 'Other Freeway and Expressway'

@@ -5,11 +5,11 @@
 import json
 import logging
 import requests
-from pydub import AudioSegment
+# from pydub import AudioSegment
 import time
 from typing import Type, Union, Dict, Any, List
-
-import speech_recognition as sr
+from connect_to_rds import get_connection_strings
+# import speech_recognition as sr
 
 # postgress imports
 # import psycopg2
@@ -20,11 +20,22 @@ import boto3
 from botocore.exceptions import ClientError
 
 # AWS resoucres
-s3 = boto3.client("s3")
-transcribe = boto3.client("transcribe")
+AWS_Credentials = get_connection_strings("AWS_DEV")
+s3 = boto3.client("s3"
+,   aws_access_key_id=AWS_Credentials['aws_access_key_id']
+    ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key']
+    ,region_name=AWS_Credentials['region'])
+transcribe = boto3.client("transcribe",   aws_access_key_id=AWS_Credentials['aws_access_key_id']
+    ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key']
+    ,region_name=AWS_Credentials['region'])
+s3_resource = boto3.resource('s3'
+    ,aws_access_key_id=AWS_Credentials['aws_access_key_id']
+    ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
+S3_AUDIO_BUCKET = AWS_Credentials['s3_bucket']
+bucket = s3_resource.Bucket(S3_AUDIO_BUCKET)
 
 # TODO change this to your bucket
-S3_AUDIO_BUCKET = "banjo-private-bucket"
+# S3_AUDIO_BUCKET = "banjo-private-bucket"
 
 
 def upload_file_to_s3(file_name: str, bucket: str, object_name: str = None) -> bool:
@@ -98,6 +109,9 @@ def get_audio_files(timestamp):
 
         if talk_group not in valid_talk_groups:
             continue
+        # also don't want to transcribe calls that are too short
+        if call["len"] < 4:
+            continue
 
         # TODO will need to pass on calls we already have ids on
 
@@ -115,6 +129,7 @@ def get_audio_files(timestamp):
 
         audio_recods.append(audio_data)
 
+    print(len(audio_recods))
     return audio_recods
 
 
@@ -217,7 +232,6 @@ def test_transcibe_aws():
     upload_file_to_s3(audio_file, S3_AUDIO_BUCKET, f"raw_audio/{audio_file}")
     s3_url = f"s3://{S3_AUDIO_BUCKET}/raw_audio/{audio_file}"
     transcribed_audio = aws_transcribe_job(audio_file, s3_url)
-    print(transcribed_audio)
 
 
 def aws_transcribe_job(file_name, s3_url):
@@ -229,11 +243,13 @@ def aws_transcribe_job(file_name, s3_url):
     Returns:
         N/A
     """
+    epoch_timestamp = str(time.time())
     transcribe.start_transcription_job(
         TranscriptionJobName=file_name,
         Media={"MediaFileUri": s3_url},
         MediaFormat="mp4",
-        LanguageCode="en-US",
+        LanguageCode="en-US"
+        ,Settings = {"ShowAlternatives":True, "MaxAlternatives":5}
     )
 
     # TODO possibile infinite loop condtion?
@@ -251,7 +267,9 @@ def aws_transcribe_job(file_name, s3_url):
         data = requests.get(
             status["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
         ).json()
-        text = data["results"]["transcripts"][0]["transcript"]
+        # i set the transcribe job to give us back all alternatives to increase the chances that the string "pedestrian" will be somewhere in the result. so i'm bringing back all results
+        text = data["results"]
+        # ["transcripts"][0]["transcript"]
         logging.info(text)
         return text
 
@@ -276,20 +294,31 @@ def transcribe_pipeline():
     # for all files transicbe the audio
     for call in audio_data:
 
-        # down the file
-        file_name = download_audio_file(call["audio_url"])
+        # get the audio URL
+        r=requests.get(call["audio_url"])
+        # replace the AWS part of the file name
+        file_name = call["audio_url"].replace("https://s3.us-east-2.wasabisys.com/openmhz/media/", "")
 
-        # upload the file to s3
-        upload_file_to_s3(file_name, S3_AUDIO_BUCKET, f"raw_audio/{file_name}")
+        # put the audio in our own S3 bucket
+        s3_resource.Bucket(S3_AUDIO_BUCKET).put_object(Key='source-data/scanner/{}'.format(file_name)
+                                                   , Body=r.content)
 
-        s3_url = f"s3://{S3_AUDIO_BUCKET}/raw_audio/{file_name}"
+        # make an S3 URL out of it to pass to the transcribe job
+        s3_url = f"s3://{S3_AUDIO_BUCKET}/source-data/scanner/{file_name}"
 
         # start transcription job
-        transcribed_audio = aws_transcribe_job(file_name, s3_url)
+        try:
+            transcribed_audio = aws_transcribe_job(file_name, s3_url)
+        except Exception as error:
+            logging.error(error)
+            continue
         call["transcribed_audio"] = transcribed_audio
+        # s3_resource.Bucket(S3_AUDIO_BUCKET).put_object(Key='source-data/scanner/transcribed/{}'.format(json_filename), Body=json.dumps(call),)
 
     # TODO you can save this to database directly
-    save_json(f"transcribed_audio_{epoch_time}.json", audio_data)
+    # save_json(f"transcribed_audio_{epoch_time}.json", audio_data)
+    s3_resource.Bucket(S3_AUDIO_BUCKET).put_object(Key='source-data/scanner/transcribed/transcribed_audio_{}.json'.format(epoch_time), Body=json.dumps(audio_data),)
+    # s3_resource.Bucket(S3_AUDIO_BUCKET).put_object(Key=s3_key, Body=upload, Metadata =metadata)
 
     # TODO cleanup function
     # want to remove downloaded m4a files, and the file in s3 bucket
