@@ -14,6 +14,7 @@ from geopy import distance
 
 # Project Imports
 from get_address import GeoLoc
+import data_collectors
 
 
 # Check if google key found
@@ -261,6 +262,10 @@ def time_of_day_concerns(address: str):
 
     st.write("(Such as weekday AM peak, weekday PM peak, overnight, weekends, etc.) ")
 
+    data = data_collectors.unsafe_times.get_unsafe_times(address)
+
+    st.write(data)
+
 
 def existing_traffic_calms(address: str):
     """
@@ -274,6 +279,10 @@ def existing_traffic_calms(address: str):
     st.subheader("4. Are there existing traffic calming features on the block?")
 
     st.write("This includes speed humps, rumble strips, etc.")
+
+    data = data_collectors.traffic_calming.get_traffic_calming(address)
+
+    st.write(data)
 
 
 def get_neighborhood_uses(address: str):
@@ -336,6 +345,10 @@ def get_prev_concerns(address: str):
     st.subheader("8. Have you previously contacted DDOT about your concerns?")
 
     st.write("8. Have you previously contacted DDOT about your concerns?")
+
+    data = data_collectors.get_prev_311.get_prev_requests(address)
+
+    st.write(data)
 
 
 def get_extra_info(address: str):
