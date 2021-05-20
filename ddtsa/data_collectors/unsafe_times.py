@@ -18,6 +18,28 @@ def find_unsafe_times(df, address):
     print("Have fun!!")
 
 
+    # MILITARY RD NW and  ROSS DR NW
+    # revese gecode service - map box, google maps, etc has one
+    # geocode to a spot?  < char has some code have to decouple, dont wont to rely on db
+    # 
+
+    # Can we leverage geopands?? #TODO 
+    # distance formula on all lat long pairs  
+    # if distance within < .2 consider it a crash
+    # get the datetime from reportdate
+    # add to correct result location
+
+
+    # moring 6m,-12pn
+    # afternoon 12pm-6pm
+    # night 6- 6am
+    # result = {
+    #     "morning": [[objectid]],
+    #     "afternoon": [objectid],
+    #     "night": [objectid],
+    # }
+
+
 def main():
     """
     Purpose:
