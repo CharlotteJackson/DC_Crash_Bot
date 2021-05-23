@@ -13,16 +13,15 @@ from geopy import distance
 
 
 # Project Imports
-from get_address import GeoLoc
 import data_collectors
 
-
-# Check if google key found
-try:
-    GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
-    geo_loc_instance = GeoLoc(GOOGLE_API_KEY)
-except Exception as error:
-    st.error("No GOOGLE API KEY detected")
+# TODO might want to get google data just once
+# # Check if google key found
+# try:
+#     GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
+#     geo_loc_instance = GeoLoc(GOOGLE_API_KEY)
+# except Exception as error:
+#     st.error("No GOOGLE API KEY detected")
 
 
 # Full results from Geocoding API for 14th St NW & Columbia Rd NW, Washington, DC 20009
@@ -84,43 +83,6 @@ test_data = {
 }
 
 
-def load_json(path_to_json: str) -> Dict[str, Any]:
-    """
-    Purpose:
-        Load json files
-    Args:
-        path_to_json (String): Path to  json file
-    Returns:
-        Conf: JSON file if loaded, else None
-    """
-    try:
-        with open(path_to_json, "r") as config_file:
-            conf = json.load(config_file)
-            return conf
-
-    except Exception as error:
-        logging.error(error)
-        raise TypeError("Invalid JSON file")
-
-
-def save_json(json_path: str, json_data: Any) -> None:
-    """
-    Purpose:
-        Save json files
-    Args:
-        path_to_json (String): Path to  json file
-        json_data: Data to save
-    Returns:
-        N/A
-    """
-    # save sut config
-    try:
-        with open(json_path, "w") as outfile:
-            json.dump(json_data, outfile)
-    except Exception as error:
-        raise OSError(error)
-
-
 def get_open_work_orders(lat, lng: str):
     """
     Purpose:
@@ -140,7 +102,7 @@ def get_open_work_orders(lat, lng: str):
     # data = requests.get(api_url).json()["features"]
 
     curr_loc = (lat, lng)
-    work_orders = load_json("work_order.json")
+    work_orders = data_collectors.utils.load_json("work_order.json")
 
     close_work_orders = []
 
@@ -196,7 +158,7 @@ def get_open_work_orders(lat, lng: str):
     #     print(gmap_data)
     #     datum["gmap_data"] = gmap_data
 
-    # save_json("work_order.json", data)
+    # data_collectors.utils.save_json("work_order.json", data)
     return close_work_orders
 
 
@@ -230,7 +192,9 @@ def location_data(address: str):
     lng = test_data["results"][0]["geometry"]["location"]["lng"]
 
     # TODO format to be readable
-    st.write(get_open_work_orders(lat, lng))
+    # st.write(get_open_work_orders(lat, lng))
+
+    st.write("TODO")
 
 
 def safety_concerns(address: str):
@@ -264,7 +228,7 @@ def time_of_day_concerns(address: str):
 
     data = data_collectors.unsafe_times.get_unsafe_times(address)
 
-    st.write(data)
+    st.markdown(data)
 
 
 def existing_traffic_calms(address: str):
