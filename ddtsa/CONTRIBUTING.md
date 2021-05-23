@@ -10,7 +10,7 @@ pip install -r requirements.txt
 
 ## Test the app
 
-THis is how you launch the app
+This is how you launch the app
 
 ```
 streamlit run ddtsa.py
@@ -33,4 +33,4 @@ for example...
 banjo_ddtsa_82
 ```
 
-WHen your work on the issue is completed create a merge request to the ddtsa branch.
+When your work on the issue is completed create a merge request to the ddtsa branch.
