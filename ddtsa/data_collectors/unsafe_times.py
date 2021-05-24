@@ -9,7 +9,12 @@ from geopy.distance import geodesic
 import pandas as pd
 
 # Project Imports
-from .get_address import rev_geocode
+# TODO what is wrong with imports?
+try:
+    from .get_address import rev_geocode
+except:
+    from get_address import rev_geocode
+
 
 
 # Check if google key found
@@ -19,14 +24,14 @@ except Exception as error:
     logging.error("No GOOGLE API KEY detected")
 
 
-def get_unsafe_times(address: str) -> str:
+def get_unsafe_times(address: str, gmap_data) -> str:
 
     # TODO connect to live database
     # For now use the test data we have
     df = pd.read_csv("../data/analysis_data_dc_crashes_w_details.csv")
 
     try:
-        json_results = find_unsafe_times(df, address)
+        json_results = find_unsafe_times(df, address, gmap_data)
         text_string = format_results(json_results)
     except Exception as error:
         json_results = {"error": error}
@@ -142,7 +147,9 @@ def fill_crash_json(
             crash_json["weekends"].append(obj_id)
 
 
-def find_unsafe_times(df: pd.DataFrame, address: str) -> Dict[str, Any]:
+def find_unsafe_times(
+    df: pd.DataFrame, address: str, gmap_data: Dict[str, Any] = None
+) -> Dict[str, Any]:
     """
     Purpose:
         Find unsafe times given an address
@@ -152,10 +159,10 @@ def find_unsafe_times(df: pd.DataFrame, address: str) -> Dict[str, Any]:
     Returns:
         unsafe_times_json - > JSON with unsafe times
     """
-    print("Have fun!!")
 
     # geocode service - using google maps
-    gmap_data = rev_geocode(address, GOOGLE_API_KEY)
+    if not gmap_data:
+        gmap_data = rev_geocode(address, GOOGLE_API_KEY)
 
     # Get the latitude and longitude
     curr_lat = gmap_data[0]["geometry"]["location"]["lat"]

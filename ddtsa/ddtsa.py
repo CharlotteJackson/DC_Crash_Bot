@@ -13,15 +13,18 @@ from geopy import distance
 
 
 # Project Imports
-import data_collectors
+from data_collectors.get_address import rev_geocode
+from data_collectors.unsafe_times import get_unsafe_times
+from data_collectors.get_prev_311 import get_prev_requests
+from data_collectors.traffic_calming import get_traffic_calming
+
 
 # TODO might want to get google data just once
 # # Check if google key found
-# try:
-#     GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
-#     geo_loc_instance = GeoLoc(GOOGLE_API_KEY)
-# except Exception as error:
-#     st.error("No GOOGLE API KEY detected")
+try:
+    GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
+except Exception as error:
+    st.error("No GOOGLE API KEY detected")
 
 
 # Full results from Geocoding API for 14th St NW & Columbia Rd NW, Washington, DC 20009
@@ -213,7 +216,7 @@ def safety_concerns(address: str):
     )
 
 
-def time_of_day_concerns(address: str):
+def time_of_day_concerns(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
         Get time of day concerns
@@ -226,7 +229,7 @@ def time_of_day_concerns(address: str):
 
     st.write("(Such as weekday AM peak, weekday PM peak, overnight, weekends, etc.) ")
 
-    data = data_collectors.unsafe_times.get_unsafe_times(address)
+    data = get_unsafe_times(address, gmap_data)
 
     st.markdown(data)
 
@@ -244,7 +247,7 @@ def existing_traffic_calms(address: str):
 
     st.write("This includes speed humps, rumble strips, etc.")
 
-    data = data_collectors.traffic_calming.get_traffic_calming(address)
+    data = get_traffic_calming(address)
 
     st.write(data)
 
@@ -310,7 +313,7 @@ def get_prev_concerns(address: str):
 
     st.write("8. Have you previously contacted DDOT about your concerns?")
 
-    data = data_collectors.get_prev_311.get_prev_requests(address)
+    data = get_prev_requests(address)
 
     st.write(data)
 
@@ -340,9 +343,13 @@ def generate_report(address: str):
     """
     st.header(f"Generating report for {address}")
     # TODO may want to check if address is in DC
+    # TODO we should input the google maps data into these functions
+    gmap_data = rev_geocode(address, GOOGLE_API_KEY)
+    # st.write(gmap_data)
+
     location_data(address)
     safety_concerns(address)
-    time_of_day_concerns(address)
+    time_of_day_concerns(address, gmap_data)
     existing_traffic_calms(address)
     get_neighborhood_uses(address)
     get_multi_modal(address)
