@@ -196,7 +196,7 @@ def main():
         N/A
     """
     # sample address
-    address = "BROAD BRANCH ROAD NW AND BRANDYWINE STREET NW"
+    address = "R Street Northwest & 19th Street Northwest, Washington, DC"
 
     print(f"Testing using address: {address}")
 
