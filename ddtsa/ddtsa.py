@@ -17,7 +17,10 @@ from data_collectors.get_address import rev_geocode
 from data_collectors.unsafe_times import get_unsafe_times
 from data_collectors.get_prev_311 import get_prev_requests
 from data_collectors.traffic_calming import get_traffic_calming
-
+from data_collectors.get_construction_projects import (
+    get_nearby_construction_projects,
+    format_incident_data,
+)
 
 # TODO might want to get google data just once
 # # Check if google key found
@@ -28,62 +31,6 @@ except Exception as error:
 
 
 # Full results from Geocoding API for 14th St NW & Columbia Rd NW, Washington, DC 20009
-test_data = {
-    "results": [
-        {
-            "address_components": [
-                {"long_name": "3023", "short_name": "3023", "types": ["street_number"]},
-                {
-                    "long_name": "14th Street Northwest",
-                    "short_name": "14th St NW",
-                    "types": ["route"],
-                },
-                {
-                    "long_name": "Northwest Washington",
-                    "short_name": "Northwest Washington",
-                    "types": ["neighborhood", "political"],
-                },
-                {
-                    "long_name": "Washington",
-                    "short_name": "Washington",
-                    "types": ["locality", "political"],
-                },
-                {
-                    "long_name": "District of Columbia",
-                    "short_name": "DC",
-                    "types": ["administrative_area_level_1", "political"],
-                },
-                {
-                    "long_name": "United States",
-                    "short_name": "US",
-                    "types": ["country", "political"],
-                },
-                {"long_name": "20009", "short_name": "20009", "types": ["postal_code"]},
-                {
-                    "long_name": "6838",
-                    "short_name": "6838",
-                    "types": ["postal_code_suffix"],
-                },
-            ],
-            "formatted_address": "3023 14th St NW, Washington, DC 20009, USA",
-            "geometry": {
-                "location": {"lat": 38.9281536, "lng": -77.0320617},
-                "location_type": "ROOFTOP",
-                "viewport": {
-                    "northeast": {"lat": 38.9295025802915, "lng": -77.03071271970849},
-                    "southwest": {"lat": 38.92680461970851, "lng": -77.0334106802915},
-                },
-            },
-            "place_id": "ChIJH1gbkR_It4kRoqUEqSfFySo",
-            "plus_code": {
-                "compound_code": "WXH9+75 Washington, DC, USA",
-                "global_code": "87C4WXH9+75",
-            },
-            "types": ["establishment", "point_of_interest"],
-        }
-    ],
-    "status": "OK",
-}
 
 
 def get_open_work_orders(lat, lng: str):
@@ -165,7 +112,7 @@ def get_open_work_orders(lat, lng: str):
     return close_work_orders
 
 
-def location_data(address: str):
+def location_data(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
         Generates Report
@@ -189,15 +136,8 @@ def location_data(address: str):
         "Is this location near an existing construction project? If yes, please provide the name and location of the project and any construction‐related concerns."
     )
 
-    # TODO: USING TEST DATA
-
-    lat = test_data["results"][0]["geometry"]["location"]["lat"]
-    lng = test_data["results"][0]["geometry"]["location"]["lng"]
-
-    # TODO format to be readable
-    # st.write(get_open_work_orders(lat, lng))
-
-    st.write("TODO")
+    const_data = get_nearby_construction_projects(gmap_data)
+    st.markdown(format_incident_data(const_data))
 
 
 def safety_concerns(address: str):
@@ -212,7 +152,7 @@ def safety_concerns(address: str):
     st.subheader("2. Safety concerns")
 
     st.write(
-        "Provide a detailed description of the problems observed in the area of investigation (vehicle crashes, speeding, pedestrian safety, bicycle safety, unable to cross the street, hard to see cross‐traffic, etc.)For intersection‐related concerns, please include the type of intersection:"
+        "Provide a detailed description of the problems observed in the area of investigation (vehicle crashes, speeding, pedestrian safety, bicycle safety, unable to cross the street, hard to see cross‐traffic, etc.) For intersection‐related concerns, please include the type of intersection:"
     )
 
 
@@ -347,7 +287,7 @@ def generate_report(address: str):
     gmap_data = rev_geocode(address, GOOGLE_API_KEY)
     # st.write(gmap_data)
 
-    location_data(address)
+    location_data(address, gmap_data)
     safety_concerns(address)
     time_of_day_concerns(address, gmap_data)
     existing_traffic_calms(address)
