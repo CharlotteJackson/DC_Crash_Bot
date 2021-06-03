@@ -1,0 +1,296 @@
+﻿Location#,District,PSA,Ward,ANC,Phase,Location
+2,4,409,1,1A,Existing,oregon blk Park Pl NW s/b     
+3,3,304/305,1,1B,Existing,100 Blk Florida Ave NW nw/b
+1,4,408,1,1A/1D,Planned,16th St s/b @ Irving St
+131,3,302,1,1A,Proposed,"400 blk Warder Street, NW e/b"
+132,5,302,1,1A,Proposed,1500 Blk. Monroe St. NE (EB)
+133,3,302,1,1C,Proposed,Columbia Rd n/b @ 17th St
+134,3,303,1,1C,Proposed,1800 blk Harvard St NW nw/b
+135,3,304,1,1B,Proposed,2400 Blk Sherman Av NW SB
+136,3,304,1,1B,Proposed,2500 blk Georgia Ave NW 
+137,3,305,1,1B,Proposed,1300 blk W St NW e/b
+138,4,408,1,1D,Proposed,1800 to 2000 blocks of Park
+139,4,408,1,1D,Proposed,Irving St NW from Adams Mill
+140,4,409,1,1A,Proposed,3500 blk New Hampshire Ave NW
+141,3,302/304,1,1B,Proposed,700 blk Harvard St NW 
+4,5,101,2,2F,Existing,1400 blk New York Ave NE
+6,2,207,2,2A,Existing,2200 block K St NW e/b
+5,2,206,2,2E,Planned,M St w/b @ Whitehurst Frwy
+7,2,207,2,2A,Planned,K St e/b @ 27th St
+8,2,207,2,2A,Planned,K St w/b @ 25th St
+142,1,101,2,2C/2F,Proposed,10th St @ H St NW
+143,2,206,2,2E,Proposed,Reservoir Rd NW between 37th and
+144,2,207,2,2A,Proposed,2200 blk K St NW w/b
+145,2,207,2,2A,Proposed,Rock Crk Pky n/b NW .2mi
+146,2,208,2,2D,Proposed,2300 blk Connecticut Ave NW s/b
+147,2,208,2,2B,Proposed,Connecticut Ave NW under Dupont Circle
+148,2,301,2,2B,Proposed,1500 blk T St NW e/b
+149,3,308,2,2C,Proposed,1500 blk New Jersey Ave NW
+10,2,202,3,3E,Existing,4400 Blk. River Rd. NW (NB)
+12,2,203,3,3C,Existing,2500 blk Porter St NW w/b
+13,2,203,3,3F,Existing,4900 blk Connecticut Ave NW se/b
+16,2,204,3,3C,Existing,3500 Massachusetts Ave NW (E/B) 
+18,2,205,3,3D,Existing,2900 Blk Arizona Av NW SB
+19,2,205,3,3D,Existing,3000 Blk Arizona Av NW SB
+20,2,205,3,3D,Existing,3000 blk Foxhall Rd NW s/b
+21,2,205,3,3D,Existing,4700 Blk MacArthur Blvd NW s/b
+22,2,205,3,3D,Existing,5100 blk Loughboro Rd NW w/b
+23,2,205,3,3D,Existing,5700 Blk MacArthur Blv NW NB
+25,2,205,3,3D,Existing,Canal Rd NW 0.3 m s/o
+9,2,201,3,3G,Planned,Conn Ave n/b @ Military Rd
+11,2,202,3,3E/3F,Planned,Wisconsin Ave n/b @ Brandywine St
+14,2,203,3,3F/3G,Planned,Connecticut Ave s/b @ Nebraska Ave
+15,2,203,3,3C,Planned,Connecticut Ave s/b @ Porter St
+17,2,204,3,3C,Planned,Connecticut Ave n/b @ Calvert St
+26,2,201/203,3,3F/3G,Planned,Nebraska Ave ne/b @ Fessenden St
+150,2,201,3,3G,Proposed,2600 Blk Military Rd. NW (W/B)
+151,2,201,3,3G,Proposed,2800 BLK MILITARY RD NW (W/B)
+152,2,201,3,3G,Proposed,2900 BLK MILITARY RD NW (E/B)
+154,2,201,3,3G,Proposed,5300 blk Reno Rd NW 
+155,2,201,3,3G,Proposed,5800 blk Nebraska Ave NW nw/b
+156,2,201,3,3G,Proposed,6500 blk Western Ave NW ne/b
+157,2,201,3,3G,Proposed,Oregon Ave NW between Military Rd
+158,2,201,3,3G,Proposed,33rd St @ Northampton St NW
+159,2,202,3,3E,Proposed,4100 blk Albemarle St NW w/b
+160,2,202,3,3E,Proposed,4200 blk Van Ness St NW
+161,2,202,3,3F,Proposed,4500 blk Nebraska Ave NW 
+162,2,202,3,3E,Proposed,4500 Blk. River Rd. NW (SB)
+163,2,202,3,3E,Proposed,4700 blk Western Ave NW ne/b
+164,2,202,3,3E,Proposed,5000-5200 blks Wisconsin Ave NW 
+165,2,203,3,3C,Proposed,2300 blk of Porter St NW
+166,2,203,3,3C,Proposed,2300 blk of Porter St NW
+167,2,203,3,3C,Proposed,3200 blk Porter St NW e/b
+168,2,203,3,3F,Proposed,4800 blk Connecticut Ave NW nw/b
+169,2,203,3,3C,Proposed,3800 to 4000 Reno Road NW
+170,2,204,3,3C,Proposed,2800 blk Calvert St NW e/b
+171,2,204,3,3C,Proposed,2900 blks Cleveland Ave NW 
+172,2,204,3,3C,Proposed,3000 Blk Cleveland Av NW SB
+173,2,204,3,3C,Proposed,3100 blk Wisconsin Ave NW s/b
+174,2,204,3,3C,Proposed,3400-3500 blks Cathedral Ave NW 
+175,2,204,3,3B,Proposed,4100 blk Cathedral Ave NW 
+176,2,204,3,3C,Proposed,Wisconsin Ave s/b @ Massachusetts Ave
+177,2,205,3,3D,Proposed,1900 block Foxhall Rd NW n/b
+178,2,205,3,3D,Proposed,1900 block Foxhall Rd NW s/b
+179,2,205,3,3E,Proposed,4100 blk Massachusetts Ave NW nw/b
+180,2,205,3,3D,Proposed,4500 blk Massachusetts Ave NW nw/b
+181,2,205,3,3D,Proposed,5000 Blk MacArthur Blv NW n/b
+182,2,205,3,3D,Proposed,5000 Blk MacArthur Blv NW SB
+183,2,205,3,3D,Proposed,5000 blk Massachusetts Ave NW se/b
+184,2,205,3,3D,Proposed,5400 Blk MacArthur Blvd NW nw/b
+185,2,205,3,3D,Proposed,5600 Blk MacArthur Blv NW n/b
+186,2,205,3,3D,Proposed,Canal Rd NW 0.3 m s/o
+187,2,205,3,3D,Proposed,Dalecarlia Pkwy s/b and n/b 
+188,2,205,3,3D,Proposed,Foxhall Rd s/b @ Reservoir Rd
+189,2,205,3,3D,Proposed,Reservoir Rd NW between Foxhall and
+190,2,203/204,3,3C,Proposed,"35th St @ Macomb St, NW"
+27,4,401,4,4A,Existing,1700 blk N Portal Dr NW
+28,4,401,4,4A,Existing,7700 Blk 16th St NW n/b
+29,4,402,4,4B,Existing,600 blk Missouri Ave NW nw/b
+30,4,402,4,4B,Existing,600 blk Missouri Ave NW se/b
+31,4,403,4,4C,Existing,5200 BLK 14TH STREET NW (S/B)
+32,4,403,4,4A,Existing,5400 Blk 16th Street NW s/b
+33,4,403,4,4A,Existing,Military Rd .1m pri/to 17St NW
+34,4,403,4,4A,Existing,Military Rd .2m w/o 16St Rmp
+35,4,404,4,4C,Existing,4800 blk Georgia Ave NW s/b
+38,4,406,4,4B,Existing,400 block Riggs Road NE n/b
+39,4,406,4,4B,Existing,5800 blk New Hampshire Ave NE
+43,4,405/407,4,4D/5A,Existing,3100 blk N Capitol St NE
+36,5,404,4,4C,Planned,1200 blk Taylor St NE w/b
+37,4,406,4,4B,Planned,100 blk Riggs Rd NE e/b
+40,4,402/403,4,4B/4C,Planned,Georgia Ave s/b @ Missouri Ave
+41,4,402/403,4,4A,Planned,Military Rd w/b @ 14th St
+42,4,403/404,4,4A/4C,Planned,16th St s/b @ Colorado Ave
+191,4,401,4,4A,Proposed,6600 blk 16th St NW 
+192,4,401,4,4B,Proposed,7400 blk Blair Rd NW se/b
+193,4,401,4,4A/4B,Proposed,7600 blk Georgia Ave NW s/b
+194,4,401,4,41,Proposed,7700 block 16th St NW s/b
+195,4,402,4,4A,Proposed,6100 blk Georgia Ave NW s/b
+196,4,403,4,4C,Proposed,5100 block 13th St NW s/b
+197,4,404,4,4C,Proposed,1300 blk Quincy St NW 
+198,4,404,4,4A,Proposed,4200 to 4500 blks Blagden Ave
+199,4,404,4,4C,Proposed,14th St n/b @ Farragut St
+200,4,406,4,4B,Proposed,5900 blk New Hampshire Ave NE
+201,4,406,4,4B,Proposed,6300-6600 Blks Blair Road NW s/b
+202,4,407,4,4C,Proposed,300 Block of Rock Creek Church
+203,4,407,4,4C,Proposed,4400 blk New Hampshire Ave NW
+204,4,407,4,4D/5A,Proposed,5000 7th St NW s/b 
+45,5,405,5,5C,Existing,100 Blk Michigan Ave NE w/b
+46,5,405,5,5C,Existing,100 Blk Michigan Avenue NE e/b
+48,5,503,5,5B,Existing,2200 blk South Dakota Ave NE
+49,5,503,5,5B,Existing,2700 BLK NEW YORK AVE NE
+50,5,503,5,5B,Existing,2800 Blk New York Ave. NE
+51,5,503,5,5A,Existing,3000 block Rhode Island Ave NE
+53,5,504,5,5A,Existing,1100 blk Michigan Ave NE w/b
+54,5,504,5,5A,Existing,4100 blk S Dakota Ave NE
+55,5,504,5,5A,Existing,4200 blk S Dakota Ave NE
+56,5,504,5,5C,Existing,700 blk Franklin St NE w/b
+57,5,505,5,5B,Existing,600 Blk New York Avenue NE
+58,5,506,5,5B,Existing,1100 blk Bladensburg Rd NE ne/b
+59,5,506,5,5B,Existing,1100 blk Bladensburg Rd NE sw/b
+62,5,506,5,5B,Existing,1200 blk Mt Olivet Rd NE
+64,5,506,5,5B,Existing,1500 blk West Virginia Ave NE
+44,4,405,5,5C,Planned,N Capitol St n/b @ Harewood
+47,5,501,5,5C,Planned,Rhode Island Ave sw/b @ 1st
+52,5,503,5,5A/5B,Planned,S Dakota se/b @ Bladensburg Rd
+60,5,506,5,5B,Planned,1100 blk Florida Ave NE nw/b
+61,5,506,5,5B,Planned,1100 blk Florida Ave NE se/b
+65,5,503/506,5,5B,Planned,Bladensburg Rd ne/b @ NY Ave
+66,5,504/505,5,5B,Planned,Rhode Island Ave sw/b @ Reed
+67,5,505/506,5,5B,Planned,Mt Olivet se/b @ W Virginia
+205,4,405,5,5A,Proposed,5500 blk Eastern Ave NE se/b
+206,4,405,5,5C,Proposed,Unit blk Irving St NW e/b
+207,4,405,5,5C,Proposed,Unit blk Irving St NW w/b
+208,4,405,5,5A,Proposed,4600 to 5000 blks Fort Totten
+209,5,405,5,5C,Proposed,4500 blk Clermont Dr NE s/b
+210,5,405,5,5C,Proposed,N Capitol s/b @ Michigan Ave
+211,5,501,5,5C,Proposed,1400 blk New Jersey Ave NW
+212,4,502,5,5A,Proposed,Monroe St NE e/b & Rhode
+213,5,502,5,5C,Proposed,2500 blk N. Capitol St NE
+214,5,502,5,5C,Proposed,2600 blk Lincoln Rd NE n/b
+215,5,502,5,5C,Proposed,3000-3400 blks 7th St NE 
+216,5,502,5,5C,Proposed,3100 blk 4th St NE n/b
+217,5,503,5,5A,Proposed,2200-2300 blks Rhode Island Ave NE
+218,5,503,5,5B,Proposed,2800 blk 20th St NE n/b
+219,5,503,5,5A,Proposed,2800 blk Bladensburg Rd NE sw/b
+220,5,503,5,5A,Proposed,3100 blk Bladensburg Rd NE ne/b
+221,5,503,5,5A,Proposed,3600 blk S Dakota NE Ave
+222,5,503,5,5A,Proposed,3800 BLK EASTERN AVENUE NE (SE/B)
+223,5,503,5,5A,Proposed,3900 blk S Dakota Ave NE
+224,5,503,5,5A/5B,Proposed,S. Dakota Ave NE w/b prior
+225,5,504,5,5B,Proposed,1700 Blk Rhode Island Ave NE
+226,5,504,5,5A/5B,Proposed,1800 blk Rhode Island Ave NE
+227,5,504,5,5B,Proposed,2600-2800 blks 10th St NE 
+228,5,504,5,5A,Proposed,18th St n/b @ Randolph NE
+229,6,504,5,5A,Proposed,4000 blk 12th St NE s/b
+230,5,505,5,5B,Proposed,1300 blk New York Ave NE
+231,5,505,5,5B,Proposed,1800 block Montana Ave NE se/b
+232,5,505,5,5B,Proposed,2000 blk West Virginia Ave NE
+233,5,505,5,5B,Proposed,2400 blk Queens Chapel Rd NE
+234,5,507,5,5B,Proposed,700 blk 26th St NE n/b
+235,5,503/504,5,5A,Proposed,Michigan Ave w/b @ S Dakota
+68,1,103,6,6C,Existing,3rd St Tunnel NW n/b at
+70,1,104,6,61,Existing,1200 blk Maryland Ave NE ne/b
+71,1,104,6,6C,Existing,300 blk H St NE e/b
+73,1,105,6,6D,Existing,9th St Tunnel NW s/b 
+74,1,106,6,6D,Existing,200 blk M St SE e/b
+75,1,106,6,6B,Existing,700 blk 11th St SE s/b
+76,1,108,6,6B,Existing,1300 blk Pennsylvania Ave SE nw/b
+78,1,108,6,6A,Existing,1700 blk C St NE w/b
+79,1,108,6,6B,Existing,1900 blk Independence Ave SE e/b
+80,1,108,6,6A,Existing,200 blk 17th St NE s/b
+81,1,108,6,6B,Existing,200 blk 19th St SE n/b
+82,1,108,6,6B,Existing,300 block 17th St SE s/b
+83,1,207,6,6D,Existing,400 blk 14th St SW n/b
+84,1,102/103,6,6C,Existing,3rd St Tunnel NW s/b at
+69,1,103,6,6C,Planned,N Capitol St s/b @ H
+72,1,105,6,6D,Planned,14th St n/b @ C St
+77,1,108,6,6B,Planned,1300 block Pennsylvania Ave SE se/b
+236,1,103,6,6C,Proposed,700 blk 4th St NE 
+237,1,104,6,6C,Proposed,1100 blk 4th St NE s/b
+238,1,104,6,6C,Proposed,6th St @ G St NE
+239,1,105,6,6D,Proposed,800 blk Maine Ave SW nw/b
+240,1,105,6,6D,Proposed,Southwest Fwy SW @ Exit 4
+241,1,105,6,6D,Proposed,"400 to 700 G Street, SW"
+242,1,106,6,6B,Proposed,200-300 blks E St SE 
+243,1,107,6,6B,Proposed,1000 blk Pennsylvania Ave SE se/b
+244,1,107,6,6B,Proposed,Pennsylvania Ave e/b @ 11th St
+245,1,107,6,6B,Proposed,4th St s/b @ E St
+246,1,108,6,6A,Proposed,1400 blk E Capitol St e/b
+247,1,108,6,6b,Proposed,400 blk 17th St SE s/b
+248,1,108,6,6B,Proposed,100 - 200 blk of Kentucky
+249,5,507,6,6A,Proposed,1800 blk C St NE e/b
+250,1,101/103/105,6,6D,Proposed,SE/SW Frwy @ 8th St Exit
+251,1,101/103/105,6,6D,Proposed,SE/SW Frwy @ 9th St Entrance
+252,1,104/107,6,6C,Proposed,700 blk Maryland Ave NE sw/b
+85,6,601,7,7D,Existing,2800 block Benning Rd NE e/b
+86,6,601,7,7D,Existing,3400 blk Benning Rd NE w/b
+87,6,601,7,7D,Existing,3600 Jay St NE ne/b 
+88,6,602,7,7C/7D,Existing,DC295 0.4 mi s/o Burroughs Av
+89,6,602,7,7C/7D,Existing,DC295 NE .1mile s/o Eastern Ave
+90,6,602,7,7C/7D,Existing,DC295 NE .1mile s/o Eastern Ave
+92,6,604,7,7A,Existing,3300 Blk Minnesota Ave SE (NE/B)
+93,6,604,7,7A,Existing,3300 Blk Minnesota Ave SE sw/b
+94,6,605,7,7B,Existing,1200 block Branch Ave SE s/b
+95,6,605,7,7A,Existing,3000 blk Minnesota Ave SE ne/b
+96,6,605,7,7B,Existing,3100 blk Minnesota Ave SE sw/b
+97,6,605,7,7B,Existing,3700 blk Massachusetts Ave SE se/b
+98,6,605,7,7B,Existing,3900 blk Pennsylvania Ave SE se/b
+99,6,605,7,7B,Existing,3900 block Pennsylvania Ave SE nw/b
+101,6,606,7,7B,Existing,3700 BLK SOUTHERN AVENUE SE (SW/B)
+103,6,607,7,7B,Existing,1900 blk Branch Ave SE n/b
+104,6,607,7,7B,Existing,3600 blk Alabama Ave SE ne/b
+105,6,608,7,7C,Existing,1400 blk Southern Ave SE sw/b
+106,6,608,7,7C,Existing,5400 block N H Burroughs Ave
+107,7,701,7,7B,Existing,2300 blk Good Hope Rd SE
+109,7,701,7,7B,Existing,2500 block Naylor Rd SE n/b
+110,6,602/603,7,7A/7D,Existing,DC295 NE at Benning Rd Exit
+113,6,604/608,7,7C/7E,Existing,5500 blk E Capitol St NE
+91,6,603,7,7A,Planned,100 blk Ridge Rd SE nw/b
+100,6,605,7,7E,Planned,700 Blk Ridge Rd SE se/b
+102,6,606,7,7B,Planned,Branch Ave n/b @ Alabama Ave
+111,6,603/604/608,7,7A/7D/7E,Planned,E Capitol St e/b @ Texas
+112,6,603/604/608,7,7D/7E,Planned,E Capitol St w/b @ Benning
+114,6,604/608,7,7C7E,Planned,E Capitol St w/b @ Southern
+253,5,507,7,7D,Proposed,300 blk Oklahoma Ave NE ne/b
+254,5,601,7,7D,Proposed,3300 Blk. E. Capitol St. NE
+255,6,602,7,7C,Proposed,4600 Blk N H Burroughs Ave
+256,6,602,7,7C,Proposed,5000 blk Sheriff Rd NE w/b
+257,6,602,7,7C/7D,Proposed,DC295 NE at 8.2 mile marker
+258,6,602,7,7D,Proposed,"44th and Brooks, NE w/b and"
+259,6,603,7,7A,Proposed,4000 blk East Capitol St NE
+260,6,603,7,7A,Proposed,4100 blk East Capitol St SE
+261,6,603,7,7A,Proposed,4800 blk Texas Ave SE n/b
+262,6,604,7,7E,Proposed,5400 blk Central Ave SE NW/B
+263,6,605,7,7B,Proposed,4100 Blk Alabama Ave SE w/b
+264,6,605,7,7A,Proposed,4300 blk Texas Ave SE s/b
+265,6,605,7,7E,Proposed,800 Blk Ridge Rd SE nw/b
+266,6,605,7,7E,Proposed,800 blk Ridge Rd SE se/b
+267,6,605,7,7E,Proposed,"Bowen Road @ Stanley St, SE"
+268,7,605,7,7A,Proposed,DC 295 0.4 mi S/O Penn.
+269,6,606,7,7B,Proposed,2100 blk 38th St SE 
+270,6,606,7,7B,Proposed,2700 Blk Branch Ave SE n/b
+271,6,606,7,7B,Proposed,5200 Blk Southern Ave SE ne/b
+272,6,606,7,7B,Proposed,5200 BLK Southern Ave SE se/b
+273,7,606,7,7B,Proposed,Suitland Rd from Alabama to Southern
+274,6,607,7,7B,Proposed,1900 blk Branch Ave SE s/b
+275,6,608,7,7C,Proposed,800 BLK EASTERN AVENUE NE (E/B)
+276,6,608,7,7C,Proposed,800 BLK EASTERN AVENUE NE (W/B)
+277,7,608,7,7C,Proposed,5000 blk E Capitol NE w/b
+278,6,604/608,7,7C/7E,Proposed,5500 blk E Capitol St NE
+115,7,703,8,8C,Existing,100 block Malcolm X Ave SE
+116,7,703,8,8C,Existing,Suitland Pk .3m pr F Strl
+119,7,704,8,8E,Existing,1900 BLK SOUTHERN AVENUE SE (NE/B)
+120,7,708,8,8D,Existing,4200 blk S Capitol St SW
+121,7,708,8,8D,Existing,DC 295 SW . 7 miles
+122,7,708,8,8D,Existing,DC295 SW 0.3 miles s/o exit
+117,7,703,8,8C,Planned,Suitland Pkwy e/b @ Firth Sterling
+118,7,703,8,8C,Planned,Suitland Pkwy w/b @ Stanton Rd
+279,1,701,8,8A,Proposed,I395 SW after Exit 4 e/b
+280,7,702,8,8B,Proposed,3000 blk Southern Ave ne/b 
+281,7,703,8,8E,Proposed,1400 BLK Alabama Ave. S.E. e/b
+282,7,703,8,8C,Proposed,2700 Blk M L King Jr.
+283,7,703,8,8C,Proposed,2800 Blk South Capitol St SE
+284,7,703,8,8C,Proposed,I-295 At Exit 2 SE n/b
+285,7,703,8,8C,Proposed,Suitland Pk 0.6 mi So Stanton
+286,7,703,8,8C,Proposed,Suitland Pk 0.8 mi No. Stanton
+287,7,703,8,8A/8B/8E,Proposed,Suitland PKWY S.E. 0.9 mi South
+288,7,703,8,8C,Proposed,Suitland PKWY SE .2mi South Of
+289,7,704,8,8B,Proposed,2200 blk Southern Ave SE ne/b
+290,7,705,8,8E,Proposed,1300 blk Mississippi Ave SE ne/b
+291,7,705,8,8D/8E,Proposed,1500 Blk Alabama Ave SE sw/b
+292,7,706,8,8D,Proposed,4200 blk 6th St SE n/b
+293,7,706,8,8D,Proposed,600 blk Southern Ave SE sw/b
+294,7,707,8,8C,Proposed,3500 BLK M.L. King Jr. Ave.
+295,7,707,8,8C,Proposed,3500 BLK M.L.King Jr. Ave. S.E.
+296,7,707,8,8C,Proposed,3600 Blk M L King Jr.
+129,5,306,6-May,5B/6C,Existing,600 Blk Florida Ave NE nw/b   
+299,7,605/607,8-Jul,7A/8A,Proposed,DC295 SE 0.75 mi s/o PA Ave SE ne/b
+300,7,605/607,8-Jul,7A/8A,Proposed,DC295 SE 0.75 mi s/o PA Ave SE sw/b
+124,3,303,2-Jan,1C/2B,Planned,Connecticut Ave NW s/b @ Florida Ave  
+297,1,105,6-Feb,2C/6D,Proposed,Independence Ave e/b @ 6th St SW  
+298,1,102/103,6-Feb,2C/6D,Proposed,Inside southern part of 3rd St Tunnel n/b and
+125,4,405,5-Apr,4D/5A,Planned,N Capitol St s/b @ Gallatin St NW 
+126,4,403/405/406,5-Apr,4B/4D/5A,Planned,N Capitol St n/b @ Riggs Rd NE 
+128,6,506/507,6-May,5B/6A,Existing,5000 block Benning Rd SE nw/b   
+127,5,501/502/506,6-May,5C/6C,Planned,New York Ave sw/b @ N Capitol St NE
+130,6,605/607,8-Jul,7A/8A,Planned,Pennsylvania Ave w/b @ Minnesota Ave SE  
