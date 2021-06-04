@@ -4,9 +4,14 @@ import os
 from typing import Tuple, Union, Optional, Dict, Any
 
 # 3rd Party Imports
-from datetime import datetime
+# from datetime import datetime
+import datetime
 from geopy.distance import geodesic
 import pandas as pd
+
+# postgress imports
+import psycopg2
+import pandas.io.sql as psql
 
 # Project Imports
 # TODO what is wrong with imports?
@@ -16,7 +21,6 @@ except:
     from get_address import rev_geocode
 
 
-
 # Check if google key found
 try:
     GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
@@ -24,14 +28,34 @@ except Exception as error:
     logging.error("No GOOGLE API KEY detected")
 
 
+# Needed to connect to database
+db_host = os.environ["DB_HOST"]
+db_pass = os.environ["DB_PASS"]
+db_user = os.environ["DB_USER"]
+db_name = os.environ["DB_NAME"]
+
+
 def get_unsafe_times(address: str, gmap_data) -> str:
 
     # TODO connect to live database
     # For now use the test data we have
-    df = pd.read_csv("../data/analysis_data_dc_crashes_w_details.csv")
+    # df = pd.read_csv("../data/analysis_data_dc_crashes_w_details.csv")
 
+    conn = psycopg2.connect(
+        f"dbname='{db_name}' user='{db_user}' host='{db_host}' password='{db_pass}'"
+    )
+    logging.info("connected to db")
+
+    year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
+    date_format = "%Y-%m-%d %H:%M:%S"
+    year_ago_date_time_string = year_ago_date_time.strftime(date_format)
+
+    db_query = f"select reportdate, mpdlatitude, mpdlongitude, objectid from analysis_data.dc_crashes_w_details --where reportdate between {year_ago_date_time_string} and current_date order by reportdate desc"
+    df = psql.read_sql(db_query, conn)
+
+    df_subset = df.loc[(df["reportdate"] >= year_ago_date_time_string)]
     try:
-        json_results = find_unsafe_times(df, address, gmap_data)
+        json_results = find_unsafe_times(df_subset, address, gmap_data)
         text_string = format_results(json_results)
     except Exception as error:
         json_results = {"error": error}
@@ -103,7 +127,7 @@ def fill_crash_json(
     """
 
     try:
-        row_lat_long = (row["latitude"], row["longitude"])
+        row_lat_long = (row["mpdlatitude"], row["mpdlongitude"])
     except Exception as error:
         print(row)
         logging.error(error)
@@ -113,10 +137,10 @@ def fill_crash_json(
     # TODO what threshold do we want for crash?
     if geodesic(row_lat_long, lat_long) < 0.2:
 
-        time_string = row["reportdate"].replace("+00:00", "")
+        time_string = str(row["reportdate"]).replace("+00:00", "")
         date_format = "%Y-%m-%d %H:%M:%S"
 
-        curr_date_time = datetime.strptime(time_string, date_format)
+        curr_date_time = datetime.datetime.strptime(time_string, date_format)
 
         # TODO might want to check if crash happened in past year
 
@@ -201,10 +225,27 @@ def main():
     print(f"Testing using address: {address}")
 
     # Use the test data we have
-    df = pd.read_csv("../../data/analysis_data_dc_crashes_w_details.csv")
+    # df = pd.read_csv("../../data/analysis_data_dc_crashes_w_details.csv")
+
+    year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
+    date_format = "%Y-%m-%d %H:%M:%S"
+    year_ago_date_time_string = year_ago_date_time.strftime(date_format)
+
+    db_query = f"select reportdate, mpdlatitude, mpdlongitude, objectid from analysis_data.dc_crashes_w_details --where reportdate between {year_ago_date_time_string} and current_date order by reportdate desc"
+    print(db_query)
+
+    conn = psycopg2.connect(
+        f"dbname='{db_name}' user='{db_user}' host='{db_host}' password='{db_pass}'"
+    )
+    logging.info("connected to db")
+    df = psql.read_sql(db_query, conn)
+    # print(df)
+
+    df_subset = df.loc[(df["reportdate"] >= year_ago_date_time_string)]
+    # print(df_subset)
 
     # TODO given the address find what times crashes happen
-    crash_data = find_unsafe_times(df, address)
+    crash_data = find_unsafe_times(df_subset, address)
 
     print(crash_data)
     text_string = format_results(crash_data)
