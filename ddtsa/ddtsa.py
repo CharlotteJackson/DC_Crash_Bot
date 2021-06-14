@@ -174,7 +174,7 @@ def time_of_day_concerns(address: str, gmap_data: Dict[str, Any]):
     st.markdown(data)
 
 
-def existing_traffic_calms(address: str):
+def existing_traffic_calms(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
         Get existing traffic calming features
@@ -187,7 +187,7 @@ def existing_traffic_calms(address: str):
 
     st.write("This includes speed humps, rumble strips, etc.")
 
-    data = get_traffic_calming(address)
+    data = get_traffic_calming(address, gmap_data)
 
     st.write(data)
 
@@ -290,7 +290,7 @@ def generate_report(address: str):
     location_data(address, gmap_data)
     safety_concerns(address)
     time_of_day_concerns(address, gmap_data)
-    existing_traffic_calms(address)
+    existing_traffic_calms(address, gmap_data)
     get_neighborhood_uses(address)
     get_multi_modal(address)
     get_vehicle_types(address)
