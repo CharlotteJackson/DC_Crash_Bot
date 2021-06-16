@@ -240,7 +240,7 @@ def get_vehicle_types(address: str):
     )
 
 
-def get_prev_concerns(address: str):
+def get_prev_concerns(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
         Get previous concerns
@@ -253,7 +253,7 @@ def get_prev_concerns(address: str):
 
     st.write("8. Have you previously contacted DDOT about your concerns?")
 
-    data = get_prev_requests(address)
+    data = get_prev_requests(address, gmap_data)
 
     st.write(data)
 
@@ -294,7 +294,7 @@ def generate_report(address: str):
     get_neighborhood_uses(address)
     get_multi_modal(address)
     get_vehicle_types(address)
-    get_prev_concerns(address)
+    get_prev_concerns(address, gmap_data)
     get_extra_info(address)
 
 
