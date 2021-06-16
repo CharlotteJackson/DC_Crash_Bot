@@ -304,11 +304,13 @@ def fill_calming_json(
 
         traffic_calming_json["blockkey"] = row["blockkey"]
         traffic_calming_json["nbh_cluster_names"] = row["nbh_cluster_names"]
-        traffic_calming_json["speedlimit"] = row["speed_limit"]
-        traffic_calming_json["num_sides_w_sidewalks"] = row["num_sides_w_sidewalks"]
-        traffic_calming_json["totalbikelanes"] = row["totalbikelanes"]
-        traffic_calming_json["totalraisedbuffers"] = row["totalraisedbuffers"]
-        traffic_calming_json["totalparkinglanes"] = row["totalparkinglanes"]
+        traffic_calming_json["speedlimit"] = int(row["speed_limit"])
+        traffic_calming_json["num_sides_w_sidewalks"] = int(
+            row["num_sides_w_sidewalks"]
+        )
+        traffic_calming_json["totalbikelanes"] = int(row["totalbikelanes"])
+        traffic_calming_json["totalraisedbuffers"] = int(row["totalraisedbuffers"])
+        traffic_calming_json["totalparkinglanes"] = int(row["totalparkinglanes"])
         traffic_calming_list.append(traffic_calming_json)
 
 
