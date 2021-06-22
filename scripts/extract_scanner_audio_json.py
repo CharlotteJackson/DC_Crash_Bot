@@ -2,45 +2,33 @@ from connect_to_rds import get_connection_strings, create_postgres_engine
 from json_to_postgis import json_to_postGIS
 import argparse
 
-def extract_scanner_audio_json (target_schema:str, source_table:str, target_table:str, AWS_Credentials:dict, **kwargs):
+def extract_scanner_audio_json (target_schema:str, source_table:str, target_table:str, engine, **kwargs):
 
     # assign optional arguments
     source_schema=kwargs.get('source_schema', None)
     if source_schema == None:
         source_schema='stg'
-    # if no environment is specified default to dev 
-    env=kwargs.get('env', None)
-    if env == None:
-        env='DEV'
-    env=env.upper()
-
-    # set up RDS and S3 connections, engines, cursors
-    region=AWS_Credentials['region']
-    engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
 
     # extract the json info
     step1_query ="""
-    DROP TABLE IF EXISTS tmp.citizen;
-    CREATE TABLE tmp.citizen
+    DROP TABLE IF EXISTS tmp.openmhz;
+    CREATE TABLE tmp.openmhz
     AS ( 
         WITH results AS 
             (
             SELECT jsonb_array_elements(test.results) AS data, source_file, load_datetime
             FROM
                 (
-                SELECT data->'results' as results, source_file, load_datetime
+                SELECT data->'data' as results, source_file, load_datetime
                 from {0}."{1}"
                 ) as test
             ) 
         SELECT 
-            to_timestamp(TRUNC((data->'cs')::bigint)/1000) AS cs
-            ,(data->'ll'->0)::numeric AS lat
-            ,(data->'ll'->1)::numeric AS long
-            ,to_timestamp(TRUNC((data->'ts')::bigint)/1000) AS ts
-            ,(data->'key')::varchar as incident_key
-            ,(data->'raw')::varchar as incident_desc_raw
-            ,(data->'source')::varchar as incident_source
-            ,(data->'categories') as incident_categories
+			(data->'timestamp')::varchar::timestamptz AS call_timestamp
+            ,(data->'call_length')::numeric AS call_length
+            ,(data->'source')::varchar AS call_talkgroup
+            ,(data->'id')::varchar as call_id
+			,(data->'transcribed_audio'->'transcripts'->0->'transcript')::varchar as main_transcript
             ,source_file
             ,load_datetime
             ,data 
@@ -48,26 +36,16 @@ def extract_scanner_audio_json (target_schema:str, source_table:str, target_tabl
         );
     """.format(source_schema, source_table)
 
-    step_2_query = """
-    DROP TABLE IF EXISTS tmp.citizen_geometry;
-    CREATE  TABLE tmp.citizen_geometry
-    AS (
-        SELECT *, ST_SetSRID(ST_MakePoint(long, lat),4326)::geography as geography
-        FROM tmp.citizen
-        ) ; 
-    """
-
     final_query="""
-    CREATE TABLE IF NOT EXISTS {0}.{1} (LIKE tmp.citizen_geometry);
+    CREATE TABLE IF NOT EXISTS {0}.{1} (LIKE tmp.openmhz);
 
     INSERT INTO {0}.{1} 
-        SELECT * FROM tmp.citizen_geometry;
+        SELECT * FROM tmp.openmhz WHERE main_transcript IS NOT NULL;
 
     GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
     """.format(target_schema, target_table)
 
     engine.execute(step1_query)
-    engine.execute(step_2_query)
     engine.execute(final_query)
 
     count_query = 'SELECT COUNT(*) FROM {}.{} WHERE source_file like \'%%{}%%\''.format(target_schema, target_table,source_table)
@@ -102,5 +80,4 @@ if __name__ == "__main__":
     engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
     tables_to_extract = [r for (r,) in engine.execute("select distinct table_name from information_schema.tables where table_schema = 'stg' and table_name like '%%transcribed_audio%%'")]
     for table in tables_to_extract:
-        extract_citizen_json(source_table=table, target_table='citizen_stream'
-        , target_schema='source_data',AWS_Credentials=get_connection_strings("AWS_DEV"), env=env)
+        extract_scanner_audio_json(source_table=table, target_table='openmhz', target_schema='source_data',engine=engine)

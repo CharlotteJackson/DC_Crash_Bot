@@ -14,10 +14,101 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
     region=AWS_Credentials['region']
     engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
 
+    # the queries that rename and convert all columns from varchar to their correct data type
+    convert_crash_details_query = """
+    DROP TABLE IF EXISTS tmp.crash_details;
+    CREATE TABLE tmp.crash_details AS (
+        SELECT
+            objectid
+            ,crimeid
+            ,ccn
+            ,personid
+            ,persontype
+            ,age::numeric as age
+            ,fatal
+            ,majorinjury
+            ,minorinjury
+            ,vehicleid
+            ,invehicletype
+            ,ticketissued
+            ,licenseplatestate
+            ,impaired
+            ,speeding
+        FROM source_data.crash_details
+    );
+    """
+
+    convert_crashes_raw_query = """
+    DROP TABLE IF EXISTS tmp.crashes_raw;
+    CREATE TABLE tmp.crashes_raw AS (
+    SELECT
+        u_objectid::varchar AS objectid, 
+        u_crimeid::varchar AS crimeid, 
+        u_ccn::varchar AS ccn, 
+        u_reportdate::timestamptz AS reportdate, 
+        u_routeid::varchar AS routeid, 
+        u_measure::varchar AS measure, 
+        u_offset::varchar AS _offset, 
+        u_streetsegid::varchar AS streetsegid, 
+        u_roadwaysegid::varchar AS roadwaysegid, 
+        u_fromdate::date AS fromdate, 
+        u_todate::date AS todate, 
+        u_marid::varchar AS marid, 
+        u_address::varchar AS address, 
+        u_latitude::varchar AS latitude, 
+        u_longitude::varchar AS longitude, 
+        u_xcoord::varchar AS xcoord, 
+        u_ycoord::varchar AS ycoord, 
+        u_ward::varchar AS ward, 
+        u_eventid::varchar AS eventid, 
+        u_mar_address::varchar AS mar_address, 
+        u_mar_score::varchar AS mar_score, 
+        u_majorinjuries_bicyclist::int AS majorinjuries_bicyclist, 
+        u_minorinjuries_bicyclist::int AS minorinjuries_bicyclist, 
+        u_unknowninjuries_bicyclist::int AS unknowninjuries_bicyclist, 
+        u_fatal_bicyclist::int AS fatal_bicyclist, 
+        u_majorinjuries_driver::int AS majorinjuries_driver, 
+        u_minorinjuries_driver::int AS minorinjuries_driver, 
+        u_unknowninjuries_driver::int AS unknowninjuries_driver, 
+        u_fatal_driver::int AS fatal_driver, 
+        u_majorinjuries_pedestrian::int AS majorinjuries_pedestrian, 
+        u_minorinjuries_pedestrian::int AS minorinjuries_pedestrian, 
+        u_unknowninjuries_pedestrian::int AS unknowninjuries_pedestrian, 
+        u_fatal_pedestrian::int AS fatal_pedestrian, 
+        u_total_vehicles::int AS total_vehicles, 
+        u_total_bicycles::int AS total_bicycles, 
+        u_total_pedestrians::int AS total_pedestrians, 
+        u_pedestriansimpaired::int AS pedestriansimpaired, 
+        u_bicyclistsimpaired::int AS bicyclistsimpaired, 
+        u_driversimpaired::int AS driversimpaired, 
+        u_total_taxis::int AS total_taxis, 
+        u_total_government::int AS total_government, 
+        u_speeding_involved::int AS speeding_involved, 
+        u_nearestintrouteid::varchar AS nearestintrouteid, 
+        u_nearestintstreetname::varchar AS nearestintstreetname, 
+        u_offintersection::varchar AS offintersection, 
+        u_intapproachdirection::varchar AS intapproachdirection, 
+        u_locationerror::varchar AS locationerror, 
+        u_lastupdatedate::timestamptz AS lastupdatedate, 
+        u_mpdlatitude::varchar AS mpdlatitude, 
+        u_mpdlongitude::varchar AS mpdlongitude, 
+        u_mpdgeox::varchar AS mpdgeox, 
+        u_mpdgeoy::varchar AS mpdgeoy, 
+        u_blockkey::varchar AS blockkey, 
+        u_subblockkey::varchar AS subblockkey, 
+        u_fatalpassenger::int AS fatalpassenger, 
+        u_majorinjuriespassenger::int AS majorinjuriespassenger, 
+        u_minorinjuriespassenger::int AS minorinjuriespassenger, 
+        u_unknowninjuriespassenger::int AS unknowninjuriespassenger, 
+        ST_Force2D(ST_GeomFromText(u_geometry, 4326)) as geography
+    FROM source_data.crashes_raw
+    );
+    """
+
     # The queries that are specific to the crash data and are not run anywhere else
     add_columns_query ="""
-    DROP TABLE IF EXISTS tmp.crash_details;
-    CREATE TABLE tmp.crash_details 
+    DROP TABLE IF EXISTS tmp.crash_details_new_columns;
+    CREATE TABLE tmp.crash_details_new_columns 
     AS (
         SELECT *
             ,CASE WHEN PERSONTYPE = 'Driver' AND AGE >=65 THEN 1 ELSE 0 END AS DRIVERS_OVER_65
@@ -50,7 +141,7 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
             ,CASE WHEN PERSONTYPE = 'Driver' THEN 1 ELSE 0 END AS TOTAL_VEHICLES
             ,CASE WHEN PERSONTYPE = 'Pedestrian' THEN 1 ELSE 0 END AS TOTAL_PEDESTRIANS
             ,CASE WHEN PERSONTYPE = 'Bicyclist' THEN 1 ELSE 0 END AS TOTAL_BICYCLISTS
-        FROM source_data.crash_details
+        FROM tmp.crash_details
     )
     """
     group_by_query = """
@@ -88,7 +179,7 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
             ,ARRAY_AGG(PERSONTYPE) AS PERSONTYPE_ARRAY
             ,ARRAY_AGG(INVEHICLETYPE) AS INVEHICLETYPE_ARRAY
             ,ARRAY_AGG(LICENSEPLATESTATE) AS LICENSEPLATESTATE_ARRAY
-        FROM tmp.crash_details
+        FROM tmp.crash_details_new_columns
         GROUP BY CRIMEID
     ) ;
     create index crime_id on tmp.crash_details_agg (crimeid);
@@ -173,9 +264,9 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
                 ,a.LASTUPDATEDATE
                 ,a.BLOCKKEY
                 ,a.SUBBLOCKKEY
-                ,ST_Force2D(a.geography::geometry) as geography
+                ,a.geography
 
-        FROM source_data.crashes_raw a
+        FROM tmp.crashes_raw a
         LEFT JOIN tmp.crash_details_agg b on a.CRIMEID = b.CRIMEID
         WHERE date_part('year', a.fromdate) >=2015
     ) ;
@@ -209,6 +300,10 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
     """
 
     # First execute the table-specific queries
+    engine.execute(convert_crash_details_query)
+    print("crash details table converted")
+    engine.execute(convert_crashes_raw_query)
+    print("raw crashes table converted")
     engine.execute(add_columns_query)
     print("add columns query complete")
     engine.execute(group_by_query)

@@ -105,7 +105,8 @@ def get_audio_files(timestamp):
         talk_group = int(call["talkgroupNum"])
 
         # We're interested in talk group 101 (dispatch) and 728/729 (EMS 5 and 6)
-        valid_talk_groups = [101, 728, 729]
+        # update 5-18: limiting to just 101 to save money
+        valid_talk_groups = [101]
 
         if talk_group not in valid_talk_groups:
             continue
