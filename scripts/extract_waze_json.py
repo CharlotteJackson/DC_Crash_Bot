@@ -113,6 +113,7 @@ def extract_waze_alerts_json (target_schema:str, source_table:str, target_table:
 			,source_file
             ,scrape_datetime::timestamptz as scrape_datetime
 			,alerts as data
+            ,(alerts->'subtype')::varchar as alert_subtype
 	    FROM results	
         );
     """.format(source_schema=source_schema, source_table=source_table)
@@ -174,9 +175,9 @@ def extract_waze_jams_json (target_schema:str, source_table:str, target_table:st
 			,(jams->'speedKMH')::numeric as jam_speedKMH
 			,(jams->'turnType')::varchar as jam_turnType
 			,(jams->'blockType')::varchar as jam_blockType
-			,(jams->'blockUpdate')::varchar as jam_blockUpdate
-			,(jams->'blockStartTime')::varchar as jam_blockStartTime
-			,(jams->'blockExpiration')::varchar as jam_blockExpiration
+			,to_timestamp(TRUNC((jams->'blockUpdate')::bigint)/1000)::timestamptz as jam_blockUpdate
+			,to_timestamp(TRUNC((jams->'blockStartTime')::bigint)/1000)::timestamptz as jam_blockStartTime
+			,to_timestamp(TRUNC((jams->'blockExpiration')::bigint)/1000)::timestamptz  as jam_blockExpiration
 			,(jams->'blockingAlertID')::varchar as jam_blockingAlertID
 			,(jams->'blockDescription')::varchar as jam_blockDescription
 			,(jams->'blockingAlertUuid')::varchar as jam_blockingAlertUuid
