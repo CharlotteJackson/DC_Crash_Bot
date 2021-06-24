@@ -83,7 +83,7 @@ def get_all_tweets(screen_name):
 # python get_historical_tweets_by_user.py users "alanhenney,realtimenews10"
 CLI=argparse.ArgumentParser()
 CLI.add_argument(
-"users",  
+"--users",  
 nargs="*",  
 type=str,
 default=['alanhenney','realtimenews10'],  # default - the two main twitter accounts that tweet out scanner audio

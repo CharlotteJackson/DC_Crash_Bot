@@ -27,9 +27,9 @@ def main(lat_min:float, long_min:float,lat_max:float, long_max:float, num_square
     lat_delta = (lat_max - lat_min)/num_divisions
     long_delta = (long_max - long_min)/num_divisions
     all_squares_list = []
-    while lat_min <= lat_max:
+    while lat_min < lat_max:
         loop_long_min = long_min
-        while loop_long_min <=long_max:
+        while loop_long_min <long_max:
             square_coords = {}
             square_coords['bottom'] = lat_min
             square_coords['top'] = lat_min + lat_delta
@@ -67,5 +67,6 @@ def main(lat_min:float, long_min:float,lat_max:float, long_max:float, num_square
         s3_resource.Bucket(bucket_name).put_object(Key=s3_key, Body=upload, Metadata =metadata)
 
 if __name__ == "__main__":
-    main(lat_min=38.828109, long_min=-77.119350, lat_max = 38.994398, long_max =-76.896663, num_squares=25, alerts=200, jams=200, users=400)
+    main(lat_min=38.828109, long_min=-77.119350, lat_max = 38.994398, long_max =-76.896663, num_squares=36, alerts=0, jams=0, users=400)
+    main(lat_min=38.828109, long_min=-77.119350, lat_max = 38.994398, long_max =-76.896663, num_squares=4, alerts=800, jams=200, users=0)
 
