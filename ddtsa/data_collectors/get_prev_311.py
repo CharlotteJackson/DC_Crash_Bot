@@ -90,7 +90,7 @@ def format_results(json_results: List) -> str:
 
     for item in json_results:
 
-        text += f"On {str(item['adddate']).replace('+00:00','')} a request was put in at {item['streetaddress']}\n"
+        text += f"On {str(item['adddate']).replace('+00:00','')} a request was put in at {item['streetaddress']}\n\n"
 
         if item["details"]:
             text += f" Here are the details: {item['details']}\n"

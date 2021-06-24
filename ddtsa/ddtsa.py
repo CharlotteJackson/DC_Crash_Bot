@@ -17,6 +17,8 @@ from data_collectors.get_address import rev_geocode
 from data_collectors.unsafe_times import get_unsafe_times
 from data_collectors.get_prev_311 import get_prev_requests
 from data_collectors.traffic_calming import get_traffic_calming
+from data_collectors.waze_scrapper import get_waze_data
+
 from data_collectors.get_construction_projects import (
     get_nearby_construction_projects,
     format_incident_data,
@@ -140,7 +142,7 @@ def location_data(address: str, gmap_data: Dict[str, Any]):
     st.markdown(format_incident_data(const_data))
 
 
-def safety_concerns(address: str):
+def safety_concerns(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
         Get safety concerns
@@ -154,6 +156,11 @@ def safety_concerns(address: str):
     st.write(
         "Provide a detailed description of the problems observed in the area of investigation (vehicle crashes, speeding, pedestrian safety, bicycle safety, unable to cross the street, hard to see cross‐traffic, etc.) For intersection‐related concerns, please include the type of intersection:"
     )
+
+    waze_data = get_waze_data(address, gmap_data)
+
+    with st.beta_expander("Waze Data"):
+        st.markdown(waze_data)
 
 
 def time_of_day_concerns(address: str, gmap_data: Dict[str, Any]):
@@ -288,7 +295,7 @@ def generate_report(address: str):
     # st.write(gmap_data)
 
     location_data(address, gmap_data)
-    safety_concerns(address)
+    safety_concerns(address, gmap_data)
     time_of_day_concerns(address, gmap_data)
     existing_traffic_calms(address, gmap_data)
     get_neighborhood_uses(address)
