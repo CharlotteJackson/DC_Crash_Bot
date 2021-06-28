@@ -197,6 +197,14 @@ def format_results(
     text_string += f"Speed limit: {waze_speed_limit}  \n"
     text_string += f"Mean speed from Waze {waze_speed}  \n"
 
+    count = 0
+    for speed in list(waze_df["avg_speed_mph_moving_users"]):
+        if speed > waze_speed_limit:
+            count += 1
+
+    count_len = len(list(waze_df["avg_speed_mph_moving_users"]))
+    text_string += f"Counted {count} speeders out of {count_len} interactions  \n"
+
     return text_string
 
 
