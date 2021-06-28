@@ -79,7 +79,10 @@ def get_safety_concerns(address: str, gmap_data: Dict[str, Any] = None) -> str:
     moving_query = f"select issue_date,latitude, longitude,fine_amount, violation_code, violation_process_desc,plate_state, objectid FROM analysis_data.moving_violations mv WHERE issue_date > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' AND ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),mv.geography,{DIST}) order by issue_date desc"
     moving_df = psql.read_sql(moving_query, conn)
 
-    # moving_df.to_csv("moving_df_example.csv")
+    waze_query = f"select speed_limit,avg_speed_mph_moving_users FROM analysis_data.avg_waze_speed_by_roadway_block mv WHERE ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),mv.geography,{DIST})"
+    waze_df = psql.read_sql(waze_query, conn)
+
+    # waze_df.to_csv("waze_df.csv")
 
     # moving_subset = moving_df.loc[
     #     (moving_df["issue_date"] >= year_ago_date_time_string)
@@ -91,7 +94,7 @@ def get_safety_concerns(address: str, gmap_data: Dict[str, Any] = None) -> str:
     try:
         json_results = find_safety_concerns(df, address, gmap_data)
         moving_results = find_moving_concerns(moving_df, address, gmap_data)
-        text_string = format_results(json_results, moving_results)
+        text_string = format_results(json_results, moving_results, waze_df)
     except Exception as error:
         json_results = {"error": error}
         text_string = error
@@ -102,7 +105,9 @@ def get_safety_concerns(address: str, gmap_data: Dict[str, Any] = None) -> str:
 # "Provide a detailed description of the problems observed in the area of investigation (vehicle crashes, speeding, pedestrian safety, bicycle safety, unable to cross the street, hard to see cross‐traffic, etc.) For intersection‐related concerns, please include the type of intersection:
 
 
-def format_results(json_results: Dict[str, Any], moving_results: Dict[str, Any]) -> str:
+def format_results(
+    json_results: Dict[str, Any], moving_results: Dict[str, Any], waze_df
+) -> str:
     """
     Purpose:
         Format the json to a text response
@@ -183,6 +188,14 @@ def format_results(json_results: Dict[str, Any], moving_results: Dict[str, Any])
         text_string += "State Plate types:  \n"
         for key in plate_types:
             text_string += f"{key} Plate Count: {plate_json[key]}  \n"
+
+    text_string += f"  \n"
+    # get waze speed
+    waze_speed = waze_df["avg_speed_mph_moving_users"].mean()
+    waze_speed_limit = waze_df["speed_limit"].max()
+
+    text_string += f"Speed limit: {waze_speed_limit}  \n"
+    text_string += f"Mean speed from Waze {waze_speed}  \n"
 
     return text_string
 
