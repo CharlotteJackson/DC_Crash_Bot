@@ -35,8 +35,16 @@ db_user = os.environ["DB_USER"]
 db_name = os.environ["DB_NAME"]
 
 
-def get_safety_concerns(address: str, gmap_data) -> str:
-
+def get_safety_concerns(address: str, gmap_data: Dict[str, Any] = None) -> str:
+    """
+    Purpose:
+        Get safey concerns
+    Args:
+        address - current address
+        gmap_data - google maps data
+    Returns:
+        text_string: formatted text
+    """
     # TODO connect to live database
     # For now use the test data we have
     # df = pd.read_csv("../data/analysis_data_dc_crashes_w_details.csv")
@@ -46,17 +54,44 @@ def get_safety_concerns(address: str, gmap_data) -> str:
     )
     logging.info("connected to db")
 
-    year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
-    date_format = "%Y-%m-%d %H:%M:%S"
-    year_ago_date_time_string = year_ago_date_time.strftime(date_format)
+    # Get date form one year ago
+    # year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
+    # date_format = "%Y-%m-%d %H:%M:%S"
+    # year_ago_date_time_string = year_ago_date_time.strftime(date_format)
 
-    db_query = f"select reportdate, mpdlatitude, mpdlongitude, objectid, bicycle_injuries,vehicle_injuries, pedestrian_injuries,total_injuries,total_major_injuries,total_minor_injuries,bicycle_fatalities,pedestrian_fatalities, vehicle_fatalities from analysis_data.dc_crashes_w_details --where reportdate between {year_ago_date_time_string} and current_date order by reportdate desc"
+    if not gmap_data:
+        gmap_data = rev_geocode(address, GOOGLE_API_KEY)
+
+    # Get the latitude and longitude
+    curr_lat = gmap_data[0]["geometry"]["location"]["lat"]
+    curr_lng = gmap_data[0]["geometry"]["location"]["lng"]
+
+    # Distance
+    DIST = 321.868  # .2 miles
+
+    # Query for crash data
+    db_query = f"select mpdlatitude, mpdlongitude, reportdate, objectid, bicycle_injuries,vehicle_injuries, pedestrian_injuries,total_injuries,total_major_injuries,total_minor_injuries,bicycle_fatalities,pedestrian_fatalities, vehicle_fatalities from analysis_data.dc_crashes_w_details ad WHERE reportdate > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' order by reportdate desc"
     df = psql.read_sql(db_query, conn)
 
-    df_subset = df.loc[(df["reportdate"] >= year_ago_date_time_string)]
+    # df_subset = df.loc[(df["reportdate"] >= year_ago_date_time_string)]
+
+    # Query for moving violations
+    moving_query = f"select issue_date,latitude, longitude,fine_amount, violation_code, violation_process_desc,plate_state, objectid FROM analysis_data.moving_violations mv WHERE issue_date > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' AND ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),mv.geography,{DIST}) order by issue_date desc"
+    moving_df = psql.read_sql(moving_query, conn)
+
+    # moving_df.to_csv("moving_df_example.csv")
+
+    # moving_subset = moving_df.loc[
+    #     (moving_df["issue_date"] >= year_ago_date_time_string)
+    # ]
+
+    # moving_subset.to_csv("moving_df_example.csv")
+    # geocode service - using google maps
+
     try:
-        json_results = find_safety_concerns(df_subset, address, gmap_data)
-        text_string = format_results(json_results)
+        json_results = find_safety_concerns(df, address, gmap_data)
+        moving_results = find_moving_concerns(moving_df, address, gmap_data)
+        text_string = format_results(json_results, moving_results)
     except Exception as error:
         json_results = {"error": error}
         text_string = error
@@ -67,7 +102,7 @@ def get_safety_concerns(address: str, gmap_data) -> str:
 # "Provide a detailed description of the problems observed in the area of investigation (vehicle crashes, speeding, pedestrian safety, bicycle safety, unable to cross the street, hard to see cross‐traffic, etc.) For intersection‐related concerns, please include the type of intersection:
 
 
-def format_results(json_results: Dict[str, Any]) -> str:
+def format_results(json_results: Dict[str, Any], moving_results: Dict[str, Any]) -> str:
     """
     Purpose:
         Format the json to a text response
@@ -76,41 +111,78 @@ def format_results(json_results: Dict[str, Any]) -> str:
     Returns:
         text_string: formatted text
     """
-    # crash_json["early_morning"] = []
-    # crash_json["morning"] = []
-    # crash_json["afternoon"] = []
-    # crash_json["night"] = []
-    # crash_json["weekdays"] = []
-    # crash_json["weekends"] = []
 
-    early_morning_crashes = len(json_results["early_morning"])
-    morning_crashes = len(json_results["morning"])
-    afternoon_crashes = len(json_results["afternoon"])
-    night_crashes = len(json_results["night"])
-    weekday_crashes = len(json_results["weekdays"])
-    weekend_crashes = len(json_results["weekends"])
+    total_crashes = len(json_results)
+    total_moving_violations = len(moving_results)
 
-    total_crashes = weekday_crashes + weekend_crashes
-    # TODO massage text
-    text_string = f"There have been {total_crashes} crashes in the past year.  "
+    text_string = f"There have been {total_crashes} crashes in the past year.  \n"
+    text_string += f"There have been {total_moving_violations} moving violations in the past year.  \n"
 
-    if early_morning_crashes > 0:
-        text_string += f"\n {early_morning_crashes} happened overnight  "
+    text_string += f"  \n"
 
-    if morning_crashes > 0:
-        text_string += f"\n {morning_crashes} happened in the morning  "
+    bicycle_injuries = 0
+    vehicle_injuries = 0
+    pedestrian_injuries = 0
+    bicycle_fatalities = 0
+    pedestrian_fatalities = 0
+    vehicle_fatalities = 0
 
-    if afternoon_crashes > 0:
-        text_string += f"\n {afternoon_crashes} happened in the afternoon  "
+    for obj in json_results:
 
-    if night_crashes > 0:
-        text_string += f"\n {night_crashes} happened at night  "
+        bicycle_injuries += obj["bicycle_injuries"]
+        vehicle_injuries += obj["vehicle_injuries"]
+        pedestrian_injuries += obj["pedestrian_injuries"]
+        bicycle_fatalities += obj["bicycle_fatalities"]
+        pedestrian_fatalities += obj["pedestrian_fatalities"]
+        vehicle_fatalities += obj["vehicle_fatalities"]
 
-    if weekday_crashes > 0:
-        text_string += f"\n {weekday_crashes} happened during the weekdays  "
+    text_string += f"Pedestrian Stats:  \n"
+    text_string += f"pedestrian injuries: {pedestrian_injuries}   \n"
+    text_string += f"pedestrian fatalities: {pedestrian_fatalities}  \n"
+    text_string += f"  \n"
 
-    if weekend_crashes > 0:
-        text_string += f"\n {weekend_crashes} happened during the weekend  "
+    text_string += f"Bicycle Stats:  \n"
+    text_string += f"bicycle injuries: {bicycle_injuries}   \n"
+    text_string += f"bicycle fatalities: {bicycle_fatalities}   \n"
+    text_string += f"  \n"
+
+    text_string += f"Vehicle Stats:  \n"
+    text_string += f"vehicle injuries: {vehicle_injuries}   \n"
+    text_string += f"vehicle fatalities: {vehicle_fatalities}   \n"
+    text_string += f"  \n"
+
+    type_json = {}
+    plate_json = {}
+    for obj in moving_results:
+
+        # May want to check certian one
+        # T119 - SPEED 11-15 MPH OVER THE SPEED LIMIT
+        # T013 - FAIL TO PAY ATTENTION WHILE OPERATING A VEHICLE
+        mov_type = obj["violation_process_desc"]
+        driver_plate = obj["plate_state"]
+
+        if mov_type in type_json:
+            type_json[mov_type] += 1
+        else:
+            type_json[mov_type] = 1
+
+        if driver_plate in plate_json:
+            plate_json[driver_plate] += 1
+        else:
+            plate_json[driver_plate] = 1
+
+    mov_types = list(type_json.keys())
+    if len(mov_types) > 0:
+        text_string += "Moving violations types:  \n"
+        for key in mov_types:
+            text_string += f"{key} : {type_json[key]}  \n"
+        text_string += f"  \n"
+
+    plate_types = list(plate_json.keys())
+    if len(plate_types) > 0:
+        text_string += "State Plate types:  \n"
+        for key in plate_types:
+            text_string += f"{key} Plate Count: {plate_json[key]}  \n"
 
     return text_string
 
@@ -131,26 +203,73 @@ def fill_safety_json(
 
     try:
         row_lat_long = (row["mpdlatitude"], row["mpdlongitude"])
+
+        # Did crash happen less than .2 miles from spot?
+        # TODO what threshold do we want for crash?
+        if geodesic(row_lat_long, lat_long) < 0.2:
+
+            # time_string = str(row["reportdate"]).replace("+00:00", "")
+            # date_format = "%Y-%m-%d %H:%M:%S"
+
+            # curr_date_time = datetime.datetime.strptime(time_string, date_format)
+
+            # bicycle_injuries,vehicle_injuries, pedestrian_injuries,total_injuries,total_major_injuries,total_minor_injuries,bicycle_fatalities,pedestrian_fatalities, vehicle_fatalities
+            crash_obj = {}
+            crash_obj["id"] = row["objectid"]
+
+            crash_obj["bicycle_injuries"] = row["bicycle_injuries"]
+            crash_obj["vehicle_injuries"] = row["vehicle_injuries"]
+            crash_obj["pedestrian_injuries"] = row["pedestrian_injuries"]
+            crash_obj["bicycle_fatalities"] = row["bicycle_fatalities"]
+            crash_obj["pedestrian_fatalities"] = row["pedestrian_fatalities"]
+            crash_obj["vehicle_fatalities"] = row["vehicle_fatalities"]
+
+            crash_list.append(crash_obj)
     except Exception as error:
         print(row)
         logging.error(error)
         return
 
-    # Did crash happen less than .2 miles from spot?
-    # TODO what threshold do we want for crash?
-    if geodesic(row_lat_long, lat_long) < 0.2:
 
-        time_string = str(row["reportdate"]).replace("+00:00", "")
-        date_format = "%Y-%m-%d %H:%M:%S"
+def fill_moving_json(
+    row: pd.Series, moving_list: List[Dict[str, Any]], lat_long: Tuple
+) -> None:
+    """
+    Purpose:
+        Fill out unsafe times json
+    Args:
+        row: Row to check
+        crash_json: has crash details
+        lat_long: lat long of address to check
+    Returns:
+        N/A
+    """
 
-        curr_date_time = datetime.datetime.strptime(time_string, date_format)
+    try:
+        # row_lat_long = (row["latitude"], row["longitude"])
 
-        # bicycle_injuries,vehicle_injuries, pedestrian_injuries,total_injuries,total_major_injuries,total_minor_injuries,bicycle_fatalities,pedestrian_fatalities, vehicle_fatalities
+        # Did crash happen less than .2 miles from spot?
+        # TODO what threshold do we want for crash?
+        # if geodesic(row_lat_long, lat_long) < 0.2:
 
+        # time_string = str(row["reportdate"]).replace("+00:00", "")
+        # date_format = "%Y-%m-%d %H:%M:%S"
+
+        # curr_date_time = datetime.datetime.strptime(time_string, date_format)
+
+        # fine_amount, violation_code, violation_process_desc,plate_state, objectid
         crash_obj = {}
-        obj_id = row["objectid"]
+        crash_obj["id"] = row["objectid"]
+        crash_obj["fine_amount"] = row["fine_amount"]
+        crash_obj["violation_code"] = row["violation_code"]
+        crash_obj["violation_process_desc"] = row["violation_process_desc"]
+        crash_obj["plate_state"] = row["plate_state"]
 
-        crash_list.append(crash_obj)
+        moving_list.append(crash_obj)
+
+    except Exception as error:
+        print(row)
+        logging.error(error)
 
 
 def find_safety_concerns(
@@ -186,6 +305,37 @@ def find_safety_concerns(
     return crash_list
 
 
+def find_moving_concerns(
+    df: pd.DataFrame, address: str, gmap_data: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """
+    Purpose:
+        Find unsafe times given an address
+    Args:
+        df: Data to use
+        address: address to use
+    Returns:
+        unsafe_times_json - > JSON with unsafe times
+    """
+
+    # geocode service - using google maps
+    if not gmap_data:
+        gmap_data = rev_geocode(address, GOOGLE_API_KEY)
+
+    # Get the latitude and longitude
+    curr_lat = gmap_data[0]["geometry"]["location"]["lat"]
+    curr_lng = gmap_data[0]["geometry"]["location"]["lng"]
+
+    lat_long = (curr_lat, curr_lng)
+
+    moving_list = []
+
+    df.apply(lambda row: fill_moving_json(row, moving_list, lat_long), axis=1)
+
+    # print(crash_json)
+    return moving_list
+
+
 def main():
     """
     Purpose:
@@ -197,34 +347,12 @@ def main():
     """
     # sample address
     address = "R Street Northwest & 19th Street Northwest, Washington, DC"
+    # address = "4915 Sheriff Rd NE, Washington, DC 20019"
 
     print(f"Testing using address: {address}")
 
-    # Use the test data we have
-    # df = pd.read_csv("../../data/analysis_data_dc_crashes_w_details.csv")
+    text_string = get_safety_concerns(address)
 
-    year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
-    date_format = "%Y-%m-%d %H:%M:%S"
-    year_ago_date_time_string = year_ago_date_time.strftime(date_format)
-
-    db_query = f"select reportdate, mpdlatitude, mpdlongitude, objectid from analysis_data.dc_crashes_w_details --where reportdate between {year_ago_date_time_string} and current_date order by reportdate desc"
-    print(db_query)
-
-    conn = psycopg2.connect(
-        f"dbname='{db_name}' user='{db_user}' host='{db_host}' password='{db_pass}'"
-    )
-    logging.info("connected to db")
-    df = psql.read_sql(db_query, conn)
-    # print(df)
-
-    df_subset = df.loc[(df["reportdate"] >= year_ago_date_time_string)]
-    # print(df_subset)
-
-    # TODO given the address find what times crashes happen
-    crash_data = find_unsafe_times(df_subset, address)
-
-    print(crash_data)
-    text_string = format_results(crash_data)
     print(text_string)
 
 

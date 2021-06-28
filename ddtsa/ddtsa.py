@@ -18,6 +18,7 @@ from data_collectors.unsafe_times import get_unsafe_times
 from data_collectors.get_prev_311 import get_prev_requests
 from data_collectors.traffic_calming import get_traffic_calming
 from data_collectors.waze_scrapper import get_waze_data
+from data_collectors.get_crash_data import get_safety_concerns
 
 from data_collectors.get_construction_projects import (
     get_nearby_construction_projects,
@@ -159,6 +160,10 @@ def safety_concerns(address: str, gmap_data: Dict[str, Any]):
 
     waze_data = get_waze_data(address, gmap_data)
 
+    safety_data = get_safety_concerns(address, gmap_data)
+
+    st.markdown(safety_data)
+
     with st.beta_expander("Waze Data"):
         st.markdown(waze_data)
 
@@ -258,10 +263,7 @@ def get_prev_concerns(address: str, gmap_data: Dict[str, Any]):
     """
     st.subheader("8. Have you previously contacted DDOT about your concerns?")
 
-    st.write("8. Have you previously contacted DDOT about your concerns?")
-
     data = get_prev_requests(address, gmap_data)
-
     st.write(data)
 
 

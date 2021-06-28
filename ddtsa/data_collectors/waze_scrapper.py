@@ -1,9 +1,10 @@
 # Python imports
-import datetime
+# import datetime
 import logging
 import os
 from typing import Union, Optional, Dict, Any, Tuple, List
-from geopy.distance import geodesic
+
+# from geopy.distance import geodesic
 
 # 3rd Party Imports
 import pandas as pd
@@ -49,22 +50,32 @@ def get_waze_data(address: str, gmap_data: Dict[str, Any] = None) -> str:
     )
     logging.info("connected to db")
 
-    year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
-    date_format = "%Y-%m-%d %H:%M:%S"
-    year_ago_date_time_string = year_ago_date_time.strftime(date_format)
+    # year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
+    # date_format = "%Y-%m-%d %H:%M:%S"
+    # year_ago_date_time_string = year_ago_date_time.strftime(date_format)
+
+    if not gmap_data:
+        gmap_data = rev_geocode(address, GOOGLE_API_KEY)
+
+    # Get the latitude and longitude
+    curr_lat = gmap_data[0]["geometry"]["location"]["lat"]
+    curr_lng = gmap_data[0]["geometry"]["location"]["lng"]
+
+    # Distance
+    DIST = 321.868  # .2 miles
 
     # Create query
-    db_query = f"select alert_street, alert_long, alert_lat,alert_subtype,alert_reportdescription,pub_datetime from source_data.waze_alerts_stream --where pub_datetime between {year_ago_date_time_string} and current_date order by pub_datetime desc"
+    db_query = f"select alert_street, alert_long, alert_lat,alert_subtype,alert_reportdescription,pub_datetime from source_data.waze_alerts_stream wd WHERE pub_datetime > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' AND ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),wd.geography,{DIST}) order by pub_datetime desc"
     df = psql.read_sql(db_query, conn)
 
-    df_subset = df.loc[(df["pub_datetime"] >= year_ago_date_time_string)]
+    # df_subset = df.loc[(df["pub_datetime"] >= year_ago_date_time_string)]
 
     # geocode service - using google maps
     if not gmap_data:
         gmap_data = rev_geocode(address, GOOGLE_API_KEY)
 
     try:
-        json_results = find_waze_alerts_features(df_subset, gmap_data)
+        json_results = find_waze_alerts_features(df, gmap_data)
 
         text_string = format_waze_json(json_results)
     except Exception as error:
@@ -120,15 +131,11 @@ def fill_waze_json(row: pd.Series, waze_list: Dict[str, Any], lat_long: Tuple) -
     """
 
     try:
-        row_lat_long = (row["alert_lat"], row["alert_long"])
+        # row_lat_long = (row["alert_lat"], row["alert_long"])
         # print(row_lat_long)
-    except Exception as error:
-        print(row)
-        logging.error(error)
-        return
 
-    # Did crash happen less than .2 miles from spot?
-    if geodesic(row_lat_long, lat_long) < 0.2:
+        # Did crash happen less than .2 miles from spot?
+        # if geodesic(row_lat_long, lat_long) < 0.2:
 
         waze_json = {}
 
@@ -138,6 +145,10 @@ def fill_waze_json(row: pd.Series, waze_list: Dict[str, Any], lat_long: Tuple) -
         waze_json["alert_street"] = row["alert_street"]
 
         waze_list.append(waze_json)
+    except Exception as error:
+        print(row)
+        logging.error(error)
+        return
 
 
 def find_waze_alerts_features(

@@ -5,8 +5,8 @@ from typing import Tuple, Union, Optional, Dict, Any, List
 
 # 3rd Party Imports
 # from datetime import datetime
-import datetime
-from geopy.distance import geodesic
+# import datetime
+# from geopy.distance import geodesic
 import pandas as pd
 
 # postgress imports
@@ -51,21 +51,31 @@ def get_prev_requests(address: str, gmap_data: Dict[str, Any] = None) -> str:
     )
     logging.info("connected to db")
 
-    year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
-    date_format = "%Y-%m-%d %H:%M:%S"
-    year_ago_date_time_string = year_ago_date_time.strftime(date_format)
+    # year_ago_date_time = datetime.datetime.now() - datetime.timedelta(days=365)
+    # date_format = "%Y-%m-%d %H:%M:%S"
+    # year_ago_date_time_string = year_ago_date_time.strftime(date_format)
 
-    db_query = f"select adddate, details, streetaddress,latitude,longitude from analysis_data.all311 --where adddate between {year_ago_date_time_string} and current_date order by adddate desc"
+    if not gmap_data:
+        gmap_data = rev_geocode(address, GOOGLE_API_KEY)
+
+    # Get the latitude and longitude
+    curr_lat = gmap_data[0]["geometry"]["location"]["lat"]
+    curr_lng = gmap_data[0]["geometry"]["location"]["lng"]
+
+    # Distance
+    DIST = 321.868  # .2 miles
+
+    db_query = f"select adddate, details,servicerequestid, streetaddress,latitude,longitude from analysis_data.all311 ad WHERE adddate > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' AND ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),ad.geography,{DIST}) order by adddate desc"
     df = psql.read_sql(db_query, conn)
 
-    df_subset = df.loc[(df["adddate"] >= year_ago_date_time_string)]
+    # df_subset = df.loc[(df["adddate"] >= year_ago_date_time_string)]
 
     # geocode service - using google maps
     if not gmap_data:
         gmap_data = rev_geocode(address, GOOGLE_API_KEY)
 
     try:
-        json_results = find_requests_in_past_12_months(df_subset, gmap_data)
+        json_results = find_requests_in_past_12_months(df, gmap_data)
         text_string = format_results(json_results)
     except Exception as error:
         json_results = {"error": error}
@@ -90,7 +100,7 @@ def format_results(json_results: List) -> str:
 
     for item in json_results:
 
-        text += f"On {str(item['adddate']).replace('+00:00','')} a request was put in at {item['streetaddress']}\n\n"
+        text += f"On {str(item['adddate']).replace('+00:00','')} request {item['servicerequestid']} was put in at {item['streetaddress']}\n\n"
 
         if item["details"]:
             text += f" Here are the details: {item['details']}\n"
@@ -110,21 +120,22 @@ def fill_reqs_list(row: pd.Series, requests_list: List, lat_long: Tuple) -> None
         N/A
     """
     try:
-        row_lat_long = (row["latitude"], row["longitude"])
-        # print(row_lat_long)
+        # row_lat_long = (row["latitude"], row["longitude"])
+
+        # Did req happen less than .2 miles from spot?
+        # if geodesic(row_lat_long, lat_long) < 0.2:
+
+        req_json = {}
+        req_json["streetaddress"] = row["streetaddress"]
+        req_json["servicerequestid"] = row["servicerequestid"]
+        req_json["adddate"] = row["adddate"]
+        req_json["details"] = row["details"]
+        requests_list.append(req_json)
+
     except Exception as error:
         print(row)
         logging.error(error)
         return
-
-    # Did req happen less than .2 miles from spot?
-    if geodesic(row_lat_long, lat_long) < 0.2:
-
-        req_json = {}
-        req_json["streetaddress"] = row["streetaddress"]
-        req_json["adddate"] = row["adddate"]
-        req_json["details"] = row["details"]
-        requests_list.append(req_json)
 
 
 def find_requests_in_past_12_months(df: pd.DataFrame, gmap_data: Dict[str, Any]):

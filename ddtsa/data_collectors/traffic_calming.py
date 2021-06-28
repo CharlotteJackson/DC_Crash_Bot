@@ -49,37 +49,48 @@ def get_traffic_calming(address: str, gmap_data: Dict[str, Any] = None) -> str:
     )
     logging.info("connected to db")
 
-    # Create query
-    db_query = f"select blockkey,nbh_cluster_names,speed_limit,num_sides_w_sidewalks,totalbikelanes,totalraisedbuffers,totalparkinglanes,st_astext(st_centroid(geography)) from analysis_data.roadway_blocks"
-    df = psql.read_sql(db_query, conn)
-
-    # need to conver latlong to a lat long
-    lats = []
-    lngs = []
-
-    latlongs = list(df["st_astext"])
-
-    for latlong in latlongs:
-        # format string
-        if latlong:
-            latlong = latlong.replace("POINT(", "").replace(")", "").split(" ")
-            # convert to float
-            lat = float(latlong[1])
-            lng = float(latlong[0])
-            # add to arrays
-            lats.append(lat)
-            lngs.append(lng)
-        else:
-            lats.append(0)
-            lngs.append(0)
-
-    # add columns to df
-    df["lat"] = lats
-    df["lng"] = lngs
-
-    # geocode service - using google maps
     if not gmap_data:
         gmap_data = rev_geocode(address, GOOGLE_API_KEY)
+
+    # Create query
+    # db_query = f"select blockkey,nbh_cluster_names,speed_limit,num_sides_w_sidewalks,totalbikelanes,totalraisedbuffers,totalparkinglanes,st_astext(st_centroid(geography)) from analysis_data.roadway_blocks"
+
+    # Get the latitude and longitude
+    curr_lat = gmap_data[0]["geometry"]["location"]["lat"]
+    curr_lng = gmap_data[0]["geometry"]["location"]["lng"]
+
+    # Distance
+    DIST = 321.868  # .2 miles
+
+    db_query = f"select blockkey,nbh_cluster_names,speed_limit,num_sides_w_sidewalks,totalbikelanes,totalraisedbuffers,totalparkinglanes from analysis_data.roadway_blocks ad WHERE ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),ad.geography,{DIST})"
+
+    df = psql.read_sql(db_query, conn)
+
+    # # need to conver latlong to a lat long
+    # lats = []
+    # lngs = []
+
+    # latlongs = list(df["st_astext"])
+
+    # for latlong in latlongs:
+    #     # format string
+    #     if latlong:
+    #         latlong = latlong.replace("POINT(", "").replace(")", "").split(" ")
+    #         # convert to float
+    #         lat = float(latlong[1])
+    #         lng = float(latlong[0])
+    #         # add to arrays
+    #         lats.append(lat)
+    #         lngs.append(lng)
+    #     else:
+    #         lats.append(0)
+    #         lngs.append(0)
+
+    # # add columns to df
+    # df["lat"] = lats
+    # df["lng"] = lngs
+
+    # geocode service - using google maps
 
     try:
         json_results = find_traffic_calming_features(df, gmap_data)
@@ -100,7 +111,7 @@ def get_traffic_calming(address: str, gmap_data: Dict[str, Any] = None) -> str:
     return text_string
 
 
-def find_nearby_speed_humps(gmap_data):
+def find_nearby_speed_humps(gmap_data: Dict[str, Any]):
     """
     Purpose:
         Find nearby speed cameras
@@ -127,7 +138,7 @@ def find_nearby_speed_humps(gmap_data):
     return speed_cameras
 
 
-def find_nearby_speed_cameras(gmap_data):
+def find_nearby_speed_cameras(gmap_data: Dict[str, Any]):
     """
     Purpose:
         Find nearby speed cameras
@@ -177,6 +188,8 @@ def format_traffic_calming_json(
             )
 
         text += "\n"
+    else:
+        text += "No speed cameras: \n\n"
 
     if len(speed_humps) > 0:
 
@@ -190,22 +203,39 @@ def format_traffic_calming_json(
                 text += f'There is {hump["count"]} speed hump at {hump["location"]}  \n'
 
         text += "\n"
+    else:
+        text += "No speed humps: \n\n"
 
     text += "Other Traffic Calming Measures: \n\n"
 
+    # Maybe just get the max
+
+    totalbikelanes_max = 0
+    totalraisedbuffers_max = 0
+    totalparkinglanes_max = 0
+    speedlimit_max = 0
+
     for traffic_calming_json in traffic_calming_list:
 
-        text += f'{traffic_calming_json["nbh_cluster_names"]} - {traffic_calming_json["blockkey"]}   \n'
-        text += f'There are {traffic_calming_json["totalbikelanes"]} bike lanes  \n'
-        text += (
-            f'There are {traffic_calming_json["totalraisedbuffers"]} raised buffers  \n'
-        )
-        text += (
-            f'There are {traffic_calming_json["totalparkinglanes"]} parking lanes  \n'
-        )
-        text += f'The speed limit is {traffic_calming_json["speedlimit"]} MPH  \n'
+        if traffic_calming_json["totalbikelanes"] > totalbikelanes_max:
+            totalbikelanes_max = traffic_calming_json["totalbikelanes"]
 
-        text += f"\n\n"
+        if traffic_calming_json["totalraisedbuffers"] > totalraisedbuffers_max:
+            totalraisedbuffers_max = traffic_calming_json["totalraisedbuffers"]
+
+        if traffic_calming_json["totalparkinglanes"] > totalparkinglanes_max:
+            totalparkinglanes_max = traffic_calming_json["totalparkinglanes"]
+
+        if traffic_calming_json["speedlimit"] > speedlimit_max:
+            speedlimit_max = traffic_calming_json["speedlimit"]
+
+    # text += f'{traffic_calming_json["nbh_cluster_names"]} - {traffic_calming_json["blockkey"]}   \n'
+    text += f"There are {totalbikelanes_max} bike lanes  \n"
+    text += f"There are {totalraisedbuffers_max} raised buffers  \n"
+    text += f"There are {totalparkinglanes_max} parking lanes  \n"
+    text += f"The speed limit is {speedlimit_max} MPH  \n"
+
+    text += f"\n\n"
 
     return text
 
@@ -290,15 +320,15 @@ def fill_calming_json(
     """
 
     try:
-        row_lat_long = (row["lat"], row["lng"])
+        # row_lat_long = (row["lat"], row["lng"])
         # print(row_lat_long)
-    except Exception as error:
-        print(row)
-        logging.error(error)
-        return
+        # except Exception as error:
+        #     print(row)
+        #     logging.error(error)
+        #     return
 
-    # Did crash happen less than .2 miles from spot?
-    if geodesic(row_lat_long, lat_long) < 0.1:
+        # Did crash happen less than .2 miles from spot?
+        # if geodesic(row_lat_long, lat_long) < 0.1:
 
         traffic_calming_json = {}
 
@@ -312,6 +342,11 @@ def fill_calming_json(
         traffic_calming_json["totalraisedbuffers"] = int(row["totalraisedbuffers"])
         traffic_calming_json["totalparkinglanes"] = int(row["totalparkinglanes"])
         traffic_calming_list.append(traffic_calming_json)
+
+    except Exception as error:
+        print(row)
+        logging.error(error)
+        return
 
 
 def find_traffic_calming_features(
