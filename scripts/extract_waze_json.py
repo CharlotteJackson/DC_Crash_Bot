@@ -57,10 +57,10 @@ def extract_waze_users_json (target_schema:str, source_table:str, target_table:s
     engine.execute(users_query)
     engine.execute(users_final_query)
 
-    count_query = 'SELECT COUNT(*) FROM {}.{} WHERE source_file like \'%%{}%%\''.format(target_schema, target_table,source_table)
+    # count_query = 'SELECT COUNT(*) FROM {}.{} WHERE source_file like \'%%{}%%\''.format(target_schema, target_table,source_table)
     
-    row_count = engine.execute(count_query).fetchone()[0]
-    print("{} rows inserted into final table from file {}".format(str(row_count), source_table))
+    # row_count = engine.execute(count_query).fetchone()[0]
+    # print("{} rows inserted into final table from file {}".format(str(row_count), source_table))
 
 
 def extract_waze_alerts_json (target_schema:str, source_table:str, target_table:str, engine, **kwargs):
@@ -130,10 +130,10 @@ def extract_waze_alerts_json (target_schema:str, source_table:str, target_table:
     engine.execute(alerts_query)
     engine.execute(alerts_final_query)
 
-    count_query = 'SELECT COUNT(*) FROM {}.{} WHERE source_file like \'%%{}%%\''.format(target_schema, target_table,source_table)
+    # count_query = 'SELECT COUNT(*) FROM {}.{} WHERE source_file like \'%%{}%%\''.format(target_schema, target_table,source_table)
     
-    row_count = engine.execute(count_query).fetchone()[0]
-    print("{} rows inserted into final table from file {}".format(str(row_count), source_table))
+    # row_count = engine.execute(count_query).fetchone()[0]
+    # print("{} rows inserted into final table from file {}".format(str(row_count), source_table))
 
 def extract_waze_jams_json (target_schema:str, source_table:str, target_table:str, engine, **kwargs):
 
@@ -238,10 +238,10 @@ def extract_waze_jams_json (target_schema:str, source_table:str, target_table:st
     engine.execute(jams_join_query)
     engine.execute(jams_final_query)
 
-    count_query = 'SELECT COUNT(*) FROM {}.{} WHERE source_file like \'%%{}%%\''.format(target_schema, target_table,source_table)
+    # count_query = 'SELECT COUNT(*) FROM {}.{} WHERE source_file like \'%%{}%%\''.format(target_schema, target_table,source_table)
     
-    row_count = engine.execute(count_query).fetchone()[0]
-    print("{} rows inserted into final table from file {}".format(str(row_count), source_table))
+    # row_count = engine.execute(count_query).fetchone()[0]
+    # print("{} rows inserted into final table from file {}".format(str(row_count), source_table))
 
     drop_table_query = 'DROP TABLE IF EXISTS {}."{}"'.format(source_schema, source_table)
     engine.execute(drop_table_query)

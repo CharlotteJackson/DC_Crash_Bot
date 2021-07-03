@@ -33,14 +33,14 @@ def extract_twitter_json (target_schema:str, source_table:str, target_table:str,
                 ) as test
 	)
 	SELECT 
-            (data->'created_at')::varchar::timestamptz AS created_at
-            ,(data->'id_str')::varchar AS tweet_id
-			,(data->'user'->'id_str')::varchar AS user_id
-			,CASE WHEN (data ? 'retweeted_status') THEN (data->'retweeted_status'->'id_str')::varchar END AS retweeted_status_id
+           (data->'created_at')::varchar::timestamptz AS created_at
+            ,replace((data->'id_str')::varchar,'"','') AS tweet_id
+			,replace((data->'user'->'id_str')::varchar,'"','') AS user_id
+			,CASE WHEN (data ? 'retweeted_status') THEN replace((data->'retweeted_status'->'id_str')::varchar,'"','') END AS retweeted_status_id
 			,CASE WHEN(data->'in_reply_to_status_id_str')::varchar <> 'null'
-				THEN (data->'in_reply_to_status_id_str')::varchar END AS in_reply_to_status_id
-			,REPLACE(REPLACE(CASE WHEN (data ? 'full_text') THEN (data->'full_text')::varchar 
-				WHEN (data ? 'text') THEN (data->'text')::varchar 
+				THEN replace((data->'in_reply_to_status_id_str')::varchar,'"','') END AS in_reply_to_status_id
+			,REPLACE(REPLACE(CASE WHEN (data ? 'full_text') THEN replace((data->'full_text')::varchar,'"','')
+				WHEN (data ? 'text') THEN REPLACE((data->'text')::varchar,'"','') 
 				END, '&amp;', '&'),'%%','percent') AS tweet_text
             ,source_file
             ,load_datetime
@@ -67,6 +67,8 @@ def extract_twitter_json (target_schema:str, source_table:str, target_table:str,
             ,b.polygon_geography
         FROM tmp.twitter a
         LEFT JOIN source_data.geocoded_text b on a.tweet_text = b.text
+        LEFT JOIN source_data.twitter_stream c on a.tweet_id = c.tweet_id
+        WHERE c.tweet_id IS NULL
         ) ; 
     """
 

@@ -97,16 +97,16 @@ def generate_waze_avg_speed (engine):
     """
 
     # First execute the table-specific queries
-    # engine.execute(step1_query)
-    # print("step1 query complete")
-    # add_roadway_info(engine=engine, target_schema='tmp', target_table='waze_users_roadway_blocks', from_schema='tmp', from_table='waze_users', partition_by_field='unique_row_id', within_distance= 20)
-    # print("roadway info query complete")
-    # engine.execute(group_by_query)
-    # print("group by query complete")
+    engine.execute(step1_query)
+    print("step1 query complete")
+    add_roadway_info(engine=engine, target_schema='tmp', target_table='waze_users_roadway_blocks', from_schema='tmp', from_table='waze_users', partition_by_field='unique_row_id', within_distance= 20)
+    print("roadway info query complete")
+    engine.execute(group_by_query)
+    print("group by query complete")
     engine.execute(percentile_query)
     print("percentile_queryquery complete")
-    # row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='avg_waze_speed_by_roadway_block', from_schema='tmp', from_table='avg_waze_speed_by_roadway_block')
-    # print("final query complete with row count ",row_count)
+    row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='avg_waze_speed_by_roadway_block', from_schema='tmp', from_table='avg_waze_speed_by_roadway_block')
+    print("final query complete with row count ",row_count)
     row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='percentiles_waze_speed_by_roadway_block', from_schema='tmp', from_table='percentiles_waze_speed_by_roadway_block')
     print("final percentiles query complete with row count ",row_count)
 
