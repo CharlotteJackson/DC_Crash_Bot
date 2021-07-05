@@ -17,8 +17,8 @@ def s3_to_postGIS (folder_to_load:str, AWS_Credentials:dict, header:str, mode:st
     bucket = s3_resource.Bucket(bucket_name)
     region=AWS_Credentials['region']
     dbname='postgres'
-    env="DEV"
-    engine = create_postgres_engine(destination="AWS_PostGIS", target_db=dbname, env=env)
+    env="PROD"
+    engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
     db_credentials = get_connection_strings("AWS_PostGIS")
     db_uid =db_credentials[env]['UID']
     db_pwd = db_credentials[env]['PWD']

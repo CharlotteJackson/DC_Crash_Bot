@@ -2,21 +2,12 @@ from connect_to_rds import get_connection_strings, create_postgres_engine
 from json_to_postgis import json_to_postGIS
 import argparse
 
-def extract_citizen_json (target_schema:str, source_table:str, target_table:str, AWS_Credentials:dict, **kwargs):
+def extract_citizen_json (target_schema:str, source_table:str, target_table:str, engine, **kwargs):
 
     # assign optional arguments
     source_schema=kwargs.get('source_schema', None)
     if source_schema == None:
         source_schema='stg'
-    # if no environment is specified default to dev 
-    env=kwargs.get('env', None)
-    if env == None:
-        env='DEV'
-    env=env.upper()
-
-    # set up RDS and S3 connections, engines, cursors
-    region=AWS_Credentials['region']
-    engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
 
     # extract the json info
     step1_query ="""
@@ -102,5 +93,4 @@ if __name__ == "__main__":
     engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
     tables_to_extract = [r for (r,) in engine.execute("select distinct table_name from information_schema.tables where table_schema = 'stg' and table_name like '%%citizen%%'")]
     for table in tables_to_extract:
-        extract_citizen_json(source_table=table, target_table='citizen_stream'
-        , target_schema='source_data',AWS_Credentials=get_connection_strings("AWS_DEV"), env=env)
+        extract_citizen_json(source_table=table, target_table='citizen_stream', target_schema='source_data',engine=engine)

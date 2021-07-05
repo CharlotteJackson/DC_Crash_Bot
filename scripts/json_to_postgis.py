@@ -38,7 +38,6 @@ def json_to_postGIS (folder_to_load:str, AWS_Credentials:dict, **kwargs):
     client=boto3.client('s3',aws_access_key_id=AWS_Credentials['aws_access_key_id']
     ,aws_secret_access_key=AWS_Credentials['aws_secret_access_key'])
     region=AWS_Credentials['region']
-    env="PROD"
     connection = create_psycopg2_connection(destination="AWS_PostGIS", env=env)
 
     files_to_load = [obj.key for obj in bucket.objects.filter(Prefix=folder_to_load) if '.json' in obj.key]
@@ -91,7 +90,6 @@ def json_to_postGIS (folder_to_load:str, AWS_Credentials:dict, **kwargs):
             s3_resource.Object(bucket_name, object_key).delete()
 
         tables_created.append((target_schema,"{}".format(stg_tble)))
-
     return tables_created
 
 

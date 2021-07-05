@@ -53,6 +53,7 @@ def create_test_db(env:str,test_db_name:str):
 
     # install PostGIS extensions
     command = """
+    CREATE EXTENSION aws_s3 CASCADE;
     CREATE EXTENSION postgis;
     CREATE EXTENSION fuzzystrmatch;
     CREATE EXTENSION postgis_tiger_geocoder;
@@ -86,7 +87,15 @@ def create_test_db(env:str,test_db_name:str):
     os.system(os_system_arg)
 
     # get all schemas on prod db
-    schemas = [r for (r,) in engine.execute("select distinct table_schema from information_schema.tables where is_insertable_into = 'YES' and table_schema not like 'pg_%%'").fetchall()]
+    get_schemas_query = """
+    SELECT DISTINCT table_schema
+    FROM information_schema.tables 
+    WHERE is_insertable_into = 'YES' 
+    AND table_schema not like 'pg_%%' 
+    AND table_schema not in ('tiger', 'tiger_data', 'topology', 'aws_commons', 'aws_s3','information_schema','my_new_topo','public')
+    """
+    schemas = [r for (r,) in engine.execute(get_schemas_query).fetchall()]
+    print(schemas)
 
     # create engine on test db
     test_engine = create_postgres_engine(destination="AWS_PostGIS", env=env.upper())
@@ -97,7 +106,7 @@ def create_test_db(env:str,test_db_name:str):
         CREATE SCHEMA IF NOT EXISTS {0};
         GRANT ALL PRIVILEGES ON SCHEMA {0} TO PUBLIC;
         """.format(schema)
-
+        print(create_schema_query)
         test_engine.execute(create_schema_query)
 
 
@@ -134,7 +143,15 @@ def refresh_test_db(env:str):
         engine.execute(map_user_query)
 
     # pull the schemas off the viz copy of the prod database
-    schemas = [(r, 'prod_'+r) for (r,) in prod_engine.execute("select distinct table_schema from information_schema.tables where is_insertable_into = 'YES' and table_schema not like 'pg_%%'").fetchall()]
+    get_schemas_query = """
+    SELECT DISTINCT table_schema
+    FROM information_schema.tables 
+    WHERE is_insertable_into = 'YES' 
+    AND table_schema not like 'pg_%%' 
+    AND table_schema not in ('tiger', 'tiger_data', 'topology', 'aws_commons', 'aws_s3','information_schema','my_new_topo','public')
+    """
+    schemas = [(r, 'prod_'+r) for (r,) in prod_engine.execute(get_schemas_query).fetchall()]
+    print(schemas)
 
     # map schemas 
     for source_schema, destination_schema in schemas:
@@ -149,7 +166,14 @@ def refresh_test_db(env:str):
         engine.execute(create_schema_query)
 
     # pull all the tables from prod db
-    schemas_tables = [(schema,table) for (schema,table) in prod_engine.execute("select distinct table_schema,table_name from information_schema.tables where is_insertable_into = 'YES' and table_schema not like 'pg_%%' and table_name not like '[%%]'").fetchall()]
+    get_schemas_tables_query = """
+    SELECT DISTINCT table_schema,table_name 
+    FROM information_schema.tables 
+    WHERE is_insertable_into = 'YES' 
+    AND table_schema not like 'pg_%%' 
+    AND table_schema not in ('tiger', 'tiger_data', 'topology', 'aws_commons', 'aws_s3','information_schema','my_new_topo','public')
+    """
+    schemas_tables = [(schema,table) for (schema,table) in prod_engine.execute(get_schemas_tables_query).fetchall()]
 
     #  create and populate tables
     for schema, table in schemas_tables:
@@ -167,6 +191,20 @@ def refresh_test_db(env:str):
         print(create_populate_tables_query)
         engine.execute(create_populate_tables_query)
 
+    # create all the indexes
+    get_indexes_tables_query = """
+    SELECT DISTINCT indexdef
+    FROM pg_indexes
+    WHERE schemaname not like 'pg_%%' 
+    AND schemaname not in ('tiger', 'tiger_data', 'topology', 'aws_commons', 'aws_s3','information_schema','my_new_topo','public')
+    """
+    indexes = [indexdef for (indexdef,) in prod_engine.execute(get_indexes_tables_query).fetchall()]
+
+    #  create and populate tables
+    for indexdef in indexes:
+        print(indexdef)
+        engine.execute(indexdef)
+
 if __name__ == "__main__":
-    # create_test_db(env='DEV', test_db_name='postgres_dev')
+    create_test_db(env='DEV', test_db_name='postgres_dev')
     refresh_test_db(env='DEV')

@@ -73,7 +73,7 @@ def generate_pulsepoint_table (AWS_Credentials:dict, **kwargs):
     DROP TABLE IF EXISTS tmp_pulsepoint_units;
     CREATE TEMP TABLE tmp_pulsepoint_units ON COMMIT PRESERVE ROWS 
     AS (
-        SELECT incident_id, Agency_ID, array_agg((Units#>'{{UnitID}}')::text) as Unit_IDs
+        SELECT incident_id, Agency_ID, array_agg(replace((Units#>'{{UnitID}}')::jsonb::text,'\"','')) as Unit_IDs
         FROM tmp_pulsepoint
         CROSS JOIN json_array_elements(unit_json::json) as Units
         GROUP BY incident_id, Agency_ID
