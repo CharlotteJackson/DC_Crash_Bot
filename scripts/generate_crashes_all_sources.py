@@ -7,205 +7,294 @@ def generate_crashes_all_sources (engine, **kwargs):
 
     # limit crashes table and create flags
     filter_crashes_query="""
-    DROP TABLE IF EXISTS tmp.pulsepoint_dupe_check;
-    CREATE TABLE tmp.pulsepoint_dupe_check 
+    DROP TABLE IF EXISTS tmp.mpd_reported_crashes;
+    CREATE TABLE tmp.mpd_reported_crashes 
     AS (
-        SELECT DISTINCT a.* , 
-            case 
-                when b.incident_id is not null then 1 else 0 end as Potential_Duplicate_Incident_Flag
-        FROM tmp.pulsepoint_filtered a
-        LEFT JOIN tmp.pulsepoint_filtered b on a.incident_id <> b.incident_id 
-        and (b.call_received_datetime at time zone 'America/New_York')::date = (a.call_received_datetime at time zone 'America/New_York')::date
-        and abs(extract(epoch from b.call_received_datetime - a.call_received_datetime)/60) <=20.00
-        and ST_DWithin(a.geography, b.geography, 100)
-        and a.Agency_ID = b.Agency_ID
-        and a.Incident_Type = b.Incident_Type
-        --and (a.num_units_responding = 0 or a.unit_ids && b.unit_ids)
-
+        SELECT DISTINCT
+        crimeid
+        ,fromdate::date
+        ,reportdate
+        ,address
+        ,total_vehicles
+        ,total_bicyclists
+        ,total_pedestrians
+        ,total_injuries
+        ,persontype_array
+        ,invehicletype_array
+        ,geography
+        ,case when invehicletype_array::text ilike '%%motor%%cycle%%' then 1 else 0 end as mpd_motorcycle_flag 
+        ,ward_name
+        ,comp_plan_area
+        ,anc_id
+        ,smd_id
+        ,nbh_cluster_names
+        ,blockkey
+        ,case when total_bicyclists > 0 or total_pedestrians > 0 or invehicletype_array::text ilike '%%moped%%'or invehicletype_array::text ilike '%%scooter%%'
+            then 1 else 0 end as mpd_someone_outside_car_struck
+        from analysis_data.dc_crashes_w_details
+        where fromdate::date >= '2021-05-15'
     ) ;
+
+    CREATE INDEX IF NOT EXISTS crashes_filtered_geom_idx ON tmp.mpd_reported_crashes USING GIST (geography);
     """
 
     match_pulsepoint_query = """
-    drop table if exists tmp.citizen_join_step1;
-        create table tmp.citizen_join_step1 as (
-        select * from (
+    
+        drop table if exists tmp.mpd_crashes_pulsepoint_join_step1;
+        create table tmp.mpd_crashes_pulsepoint_join_step1 as (
+            select * from (
             select distinct a.*
-                ,b.geography as citizen_geography
-                ,ST_Distance(a.geography, b.geography) as Distance_To_Citizen_Incident
-                ,row_number() over (partition by a.incident_id order by ST_Distance(a.geography, b.geography)) as Distance_Rank
-                ,abs(extract(epoch from b.cs - a.call_received_datetime)/60.00 ) as Minutes_Apart
-                ,b.incident_key
-                ,b.incident_desc_raw
-                ,b.motorcycle_flag as citizen_motorcycle_flag
-                ,b.someone_outside_car_struck as citizen_someone_outside_car_struck
-            from tmp.pulsepoint_final_scanner_audio_matches a
-            inner join source_data.citizen b on ST_DWITHIN(a.geography, b.geography, 500) 
-                and abs(extract(epoch from b.cs - a.call_received_datetime)/60 )<60
-            ) as tmp where Distance_Rank = 1
-        ); 
+            ,b.geography as dcfems_geography
+            ,b.Ped_Crash_Any_Source as DCFEMS_Ped_Crash
+            ,b.incident_id
+            ,b.Potential_Duplicate_Incident_Flag
+            ,call_received_datetime
+            ,fulldisplayaddress
+            ,call_ids_array
+            ,transcripts_array
+            ,incident_key
+            ,incident_desc_raw
+            ,tweet_id
+            ,tweet_text
+            ,row_number() over (partition by incident_id order by ST_Distance(a.geography, b.geography)) as Incident_to_Police_Report_Distance_Rank
+            ,(reportdate at time zone 'America/New_York')  - (CALL_RECEIVED_DATETIME at time zone 'America/New_York') as Time_To_Report
+            ,ST_Distance(a.geography, b.geography) as Call_Distance
+        FROM tmp.mpd_reported_crashes a
+                INNER JOIN analysis_data.pulsepoint b on ST_DWITHIN(a.geography, b.geography, 200) 
+                    AND fromdate::date =cast((call_received_datetime at time zone 'America/New_York') as date)
+                    AND (CALL_RECEIVED_DATETIME at time zone 'America/New_York')  < (reportdate at time zone 'America/New_York') 
+                ) as tmp where (Incident_to_Police_Report_Distance_Rank = 1)
+        ) ;
 
-    drop table if exists tmp.citizen_join_step2;
-        create table tmp.citizen_join_step2 as (
-        select * from (
-            select distinct *
-                ,row_number() over (partition by incident_key order by ST_Distance(geography, citizen_geography)) as Citizen_Distance_Rank
-            from tmp.citizen_join_step1
-            ) as tmp where Citizen_Distance_Rank = 1
-        ); 
-
-    drop table if exists tmp.citizen_pulsepoint_join_final;
-    create table tmp.citizen_pulsepoint_join_final as 
-    select 
-        incident_id
-        ,incident_type
-        ,call_received_datetime
-        ,fulldisplayaddress
-        ,geography
-        ,Potential_Duplicate_Incident_Flag
-        ,someone_outside_car_struck
-        ,motorcycle_flag
-        ,car_crash_call
-        ,call_ids_array
-        ,transcripts_array
-        ,incident_key
-        ,incident_desc_raw
-        ,citizen_someone_outside_car_struck
-    from tmp.citizen_join_step2
-    ;
-
-    insert into tmp.citizen_pulsepoint_join_final
-    select 
-        incident_id
-        ,incident_type
-        ,call_received_datetime
-        ,fulldisplayaddress
-        ,geography
-        ,Potential_Duplicate_Incident_Flag
-        ,someone_outside_car_struck
-        ,motorcycle_flag
-        ,car_crash_call
-        ,call_ids_array
-        ,transcripts_array
-        ,NULL as incident_key
-        ,NULL as incident_desc_raw
-        ,NULL as citizen_someone_outside_car_struck
-    from tmp.pulsepoint_final_scanner_audio_matches 
-    where incident_id not in (select incident_id from tmp.citizen_pulsepoint_join_final)
-    ;
+        drop table if exists tmp.mpd_crashes_pulsepoint_join_step2;
+        create table tmp.mpd_crashes_pulsepoint_join_step2 as (
+            select * from (
+                select *
+                ,row_number() over (partition by crimeid order by ST_Distance(geography, dcfems_geography)) as Police_Report_To_Incident_Distance_rank
+                from tmp.mpd_crashes_pulsepoint_join_step1
+                ) as tmp where Police_Report_To_Incident_Distance_rank = 1
+            ) ;
     """
 
-    match_twitter_query = """
+    exclude_calls_query = """
+    drop table if exists tmp.exclude_call_ids;
+    create table tmp.exclude_call_ids as (
+        select ARRAY_AGG(call_ids) as exclude_call_ids FROM 
+        (select unnest(call_ids_array) as call_ids from tmp.mpd_crashes_pulsepoint_join_step2 where mpd_someone_outside_car_struck = 1
+        INTERSECT
+        select unnest(call_ids_array) as call_ids from tmp.mpd_crashes_pulsepoint_join_step2 where mpd_someone_outside_car_struck = 0 and DCFEMS_Ped_Crash = 1
+    ) as tmp
+        ) ;
+    """
 
-        drop table if exists tmp_twitter;
-        create temporary table tmp_twitter on commit preserve rows as (
-        select * from source_data.twitter_stream
-        where ((tweet_text ilike '%%pedestrian%%' and tweet_text not ilike '%%pedestrian bridge%%')
-            or tweet_text ilike '%% cyclist%%'
-            or tweet_text ilike '%%bicycl%%'
-            or tweet_text ilike '%%ped struck%%'
-        or ((tweet_text ilike '%%struck by%%' or tweet_text ilike '%%hit by%%')
-            and tweet_text not ilike '%%gunfire%%' 
-            and tweet_text not ilike '%%bullets%%'
-        and tweet_text not ilike '%%train%%'
-        ))
-        and (created_at at time zone 'America/New_York')::date >='2021-05-15' and point_geography is not null
-            ) with data;
+    combine_tables_query = """
+        drop table if exists tmp.crashes_all_sources;
+        create table tmp.crashes_all_sources as
+            (
+            SELECT
+                'MPD Only' as category
+                ,'' as sub_category
+                ,mpd_someone_outside_car_struck as MPD_Reports_Ped_Involved
+                ,mpd_motorcycle_flag as MPD_Reports_Motorcycle_Involved
+                ,0 as Other_Sources_Report_Ped_Involved
+                ,crimeid as crash_id
+                ,NULL as incident_id
+                ,fromdate as accident_date
+                ,address as MPD_Reported_Address
+                ,NULL as DCFEMS_Call_Address
+                ,total_bicyclists as MPD_Reported_Bicyclists
+                ,total_pedestrians as MPD_Reported_Pedestrians
+                ,persontype_array
+                ,invehicletype_array
+                ,ARRAY[NULL] as scanner_audio
+                ,ARRAY[NULL] as scanner_call_ids
+                ,NULL as citizen_description
+                ,NULL as twitter_description
+                ,ST_Y(geography) as MPD_latitude
+                ,ST_X(geography) as MPD_longitude
+                ,geography::geography as MPD_Location
+                ,NULL::numeric as DCFEMS_Call_latitude
+                ,NULL::numeric as DCFEMS_Call_longitude
+                ,NULL::geography as DCFEMS_Call_Location
+                ,geography
+                ,ward_name
+                ,comp_plan_area
+                ,anc_id
+                ,smd_id
+                ,nbh_cluster_names
+                ,blockkey
+            FROM tmp.mpd_reported_crashes 
+            WHERE crimeid not in (select crimeid from tmp.mpd_crashes_pulsepoint_join_step2)
+            );
 
-       drop table if exists tmp.twitter_join_step1;
-        create table tmp.twitter_join_step1 as (
-        select * from (
-            select distinct a.*
-                ,b.point_geography as twitter_geography
-                ,ST_Distance(a.geography, b.point_geography) as Distance_To_twitter_Incident
-                ,row_number() over (partition by a.incident_id order by ST_Distance(a.geography, b.point_geography)) as Distance_Rank
-                ,abs(extract(epoch from b.created_at - a.call_received_datetime)/60.00 ) as Minutes_Apart
-                ,b.tweet_id
-                ,b.tweet_text
-                ,1 as twitter_someone_outside_car_struck
-            from tmp.citizen_pulsepoint_join_final a
-            inner join tmp_twitter b on (ST_DWITHIN(a.geography, b.point_geography, 1000) 
-								 or (ST_Area(b.polygon_geography::geography)<= 3000000 and ST_Intersects(b.polygon_geography, a.geography)))
-		    and (extract(epoch from b.created_at - a.call_received_datetime)/60.00 )between 0 and 30
-            ) as tmp where Distance_Rank = 1
-        ); 
+           insert into tmp.crashes_all_sources
+            	SELECT
+                'DCFEMS Only' as category
+                ,'' as sub_category
+                ,0 as MPD_Reports_Ped_Involved
+                ,0 as MPD_Reports_Motorcycle_Involved
+                ,Ped_Crash_Any_Source as Other_Sources_Report_Ped_Involved
+                ,NULL as crash_id
+                ,incident_id
+                ,call_received_datetime::date as accident_date
+                ,NULL as MPD_Reported_Address
+                ,fulldisplayaddress as DCFEMS_Call_Address
+                ,NULL as MPD_Reported_Bicyclists
+                ,NULL as MPD_Reported_Pedestrians
+                ,ARRAY[NULL] as persontype_array
+                ,ARRAY[NULL] as invehicletype_array
+                ,transcripts_array as scanner_audio
+                ,call_ids_array as scanner_call_ids
+                ,incident_desc_raw as citizen_description
+                ,tweet_text as twitter_description
+                ,NULL as MPD_latitude
+                ,NULL as MPD_longitude
+                ,NULL as MPD_Location
+                ,ST_Y(geography::geometry) as DCFEMS_Call_latitude
+                ,ST_X(geography::geometry) as DCFEMS_Call_longitude
+                ,geography as DCFEMS_Call_Location
+                ,geography::geometry 
+                ,ward_name
+                ,comp_plan_area
+                ,anc_id
+                ,smd_id
+                ,nbh_cluster_names
+                ,roadway_blockkey
+            FROM analysis_data.pulsepoint 
+            WHERE incident_id not in (select incident_id from tmp.mpd_crashes_pulsepoint_join_step2)
+            ;
 
-    drop table if exists tmp.twitter_join_step2;
-        create table tmp.twitter_join_step2 as (
-        select * from (
-            select distinct *
-                ,row_number() over (partition by tweet_id order by ST_Distance(geography, twitter_geography)) as twitter_Distance_Rank
-            from tmp.twitter_join_step1
-            ) as tmp where twitter_Distance_Rank = 1
-        ); 
+        insert into tmp.crashes_all_sources
+        SELECT
+            'DCFEMS and MPD' as category
+            ,'No crash type conflict' as sub_category
+            ,mpd_someone_outside_car_struck as MPD_Reports_Ped_Involved
+            ,mpd_motorcycle_flag as MPD_Reports_Motorcycle_Involved
+            ,case when b.exclude_call_ids is not null then 0 else DCFEMS_Ped_Crash end as Other_Sources_Report_Ped_Involved
+            ,crimeid
+            ,incident_id
+            ,call_received_datetime::date as accident_date
+            ,address as MPD_Reported_Address
+            ,fulldisplayaddress as DCFEMS_Call_Address
+            ,total_bicyclists as MPD_Reported_Bicyclists
+            ,total_pedestrians as MPD_Reported_Pedestrians
+            ,persontype_array
+            ,invehicletype_array
+            ,transcripts_array as scanner_audio
+            ,call_ids_array as scanner_call_ids
+            ,incident_desc_raw as citizen_description
+            ,tweet_text as twitter_description
+            ,ST_Y(geography) as MPD_latitude
+            ,ST_X(geography) as MPD_longitude
+            ,geography::geography as MPD_Location
+            ,ST_Y(dcfems_geography::geometry) as DCFEMS_Call_latitude
+            ,ST_X(dcfems_geography::geometry) as DCFEMS_Call_longitude
+            ,dcfems_geography as DCFEMS_Call_Location
+            ,geography
+            ,ward_name
+            ,comp_plan_area
+            ,anc_id
+            ,smd_id
+            ,nbh_cluster_names
+            ,blockkey
+        FROM tmp.mpd_crashes_pulsepoint_join_step2 a
+        left join tmp.exclude_call_ids b on a.call_ids_array && b.exclude_call_ids
+        WHERE  mpd_someone_outside_car_struck = 1 or (mpd_someone_outside_car_struck = 0 and DCFEMS_Ped_Crash = 0)
+        or (mpd_someone_outside_car_struck = 0 and b.exclude_call_ids is not null)
+        ;
 
-    drop table if exists tmp.twitter_pulsepoint_join_final;
-    create table tmp.twitter_pulsepoint_join_final as 
-    select 
-        incident_id
-        ,incident_type
-        ,call_received_datetime
-        ,fulldisplayaddress
-        ,geography
-        ,Potential_Duplicate_Incident_Flag
-        ,someone_outside_car_struck
-        ,motorcycle_flag
-        ,car_crash_call
-        ,call_ids_array
-        ,transcripts_array
-        ,incident_key
-        ,incident_desc_raw
-        ,citizen_someone_outside_car_struck
-        ,tweet_id
-        ,tweet_text
-        ,twitter_someone_outside_car_struck
-        ,case when twitter_someone_outside_car_struck = 1 or someone_outside_car_struck = 1 or citizen_someone_outside_car_struck = 1 then 1 else 0 end as Ped_Crash_Any_Source
-    from tmp.twitter_join_step2
-    ;
+    insert into tmp.crashes_all_sources
+        SELECT
+            'DCFEMS and MPD' as category
+		    ,'Other sources report a pedestrian or cyclist crash; MPD reports motorcycle involved' as sub_category
+            ,mpd_someone_outside_car_struck as MPD_Reports_Ped_Involved
+            ,mpd_motorcycle_flag as MPD_Reports_Motorcycle_Involved
+            ,DCFEMS_Ped_Crash as Other_Sources_Report_Ped_Involved
+            ,crimeid
+            ,incident_id
+            ,call_received_datetime::date as accident_date
+            ,address as MPD_Reported_Address
+            ,fulldisplayaddress as DCFEMS_Call_Address
+            ,total_bicyclists as MPD_Reported_Bicyclists
+            ,total_pedestrians as MPD_Reported_Pedestrians
+            ,persontype_array
+            ,invehicletype_array
+            ,transcripts_array as scanner_audio
+            ,call_ids_array as scanner_call_ids
+            ,incident_desc_raw as citizen_description
+            ,tweet_text as twitter_description
+            ,ST_Y(geography) as MPD_latitude
+            ,ST_X(geography) as MPD_longitude
+            ,geography::geography as MPD_Location
+            ,ST_Y(dcfems_geography::geometry) as DCFEMS_Call_latitude
+            ,ST_X(dcfems_geography::geometry) as DCFEMS_Call_longitude
+            ,dcfems_geography as DCFEMS_Call_Location
+            ,geography
+            ,ward_name
+            ,comp_plan_area
+            ,anc_id
+            ,smd_id
+            ,nbh_cluster_names
+            ,blockkey
+        FROM tmp.mpd_crashes_pulsepoint_join_step2 
+        WHERE  mpd_someone_outside_car_struck = 0 and DCFEMS_Ped_Crash = 1 and mpd_motorcycle_flag = 1
+        ;
 
-    insert into tmp.twitter_pulsepoint_join_final
-    select 
-        incident_id
-        ,incident_type
-        ,call_received_datetime
-        ,fulldisplayaddress
-        ,geography
-        ,Potential_Duplicate_Incident_Flag
-        ,someone_outside_car_struck
-        ,motorcycle_flag
-        ,car_crash_call
-        ,call_ids_array
-        ,transcripts_array
-        ,incident_key
-        ,incident_desc_raw
-        ,citizen_someone_outside_car_struck
-        ,NULL as tweet_id
-        ,NULL as tweet_text
-        ,NULL as twitter_someone_outside_car_struck
-        ,case when someone_outside_car_struck = 1 or citizen_someone_outside_car_struck = 1 then 1 else 0 end as Ped_Crash_Any_Source
-    from tmp.citizen_pulsepoint_join_final
-    where incident_id not in (select incident_id from tmp.twitter_pulsepoint_join_final)
-    ;
-
-    CREATE INDEX IF NOT EXISTS pulsepoint_twitter_geom_idx ON tmp.twitter_pulsepoint_join_final USING GIST (geography);
+        insert into tmp.crashes_all_sources
+        SELECT
+            'DCFEMS and MPD' as category
+		    ,'Other sources report a pedestrian or cyclist crash; MPD reports no non-vehicle parties involved' as sub_category
+            ,mpd_someone_outside_car_struck as MPD_Reports_Ped_Involved
+            ,mpd_motorcycle_flag as MPD_Reports_Motorcycle_Involved
+            ,DCFEMS_Ped_Crash as Other_Sources_Report_Ped_Involved
+            ,crimeid
+            ,incident_id
+            ,call_received_datetime::date as accident_date
+            ,address as MPD_Reported_Address
+            ,fulldisplayaddress as DCFEMS_Call_Address
+            ,total_bicyclists as MPD_Reported_Bicyclists
+            ,total_pedestrians as MPD_Reported_Pedestrians
+            ,persontype_array
+            ,invehicletype_array
+            ,transcripts_array as scanner_audio
+            ,call_ids_array as scanner_call_ids
+            ,incident_desc_raw as citizen_description
+            ,tweet_text as twitter_description
+            ,ST_Y(geography) as MPD_latitude
+            ,ST_X(geography) as MPD_longitude
+            ,geography::geography as MPD_Location
+            ,ST_Y(dcfems_geography::geometry) as DCFEMS_Call_latitude
+            ,ST_X(dcfems_geography::geometry) as DCFEMS_Call_longitude
+            ,dcfems_geography as DCFEMS_Call_Location
+            ,geography
+            ,ward_name
+            ,comp_plan_area
+            ,anc_id
+            ,smd_id
+            ,nbh_cluster_names
+            ,blockkey
+        FROM tmp.mpd_crashes_pulsepoint_join_step2  a
+        left join tmp.exclude_call_ids b on a.call_ids_array && b.exclude_call_ids
+        WHERE  mpd_someone_outside_car_struck = 0 and DCFEMS_Ped_Crash = 1 and mpd_motorcycle_flag = 0
+        and b.exclude_call_ids is null
+        ;
     """
 
     # First execute the table-specific queries
-    # engine.execute(dupe_check_query)
-    print("dupe check query complete")
+    engine.execute(filter_crashes_query)
+    print("filter crashes query complete")
 
     engine.execute(match_pulsepoint_query)
-    print("twitter matches processed")
+    print("pulsepoint matches processed")
 
-    # Then execute the same location-info queries (roadway, schools, neighborhoods) that apply to all analysis tables and create the final table
-    next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='pulsepoint_nbh_ward', from_schema='tmp', from_table='twitter_pulsepoint_join_final', partition_by_field='Incident_ID')
-    print("neighborhood-ward query complete")
-    next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='pulsepoint_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='Incident_ID', within_distance= 100)
-    print("roadway info query complete")
-    next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='pulsepoint_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='Incident_ID', within_distance= 60)
-    print("intersection info query complete")
-    next_tables = is_national_park(engine=engine, target_schema='tmp', target_table='pulsepoint_national_park', from_schema=next_tables[0], from_table=next_tables[1])
-    print("national parks info query complete")
-    row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='pulsepoint', from_schema=next_tables[0], from_table=next_tables[1])
+    engine.execute(exclude_calls_query)
+    print("exclude calls query processed")
+
+    engine.execute(combine_tables_query)
+    print("tables combined")
+
+    # create the final table
+    row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='crashes_all_sources', from_schema='tmp', from_table='crashes_all_sources')
     print("final query complete with row count ",row_count)
 
 
@@ -226,4 +315,4 @@ if __name__ == "__main__":
     env = env.upper()
     # tables_to_extract = json_to_postGIS(folder_to_load='source-data/citizen/unparsed/', move_to_folder = 'source-data/citizen/loaded_to_postgis/', AWS_Credentials=get_connection_strings("AWS_DEV"))
     engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
-    generate_pulsepoint_analysis_table(engine=engine)
+    generate_crashes_all_sources(engine=engine)
