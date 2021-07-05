@@ -27,8 +27,8 @@ def extract_scanner_audio_json (target_schema:str, source_table:str, target_tabl
 			(data->'timestamp')::varchar::timestamptz AS call_timestamp
             ,(data->'call_length')::numeric AS call_length
             ,(data->'source')::varchar AS call_talkgroup
-            ,(data->'id')::varchar as call_id
-			,(data->'transcribed_audio'->'transcripts'->0->'transcript')::varchar as main_transcript
+            ,replace((data->'id')::varchar,'"','') as call_id
+			,replace((data->'transcribed_audio'->'transcripts'->0->'transcript')::varchar,'"','') as main_transcript
             ,source_file
             ,load_datetime
             ,data 

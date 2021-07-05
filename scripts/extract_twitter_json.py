@@ -52,7 +52,7 @@ def extract_twitter_json (target_schema:str, source_table:str, target_table:str,
     engine.execute(step1_query)
 
     # geocode records
-    records = [r for (r,) in engine.execute("select distinct tweet_text from tmp.twitter").fetchall()]
+    records = [r for (r,) in engine.execute("select distinct tweet_text from tmp.twitter where tweet_text ilike '%%pedestrian%%' or tweet_text ilike '%%struck by%%' or tweet_text ilike '%%ped_struck%%'").fetchall()]
     print(len(records)," records passed to geocode function")
     geocode_text(engine=engine, records_to_geocode = records, administrative_area='District of Columbia', text_type = 'Tweet')
 

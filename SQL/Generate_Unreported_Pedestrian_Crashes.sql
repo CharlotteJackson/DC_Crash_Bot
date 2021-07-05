@@ -629,6 +629,7 @@ where incident_id not in (select incident_id from final_match)
 and incident_type in ('TC', 'TCE', 'TCS', 'VF') 
 --79
 
+select * from source_data.waze_alerts_stream order by scrape_datetime desc limit 100;
 
 drop table if exists tmp.final_scanner_audio_matches;
 create table tmp.final_scanner_audio_matches as 
@@ -662,12 +663,14 @@ select * from (
 ---------------------------------------------------------------------
 --join to twitter
 ---------------------------------------------------------------------
+
 drop table if exists tmp_twitter;
 create temporary table tmp_twitter on commit preserve rows as (
-select * from source_data.twitter_stream 
+select * from source_data.twitter_stream
 where ((tweet_text ilike '%pedestrian%' and tweet_text not ilike '%pedestrian bridge%')
 	or tweet_text ilike '% cyclist%'
 	   or tweet_text ilike '%bicycl%'
+	   or tweet_text ilike '%ped struck%'
 or ((tweet_text ilike '%struck by%' or tweet_text ilike '%hit by%')
 	and tweet_text not ilike '%gunfire%' 
 	and tweet_text not ilike '%bullets%'
@@ -675,7 +678,15 @@ or ((tweet_text ilike '%struck by%' or tweet_text ilike '%hit by%')
    ))
 and created_at::date >='2021-05-15' and point_geography is not null
 	) with data;
---47
+--58
+
+select * from tmp.twitter_pulsepoint_join_final
+where Ped_Crash_Any_Source = 1
+
+select * from tmp_twitter
+select * from citizen_join_1 where call_received_datetime between '2021-05-25 17:00:45-04' and '2021-05-25 19:15:45-04'
+order by call_received_datetime
+select * from tmp_crashes where fromdate = '2021-05-25'
 
 drop table if exists twitter_join_1;
 create temporary table twitter_join_1 on commit preserve rows as (
@@ -787,7 +798,6 @@ create temporary table step2 on commit preserve rows as (
 --884
 
 
-
 --try to fix instances where two vehicle collisions were dispatched in one audio file and one was a ped crash 
 --and the other wasn't
 drop table if exists exclude_call_ids;
@@ -804,13 +814,13 @@ INTERSECT
 ----------------------------------------------------------------------------------
 
 --first: The police-reported crashes with no 911 call
-drop table if exists analysis_data.pedestrian_crashes_all_sources;
-create table analysis_data.pedestrian_crashes_all_sources as
+drop table if exists analysis_data.crashes_all_sources;
+create table analysis_data.crashes_all_sources as
 	(
 	SELECT
 		'MPD Only' as category
 		,'' as sub_category
-		,1 as MPD_Reports_Ped_Involved
+		,person_outside_car_struck as MPD_Reports_Ped_Involved
 		,motorcycle_flag as MPD_Reports_Motorcycle_Involved
 		,0 as Other_Sources_Report_Ped_Involved
 		,crimeid as crash_id
@@ -823,6 +833,7 @@ create table analysis_data.pedestrian_crashes_all_sources as
 		,persontype_array
 		,invehicletype_array
 		,ARRAY[NULL] as scanner_audio
+		,ARRAY[NULL] as scanner_call_ids
 		,NULL as citizen_description
 		,NULL as twitter_description
 		,ST_Y(geography) as MPD_latitude
@@ -831,21 +842,21 @@ create table analysis_data.pedestrian_crashes_all_sources as
 		,NULL::numeric as DCFEMS_Call_latitude
 		,NULL::numeric as DCFEMS_Call_longitude
 		,NULL::geography as DCFEMS_Call_Location
+		,geography::geography as geography
 	FROM tmp_crashes 
-	WHERE person_outside_car_struck = 1 AND crimeid not in (select crimeid from step2 where crimeid is not null)
+	WHERE crimeid not in (select crimeid from step2 where crimeid is not null)
 	);
-	grant all privileges on analysis_data.pedestrian_crashes_all_sources to public;
+	grant all privileges on analysis_data.crashes_all_sources to public;
 
 --67 
-
 --then: The 911-reported crashes with no police report 
-insert into analysis_data.pedestrian_crashes_all_sources
+insert into analysis_data.crashes_all_sources
 	SELECT
 		'DCFEMS Only' as category
 		,'' as sub_category
 		,0 as MPD_Reports_Ped_Involved
 		,0 as MPD_Reports_Motorcycle_Involved
-		,1 as Other_Sources_Report_Ped_Involved
+		,case when (someone_outside_car_struck =1 or citizen_someone_outside_car_struck=1 or twitter_someone_outside_car_struck=1) then 1 else 0 end as Other_Sources_Report_Ped_Involved
 		,NULL as crash_id
 		,incident_id
 		,call_received_datetime::date as accident_date
@@ -856,6 +867,7 @@ insert into analysis_data.pedestrian_crashes_all_sources
 		,ARRAY[NULL] as persontype_array
 		,ARRAY[NULL] as invehicletype_array
 		,transcripts_array as scanner_audio
+		,call_ids_array as scanner_call_ids
 		,incident_desc_raw as citizen_description
 		,tweet_text as twitter_description
 		,NULL as MPD_latitude
@@ -864,17 +876,17 @@ insert into analysis_data.pedestrian_crashes_all_sources
 		,ST_Y(geography::geometry) as DCFEMS_Call_latitude
 		,ST_X(geography::geometry) as DCFEMS_Call_longitude
 		,geography as DCFEMS_Call_Location
+		,geography
 	FROM twitter_join_1 
-	WHERE  (someone_outside_car_struck =1 or citizen_someone_outside_car_struck=1 or twitter_someone_outside_car_struck=1) 
-	AND incident_id not in (select incident_id from step2 where incident_id is not null)
+	WHERE incident_id not in (select incident_id from step2 where incident_id is not null)
 --90
 
 --Calls that match
-insert into analysis_data.pedestrian_crashes_all_sources
+insert into analysis_data.crashes_all_sources
 	SELECT
 		'DCFEMS and MPD' as category
 		,'No crash type conflict' as sub_category
-		,1 as MPD_Reports_Ped_Involved
+		,person_outside_car_struck as MPD_Reports_Ped_Involved
 		,police_reports_motorcycle_flag as MPD_Reports_Motorcycle_Involved
 		,case when (someone_outside_car_struck =1 or citizen_someone_outside_car_struck=1 or twitter_someone_outside_car_struck=1)
 			then 1 else 0 end as Other_Sources_Report_Ped_Involved
@@ -896,8 +908,12 @@ insert into analysis_data.pedestrian_crashes_all_sources
 		,ST_Y(geography::geometry) as DCFEMS_Call_latitude
 		,ST_X(geography::geometry) as DCFEMS_Call_longitude
 		,geography as DCFEMS_Call_Location
+		,crash_geo::geography as geography
 	FROM step2 
-	WHERE  incident_id is not null and crimeid is not null and person_outside_car_struck = 1
+	WHERE  incident_id is not null and crimeid is not null and 
+		(person_outside_car_struck = 1 or ((citizen_someone_outside_car_struck=0 or citizen_someone_outside_car_struck is null)
+			and (twitter_someone_outside_car_struck=0 or twitter_someone_outside_car_struck is null)
+										  and someone_outside_car_struck = 0))
 --144
 
 --Calls that match, but MPD doesn't think it's a ped crash but other sources do
@@ -933,7 +949,7 @@ insert into analysis_data.pedestrian_crashes_all_sources
 --9
 
 --Calls that match, but MPD doesn't think it's a ped crash but other sources do, and motorcycle is not a possible reason for this
-insert into analysis_data.pedestrian_crashes_all_sources
+insert into analysis_data.crashes_all_sources
 	SELECT
 		'DCFEMS and MPD' as category
 		,'Other sources report a pedestrian or cyclist crash; MPD reports no non-vehicle parties involved' as sub_category
@@ -965,6 +981,38 @@ insert into analysis_data.pedestrian_crashes_all_sources
 	and police_reports_motorcycle_flag = 0
 	and b.exclude_call_ids is null
 --31
+
+--Car-only crashes in DCFEMS data and not MPD data
+
+	SELECT
+		'DCFEMS Only' as category
+		,'' as sub_category
+		,0 as MPD_Reports_Ped_Involved
+		,0 as MPD_Reports_Motorcycle_Involved
+		,0 as Other_Sources_Report_Ped_Involved
+		,NULL as crash_id
+		,incident_id
+		,call_received_datetime::date as accident_date
+		,NULL as MPD_Reported_Address
+		,fulldisplayaddress as DCFEMS_Call_Address
+		,NULL as MPD_Reported_Bicyclists
+		,NULL as MPD_Reported_Pedestrians
+		,ARRAY[NULL] as persontype_array
+		,ARRAY[NULL] as invehicletype_array
+		,transcripts_array as scanner_audio
+		,incident_desc_raw as citizen_description
+		,tweet_text as twitter_description
+		,NULL as MPD_latitude
+		,NULL as MPD_longitude
+		,NULL as MPD_Location
+		,ST_Y(geography::geometry) as DCFEMS_Call_latitude
+		,ST_X(geography::geometry) as DCFEMS_Call_longitude
+		,geography as DCFEMS_Call_Location
+	FROM twitter_join_1 
+	WHERE  someone_outside_car_struck =0 and 
+			(citizen_someone_outside_car_struck=0 or citizen_someone_outside_car_struck is null)
+			and (twitter_someone_outside_car_struck=0 or twitter_someone_outside_car_struck is null) 
+	AND incident_id not in (select incident_id from step2 where incident_id is not null)
 
 select count(*) from step2
 --3650

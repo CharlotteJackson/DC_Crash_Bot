@@ -310,11 +310,11 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
     print("group by query complete")
     engine.execute(join_query)
     print("join query complete")
-    engine.execute(pulsepoint_join_query)
-    print("pulsepoint join query complete")
+    # engine.execute(pulsepoint_join_query)
+    # print("pulsepoint join query complete")
 
     # Then execute the same location-info queries (roadway, schools, neighborhoods) that apply to all analysis tables and create the final table
-    next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crash_pulsepoint_join', partition_by_field='objectid')
+    next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crashes_join', partition_by_field='objectid')
     print("neighborhood-ward query complete")
     next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='crashes_schools', from_schema=next_tables[0], from_table=next_tables[1])
     print("schools query complete")
