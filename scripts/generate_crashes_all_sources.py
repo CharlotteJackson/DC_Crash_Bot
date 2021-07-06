@@ -123,6 +123,9 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,smd_id
                 ,nbh_cluster_names
                 ,blockkey
+                ,ST_Y(geography) as master_latitude
+                ,ST_X(geography) as master_longitude
+                ,crimeid as unique_row_id
             FROM tmp.mpd_reported_crashes 
             WHERE crimeid not in (select crimeid from tmp.mpd_crashes_pulsepoint_join_step2)
             );
@@ -160,6 +163,9 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,smd_id
                 ,nbh_cluster_names
                 ,roadway_blockkey
+                ,ST_Y(geography::geometry) as master_latitude
+                ,ST_X(geography::geometry) as master_longitude
+                ,incident_id as unique_row_id
             FROM analysis_data.pulsepoint 
             WHERE incident_id not in (select incident_id from tmp.mpd_crashes_pulsepoint_join_step2)
             ;
@@ -173,7 +179,7 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,case when b.exclude_call_ids is not null then 0 else DCFEMS_Ped_Crash end as Other_Sources_Report_Ped_Involved
             ,crimeid
             ,incident_id
-            ,call_received_datetime::date as accident_date
+            ,(call_received_datetime at time zone 'America/New_York')::date as accident_date
             ,address as MPD_Reported_Address
             ,fulldisplayaddress as DCFEMS_Call_Address
             ,total_bicyclists as MPD_Reported_Bicyclists
@@ -197,6 +203,9 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,ST_Y(geography) as master_latitude
+            ,ST_X(geography) as master_longitude
+            ,crimeid as unique_row_id
         FROM tmp.mpd_crashes_pulsepoint_join_step2 a
         left join tmp.exclude_call_ids b on a.call_ids_array && b.exclude_call_ids
         WHERE  mpd_someone_outside_car_struck = 1 or (mpd_someone_outside_car_struck = 0 and DCFEMS_Ped_Crash = 0)
@@ -236,6 +245,9 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,ST_Y(geography) as master_latitude
+            ,ST_X(geography) as master_longitude
+            ,crimeid as unique_row_id
         FROM tmp.mpd_crashes_pulsepoint_join_step2 
         WHERE  mpd_someone_outside_car_struck = 0 and DCFEMS_Ped_Crash = 1 and mpd_motorcycle_flag = 1
         ;
@@ -273,6 +285,9 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,ST_Y(geography) as master_latitude
+            ,ST_X(geography) as master_longitude
+            ,crimeid as unique_row_id
         FROM tmp.mpd_crashes_pulsepoint_join_step2  a
         left join tmp.exclude_call_ids b on a.call_ids_array && b.exclude_call_ids
         WHERE  mpd_someone_outside_car_struck = 0 and DCFEMS_Ped_Crash = 1 and mpd_motorcycle_flag = 0
