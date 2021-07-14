@@ -99,7 +99,7 @@ def generate_waze_avg_speed (engine):
     # First execute the table-specific queries
     engine.execute(step1_query)
     print("step1 query complete")
-    add_roadway_info(engine=engine, target_schema='tmp', target_table='waze_users_roadway_blocks', from_schema='tmp', from_table='waze_users', partition_by_field='unique_row_id', within_distance= 20)
+    add_roadway_info(engine=engine, target_schema='tmp', target_table='waze_users_roadway_blocks', from_schema='tmp', from_table='waze_users', partition_by_field='unique_row_id', within_distance= 50)
     print("roadway info query complete")
     engine.execute(group_by_query)
     print("group by query complete")
@@ -140,6 +140,7 @@ if __name__ == "__main__":
     if env == None:
         env='DEV'
     env=env.upper()
+    print(env)
 
     # set up RDS and S3 connections, engines, cursors
     engine = create_postgres_engine(destination="AWS_PostGIS", env=env)
