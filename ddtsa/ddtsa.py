@@ -17,7 +17,7 @@ from data_collectors.waze_scrapper import get_waze_data
 from data_collectors.get_crash_data import get_safety_concerns
 from data_collectors.get_anc import get_anc_info
 from data_collectors.neighborhood_stats import get_neighborhood_data
-from data_collectors.get_multi_modal import get_mulit_modal_data
+from data_collectors.get_multi_modal import get_multi_modal_data
 
 
 from data_collectors.get_construction_projects import (
@@ -157,7 +157,7 @@ def get_multi_modal(address: str, gmap_data: Dict[str, Any]):
         "Are there sidewalks? Bike facilities or trails? Nearby Metrorail station or Metrobus stop(s)?"
     )
 
-    data = get_mulit_modal_data(address, gmap_data)
+    data = get_multi_modal_data(address, gmap_data)
     st.write(data)
 
 

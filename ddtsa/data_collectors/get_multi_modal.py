@@ -28,7 +28,7 @@ db_user = os.environ["DB_USER"]
 db_name = os.environ["DB_NAME"]
 
 
-def get_mulit_modal_data(address: str, gmap_data: Dict[str, Any] = None) -> str:
+def get_multi_modal_data(address: str, gmap_data: Dict[str, Any] = None) -> str:
     """
     Purpose:
         get multi modal data
