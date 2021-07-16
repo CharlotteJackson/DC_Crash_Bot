@@ -63,7 +63,6 @@ def get_unsafe_times(address: str, gmap_data: Dict[str, Any] = None) -> str:
     db_query = f"select mpdlatitude, mpdlongitude,reportdate, objectid from analysis_data.dc_crashes_w_details ad WHERE reportdate > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' order by reportdate desc"
     df = psql.read_sql(db_query, conn)
 
-    # df_subset = df.loc[(df["reportdate"] >= year_ago_date_time_string)]
     try:
         json_results = find_unsafe_times(df, address, gmap_data)
         text_string = format_results(json_results)
@@ -83,12 +82,6 @@ def format_results(json_results: Dict[str, Any]) -> str:
     Returns:
         text_string: formatted text
     """
-    # crash_json["early_morning"] = []
-    # crash_json["morning"] = []
-    # crash_json["afternoon"] = []
-    # crash_json["night"] = []
-    # crash_json["weekdays"] = []
-    # crash_json["weekends"] = []
 
     early_morning_crashes = len(json_results["early_morning"])
     morning_crashes = len(json_results["morning"])
@@ -199,8 +192,6 @@ def find_unsafe_times(
 
     lat_long = (curr_lat, curr_lng)
 
-    # Can we leverage geopands?? #TODO
-
     crash_json = {}
     crash_json["early_morning"] = []
     crash_json["morning"] = []
@@ -211,7 +202,6 @@ def find_unsafe_times(
 
     df.apply(lambda row: fill_crash_json(row, crash_json, lat_long), axis=1)
 
-    print(crash_json)
     return crash_json
 
 

@@ -1,8 +1,7 @@
 # Python imports
-import datetime
 import logging
 import os
-from typing import Union, Optional, Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List
 from geopy.distance import geodesic
 
 # 3rd Party Imports
@@ -15,7 +14,6 @@ try:
     from .get_address import rev_geocode
 except:
     from get_address import rev_geocode
-
 
 # Check if google key found
 try:
@@ -49,11 +47,9 @@ def get_traffic_calming(address: str, gmap_data: Dict[str, Any] = None) -> str:
     )
     logging.info("connected to db")
 
+    # geocode service - using google maps
     if not gmap_data:
         gmap_data = rev_geocode(address, GOOGLE_API_KEY)
-
-    # Create query
-    # db_query = f"select blockkey,nbh_cluster_names,speed_limit,num_sides_w_sidewalks,totalbikelanes,totalraisedbuffers,totalparkinglanes,st_astext(st_centroid(geography)) from analysis_data.roadway_blocks"
 
     # Get the latitude and longitude
     curr_lat = gmap_data[0]["geometry"]["location"]["lat"]
@@ -66,31 +62,6 @@ def get_traffic_calming(address: str, gmap_data: Dict[str, Any] = None) -> str:
 
     df = psql.read_sql(db_query, conn)
 
-    # # need to conver latlong to a lat long
-    # lats = []
-    # lngs = []
-
-    # latlongs = list(df["st_astext"])
-
-    # for latlong in latlongs:
-    #     # format string
-    #     if latlong:
-    #         latlong = latlong.replace("POINT(", "").replace(")", "").split(" ")
-    #         # convert to float
-    #         lat = float(latlong[1])
-    #         lng = float(latlong[0])
-    #         # add to arrays
-    #         lats.append(lat)
-    #         lngs.append(lng)
-    #     else:
-    #         lats.append(0)
-    #         lngs.append(0)
-
-    # # add columns to df
-    # df["lat"] = lats
-    # df["lng"] = lngs
-
-    # geocode service - using google maps
 
     try:
         json_results = find_traffic_calming_features(df, gmap_data)
@@ -234,7 +205,6 @@ def format_traffic_calming_json(
     text += f"There are {totalraisedbuffers_max} raised buffers  \n"
     text += f"There are {totalparkinglanes_max} parking lanes  \n"
     text += f"The speed limit is {speedlimit_max} MPH  \n"
-
     text += f"\n\n"
 
     return text
@@ -320,18 +290,8 @@ def fill_calming_json(
     """
 
     try:
-        # row_lat_long = (row["lat"], row["lng"])
-        # print(row_lat_long)
-        # except Exception as error:
-        #     print(row)
-        #     logging.error(error)
-        #     return
-
-        # Did crash happen less than .2 miles from spot?
-        # if geodesic(row_lat_long, lat_long) < 0.1:
 
         traffic_calming_json = {}
-
         traffic_calming_json["blockkey"] = row["blockkey"]
         traffic_calming_json["nbh_cluster_names"] = row["nbh_cluster_names"]
         traffic_calming_json["speedlimit"] = int(row["speed_limit"])

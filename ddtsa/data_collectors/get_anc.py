@@ -1,13 +1,7 @@
 # Python imports
 import logging
 import os
-from typing import Tuple, Union, Optional, Dict, Any, List
-
-# 3rd Party Imports
-# from datetime import datetime
-# import datetime
-# from geopy.distance import geodesic
-import pandas as pd
+from typing import Dict, Any
 
 # postgress imports
 import psycopg2

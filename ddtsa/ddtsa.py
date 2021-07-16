@@ -1,16 +1,11 @@
 # Python imports
-import json
 import os
-from typing import Union, Optional, Dict, Any
-import requests
-import logging
+from typing import Dict, Any
 
 # 3rd Party Imports
-import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
-from PIL import Image
-from geopy import distance
+
+# from PIL import Image
 
 
 # Project Imports
@@ -21,6 +16,8 @@ from data_collectors.traffic_calming import get_traffic_calming
 from data_collectors.waze_scrapper import get_waze_data
 from data_collectors.get_crash_data import get_safety_concerns
 from data_collectors.get_anc import get_anc_info
+from data_collectors.neighborhood_stats import get_neighborhood_data
+from data_collectors.get_multi_modal import get_mulit_modal_data
 
 
 from data_collectors.get_construction_projects import (
@@ -28,8 +25,7 @@ from data_collectors.get_construction_projects import (
     format_incident_data,
 )
 
-# TODO might want to get google data just once
-# # Check if google key found
+# Check if google key found
 try:
     GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
 except Exception as error:
@@ -50,10 +46,6 @@ def location_data(address: str, gmap_data: Dict[str, Any]):
     st.write(
         "Define geographic boundaries as clearly as possible (400 block of A Street NE, the intersection of 1st Street & B Street NW, etc.)"
     )
-
-    # lat_long = geo_loc_instance.GetGeoLoc(address)
-
-    # st.write(lat_long)
 
     st.success(f"`{address}`")
 
@@ -129,7 +121,7 @@ def existing_traffic_calms(address: str, gmap_data: Dict[str, Any]):
     st.write(data)
 
 
-def get_neighborhood_uses(address: str):
+def get_neighborhood_uses(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
         Describe neighborhood uses:
@@ -145,8 +137,11 @@ def get_neighborhood_uses(address: str):
         "Such as residential area, retail area, school zone, recreation center, community center, etc."
     )
 
+    data = get_neighborhood_data(address, gmap_data)
+    st.write(data)
 
-def get_multi_modal(address: str):
+
+def get_multi_modal(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
         Get multi‐modal facilities
@@ -161,6 +156,9 @@ def get_multi_modal(address: str):
     st.write(
         "Are there sidewalks? Bike facilities or trails? Nearby Metrorail station or Metrobus stop(s)?"
     )
+
+    data = get_mulit_modal_data(address, gmap_data)
+    st.write(data)
 
 
 def get_vehicle_types(address: str):
@@ -211,6 +209,7 @@ def get_extra_info(address: str):
 
     st.write("We are awesome!!!!!")
 
+
 def show_anc(address: str, gmap_data: Dict[str, Any]):
     """
     Purpose:
@@ -222,13 +221,13 @@ def show_anc(address: str, gmap_data: Dict[str, Any]):
     Returns:
         N/A
     """
-    data = get_anc_info(address,gmap_data)
+    data = get_anc_info(address, gmap_data)
 
-    
     st.subheader(data["name"])
     st.markdown("**You must have an ANC Commissioner sign off on your TSA**")
     st.write(f"Here is the ANC website for {address}")
     st.write(data["website"])
+
 
 def generate_report(address: str):
     """
@@ -241,18 +240,15 @@ def generate_report(address: str):
     """
     st.header(f"Generating report for {address}")
     # TODO may want to check if address is in DC
-    # TODO we should input the google maps data into these functions
     gmap_data = rev_geocode(address, GOOGLE_API_KEY)
-    # st.write(gmap_data)
-    # get_anc_info
-    show_anc(address, gmap_data)
 
+    show_anc(address, gmap_data)
     location_data(address, gmap_data)
     safety_concerns(address, gmap_data)
     time_of_day_concerns(address, gmap_data)
     existing_traffic_calms(address, gmap_data)
-    get_neighborhood_uses(address)
-    get_multi_modal(address)
+    get_neighborhood_uses(address, gmap_data)
+    get_multi_modal(address, gmap_data)
     get_vehicle_types(address)
     get_prev_concerns(address, gmap_data)
     get_extra_info(address)

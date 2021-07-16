@@ -1,11 +1,10 @@
 # Python imports
 import logging
 import os
-from typing import Tuple, Union, Optional, Dict, Any, List
+from typing import Tuple, Dict, Any, List
 
 # 3rd Party Imports
 # from datetime import datetime
-import datetime
 from geopy.distance import geodesic
 import pandas as pd
 
@@ -45,9 +44,6 @@ def get_safety_concerns(address: str, gmap_data: Dict[str, Any] = None) -> str:
     Returns:
         text_string: formatted text
     """
-    # TODO connect to live database
-    # For now use the test data we have
-    # df = pd.read_csv("../data/analysis_data_dc_crashes_w_details.csv")
 
     conn = psycopg2.connect(
         f"dbname='{db_name}' user='{db_user}' host='{db_host}' password='{db_pass}'"
@@ -73,23 +69,13 @@ def get_safety_concerns(address: str, gmap_data: Dict[str, Any] = None) -> str:
     db_query = f"select mpdlatitude, mpdlongitude, reportdate, objectid, bicycle_injuries,vehicle_injuries, pedestrian_injuries,total_injuries,total_major_injuries,total_minor_injuries,bicycle_fatalities,pedestrian_fatalities, vehicle_fatalities from analysis_data.dc_crashes_w_details ad WHERE reportdate > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' order by reportdate desc"
     df = psql.read_sql(db_query, conn)
 
-    # df_subset = df.loc[(df["reportdate"] >= year_ago_date_time_string)]
-
     # Query for moving violations
     moving_query = f"select issue_date,latitude, longitude,fine_amount, violation_code, violation_process_desc,plate_state, objectid FROM analysis_data.moving_violations mv WHERE issue_date > date_trunc('month', CURRENT_DATE) - INTERVAL '1 year' AND ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),mv.geography,{DIST}) order by issue_date desc"
     moving_df = psql.read_sql(moving_query, conn)
 
+    # Query for waze data
     waze_query = f"select speed_limit,avg_speed_mph_moving_users FROM analysis_data.avg_waze_speed_by_roadway_block mv WHERE ST_DWithin(ST_MakePoint({curr_lng},{curr_lat}),mv.geography,{DIST})"
     waze_df = psql.read_sql(waze_query, conn)
-
-    # waze_df.to_csv("waze_df.csv")
-
-    # moving_subset = moving_df.loc[
-    #     (moving_df["issue_date"] >= year_ago_date_time_string)
-    # ]
-
-    # moving_subset.to_csv("moving_df_example.csv")
-    # geocode service - using google maps
 
     try:
         json_results = find_safety_concerns(df, address, gmap_data)
@@ -100,9 +86,6 @@ def get_safety_concerns(address: str, gmap_data: Dict[str, Any] = None) -> str:
         text_string = error
 
     return text_string
-
-
-# "Provide a detailed description of the problems observed in the area of investigation (vehicle crashes, speeding, pedestrian safety, bicycle safety, unable to cross the street, hard to see cross‐traffic, etc.) For intersection‐related concerns, please include the type of intersection:
 
 
 def format_results(
@@ -160,9 +143,6 @@ def format_results(
     plate_json = {}
     for obj in moving_results:
 
-        # May want to check certian one
-        # T119 - SPEED 11-15 MPH OVER THE SPEED LIMIT
-        # T013 - FAIL TO PAY ATTENTION WHILE OPERATING A VEHICLE
         mov_type = obj["violation_process_desc"]
         driver_plate = obj["plate_state"]
 
@@ -203,7 +183,7 @@ def format_results(
             count += 1
 
     count_len = len(list(waze_df["avg_speed_mph_moving_users"]))
-    text_string += f"Counted {count} speeders out of {count_len} interactions  \n"
+    text_string += f"Counted {count} speeders out of {count_len} interactions ({round(float(count/count_len),2)}%) \n"
 
     return text_string
 
@@ -226,15 +206,8 @@ def fill_safety_json(
         row_lat_long = (row["mpdlatitude"], row["mpdlongitude"])
 
         # Did crash happen less than .2 miles from spot?
-        # TODO what threshold do we want for crash?
         if geodesic(row_lat_long, lat_long) < 0.2:
 
-            # time_string = str(row["reportdate"]).replace("+00:00", "")
-            # date_format = "%Y-%m-%d %H:%M:%S"
-
-            # curr_date_time = datetime.datetime.strptime(time_string, date_format)
-
-            # bicycle_injuries,vehicle_injuries, pedestrian_injuries,total_injuries,total_major_injuries,total_minor_injuries,bicycle_fatalities,pedestrian_fatalities, vehicle_fatalities
             crash_obj = {}
             crash_obj["id"] = row["objectid"]
 
@@ -267,18 +240,6 @@ def fill_moving_json(
     """
 
     try:
-        # row_lat_long = (row["latitude"], row["longitude"])
-
-        # Did crash happen less than .2 miles from spot?
-        # TODO what threshold do we want for crash?
-        # if geodesic(row_lat_long, lat_long) < 0.2:
-
-        # time_string = str(row["reportdate"]).replace("+00:00", "")
-        # date_format = "%Y-%m-%d %H:%M:%S"
-
-        # curr_date_time = datetime.datetime.strptime(time_string, date_format)
-
-        # fine_amount, violation_code, violation_process_desc,plate_state, objectid
         crash_obj = {}
         crash_obj["id"] = row["objectid"]
         crash_obj["fine_amount"] = row["fine_amount"]
