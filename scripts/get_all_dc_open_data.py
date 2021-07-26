@@ -58,6 +58,12 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             ,'prefix' :'source-data/dc-open-data/anc_boundaries/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'anc_boundaries',"dataset_info":"https://opendata.dc.gov/datasets/advisory-neighborhood-commissions-from-2013"}
         }
+        ,'bike_trails' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/e8c2b7ef54fb43d9a2ed1b0b75d0a14d_4.geojson')]
+            ,'prefix' :'source-data/dc-open-data/bike_trails/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'bike_trails',"dataset_info":"https://opendata.dc.gov/datasets/bike-trails/"}
+        }
+        
         ,'census_blocks' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/a6f76663621548e1a039798784b64f10_0.geojson')]
             ,'prefix' :'source-data/dc-open-data/census_blocks/'
@@ -200,6 +206,11 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             'url':[('complete','https://opendata.arcgis.com/datasets/a779d051865f461eb2a1f50f10940ec4_161.geojson')]
             ,'prefix':'source-data/dc-open-data/roadway_intersection_approach/'
             ,'metadata':{'target_schema':'source_data', 'target_table': 'roadway_intersection_approach','dataset_info':'https://opendata.dc.gov/datasets/roadway-intersection-approach'}
+        }
+        ,"sidewalks": {
+            'url':[('complete','https://opendata.arcgis.com/datasets/2347fa1f3fd9412dbf11aa6441ddca8b_83.geojson')]
+            ,'prefix':'source-data/dc-open-data/sidewalks/'
+            ,'metadata':{'target_schema':'source_data', 'target_table': 'sidewalks','dataset_info':'https://opendata.dc.gov/datasets/sidewalks/'}
         }
         ,"smd_boundaries": {
             'url':[('complete','https://opendata.arcgis.com/datasets/890415458c4c40c3ada2a3c48e3d9e59_21.geojson')]
