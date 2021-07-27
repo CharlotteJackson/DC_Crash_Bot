@@ -29,6 +29,9 @@ def generate_crashes_all_sources (engine, **kwargs):
         ,smd_id
         ,nbh_cluster_names
         ,blockkey
+        ,intersectionid
+        ,intersection_type
+        ,distance_to_nearest_intersection
         ,case when total_bicyclists > 0 or total_pedestrians > 0 or invehicletype_array::text ilike '%%moped%%'or invehicletype_array::text ilike '%%scooter%%'
             then 1 else 0 end as mpd_someone_outside_car_struck
         from analysis_data.dc_crashes_w_details
@@ -123,6 +126,9 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,smd_id
                 ,nbh_cluster_names
                 ,blockkey
+                ,intersectionid
+                ,intersection_type
+                ,distance_to_nearest_intersection
                 ,ST_Y(geography) as master_latitude
                 ,ST_X(geography) as master_longitude
                 ,crimeid as unique_row_id
@@ -163,6 +169,9 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,smd_id
                 ,nbh_cluster_names
                 ,roadway_blockkey
+                ,intersectionid
+                ,intersection_type
+                ,distance_to_nearest_intersection
                 ,ST_Y(geography::geometry) as master_latitude
                 ,ST_X(geography::geometry) as master_longitude
                 ,incident_id as unique_row_id
@@ -203,6 +212,9 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,intersectionid
+            ,intersection_type
+            ,distance_to_nearest_intersection
             ,ST_Y(geography) as master_latitude
             ,ST_X(geography) as master_longitude
             ,crimeid as unique_row_id
@@ -245,6 +257,9 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,intersectionid
+            ,intersection_type
+            ,distance_to_nearest_intersection
             ,ST_Y(geography) as master_latitude
             ,ST_X(geography) as master_longitude
             ,crimeid as unique_row_id
@@ -285,6 +300,9 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,intersectionid
+            ,intersection_type
+            ,distance_to_nearest_intersection
             ,ST_Y(geography) as master_latitude
             ,ST_X(geography) as master_longitude
             ,crimeid as unique_row_id
