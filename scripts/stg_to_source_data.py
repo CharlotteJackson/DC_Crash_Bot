@@ -23,10 +23,41 @@ def stg_to_source_data (source_table:str, target_table:str, engine, mode:str, **
         GRANT ALL PRIVILEGES ON {target_schema}.{target_table} TO PUBLIC;
         """.format(target_schema=target_schema, target_table=target_table, source_schema=source_schema, source_table=source_table)
     elif mode.lower()=='append':
+        # get the list of column names from the target table
+        get_target_columns_query = """
+        SELECT DISTINCT column_name, ordinal_position
+        FROM information_schema.columns 
+        WHERE table_schema = '{target_schema}'
+        AND table_name = '{target_table}'
+        ORDER BY ordinal_position
+        """.format(target_schema=target_schema, target_table=target_table)
+
+        target_columns = [r.lower() for (r,p) in engine.execute(get_target_columns_query).fetchall()]
+        
+        # then get the list of column names from the source table 
+        get_source_columns_query = """
+        SELECT DISTINCT column_name, ordinal_position
+        FROM information_schema.columns 
+        WHERE table_schema = '{source_schema}'
+        AND table_name = '{source_table}'
+        ORDER BY ordinal_position
+        """.format(source_schema=source_schema, source_table=source_table)
+
+        source_columns = [r.lower() for (r,p) in engine.execute(get_source_columns_query).fetchall()]
+
+        # then get the intersection of those columns and turn it into a string
+        overlapping_columns = list(sorted(set(source_columns) & set(target_columns), key=target_columns.index))
+        overlapping_columns_string = overlapping_columns[0]
+        for column in overlapping_columns[1:]:
+            overlapping_columns_string+=' ,'
+            overlapping_columns_string+=column
+        print(overlapping_columns_string)
+
+        # then select only those columns into the target table
         final_query="""
         INSERT INTO {target_schema}.{target_table}
-            SELECT * FROM {source_schema}."{source_table}";
-        """.format(target_schema=target_schema, target_table=target_table, source_schema=source_schema, source_table=source_table)
+            SELECT {overlapping_columns_string} FROM {source_schema}."{source_table}";
+        """.format(target_schema=target_schema, target_table=target_table, source_schema=source_schema, source_table=source_table, overlapping_columns_string = overlapping_columns_string)
     elif mode.lower()=='replace':
         final_query="""
         DELETE FROM {target_schema}.{target_table} WHERE source_file IN (SELECT DISTINCT source_file FROM {source_schema}."{source_table}");
