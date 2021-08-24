@@ -1,14 +1,14 @@
 #!/bin/bash
 # source my_venv/bin/activate
 # python3 get_all_dc_open_data.py --dataset moving_violations --urls all --formats csv
-# python3 csv_to_postgis.py folders source-data/dc-open-data/moving_violations --env prod 
-# python3 stg_to_source_data.py --env prod 	"moving_violations_2010_01.csv"	 moving_violations truncate
+python3 csv_to_postgis.py folders source-data/dc-open-data/moving_violations --env prod 
+python3 stg_to_source_data.py --env prod 	"moving_violations_2010_01.csv"	 moving_violations truncate
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_02.csv"	 moving_violations append
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_03.csv"	 moving_violations append
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_04.csv"	 moving_violations append
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_05.csv"	 moving_violations append
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_06.csv"	 moving_violations append
-python3 stg_to_source_data.py --env prod 	"moving_violations_2010_07.csv"	 moving_violations append
+python3 stg_to_source_data.py --env dev 	"moving_violations_2010_07.csv"	 moving_violations append
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_08.csv"	 moving_violations append
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_09.csv"	 moving_violations append
 python3 stg_to_source_data.py --env prod 	"moving_violations_2010_10.csv"	 moving_violations append
