@@ -430,6 +430,7 @@ def add_roadway_info(engine, from_schema:str, from_table:str, target_schema:str,
             ,b.routename 
             ,b.objectid as block_objectid
             ,b.blockkey as roadway_blockkey
+            ,b.subblockkey as roadway_subblockkey
             ,case dcfunctionalclass
                 when '11.0' then 'Interstate'
                 when '12.0' then 'Other Freeway and Expressway'
@@ -439,7 +440,7 @@ def add_roadway_info(engine, from_schema:str, from_table:str, target_schema:str,
                 when '19.0' then 'Local'
                 end as dcfunctionalclass_desc
             FROM {2}.{3} a
-            LEFT JOIN source_data.roadway_blocks b on ST_DWithin(b.geography, a.geography,{5})
+            LEFT JOIN source_data.roadway_subblocks b on ST_DWithin(b.geography, a.geography,{5})
         ) ;
         DELETE FROM {0}.{1} WHERE row_num >1;
 

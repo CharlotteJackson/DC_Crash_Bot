@@ -29,6 +29,7 @@ def generate_crashes_all_sources (engine, **kwargs):
         ,smd_id
         ,nbh_cluster_names
         ,blockkey
+        ,subblockkey
         ,intersectionid
         ,intersection_type
         ,distance_to_nearest_intersection
@@ -102,6 +103,7 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,0 as Other_Sources_Report_Ped_Involved
                 ,crimeid as crash_id
                 ,NULL as incident_id
+                ,NULL::timestamptz as call_received_datetime
                 ,fromdate as accident_date
                 ,address as MPD_Reported_Address
                 ,NULL as DCFEMS_Call_Address
@@ -126,6 +128,7 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,smd_id
                 ,nbh_cluster_names
                 ,blockkey
+                ,subblockkey
                 ,intersectionid
                 ,intersection_type
                 ,distance_to_nearest_intersection
@@ -145,7 +148,8 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,Ped_Crash_Any_Source as Other_Sources_Report_Ped_Involved
                 ,NULL as crash_id
                 ,incident_id
-                ,call_received_datetime::date as accident_date
+                ,call_received_datetime
+                ,(call_received_datetime at time zone 'America/New_York')::date as accident_date
                 ,NULL as MPD_Reported_Address
                 ,fulldisplayaddress as DCFEMS_Call_Address
                 ,NULL as MPD_Reported_Bicyclists
@@ -169,6 +173,7 @@ def generate_crashes_all_sources (engine, **kwargs):
                 ,smd_id
                 ,nbh_cluster_names
                 ,roadway_blockkey
+                ,roadway_subblockkey
                 ,intersectionid
                 ,intersection_type
                 ,distance_to_nearest_intersection
@@ -188,7 +193,8 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,case when b.exclude_call_ids is not null then 0 else DCFEMS_Ped_Crash end as Other_Sources_Report_Ped_Involved
             ,crimeid
             ,incident_id
-            ,(call_received_datetime at time zone 'America/New_York')::date as accident_date
+            ,call_received_datetime
+            ,fromdate as accident_date
             ,address as MPD_Reported_Address
             ,fulldisplayaddress as DCFEMS_Call_Address
             ,total_bicyclists as MPD_Reported_Bicyclists
@@ -212,6 +218,7 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,subblockkey
             ,intersectionid
             ,intersection_type
             ,distance_to_nearest_intersection
@@ -233,7 +240,8 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,DCFEMS_Ped_Crash as Other_Sources_Report_Ped_Involved
             ,crimeid
             ,incident_id
-            ,call_received_datetime::date as accident_date
+            ,call_received_datetime
+            ,fromdate as accident_date
             ,address as MPD_Reported_Address
             ,fulldisplayaddress as DCFEMS_Call_Address
             ,total_bicyclists as MPD_Reported_Bicyclists
@@ -257,6 +265,7 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,subblockkey
             ,intersectionid
             ,intersection_type
             ,distance_to_nearest_intersection
@@ -276,7 +285,8 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,DCFEMS_Ped_Crash as Other_Sources_Report_Ped_Involved
             ,crimeid
             ,incident_id
-            ,call_received_datetime::date as accident_date
+            ,call_received_datetime
+            ,fromdate as accident_date
             ,address as MPD_Reported_Address
             ,fulldisplayaddress as DCFEMS_Call_Address
             ,total_bicyclists as MPD_Reported_Bicyclists
@@ -300,6 +310,7 @@ def generate_crashes_all_sources (engine, **kwargs):
             ,smd_id
             ,nbh_cluster_names
             ,blockkey
+            ,subblockkey
             ,intersectionid
             ,intersection_type
             ,distance_to_nearest_intersection

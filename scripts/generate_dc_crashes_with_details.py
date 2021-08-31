@@ -273,30 +273,43 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
     CREATE INDEX crashes_geom_idx ON tmp.crashes_join USING GIST (geography);
     """
 
-    # join in the pulsepoint info
-    pulsepoint_join_query="""
+    # join in the roadway subblock info
+    roadway_join_query = """
+    DROP TABLE IF EXISTS tmp.crashes_roadway_join;
+    CREATE TABLE tmp.crashes_roadway_join
+    AS (
+        SELECT DISTINCT a.*
+         ,b.aadt
+            ,b.totaltravellanes
+            ,b.totalcrosssectionwidth
+            ,b.totalparkinglanes
+            ,b.doubleyellow_line
+            ,b.summarydirection
+            ,case 
+                when b.sidewalk_ib_pavtype is not null and b.sidewalk_ob_pavtype is not null then 2
+                when b.sidewalk_ib_pavtype is not null or b.sidewalk_ob_pavtype is not null then 1
+                else 0 end as Num_Sides_W_Sidewalks
+            ,coalesce(b.sidewalk_ib_width, b.sidewalk_ob_width) as sidewalk_width
+            ,coalesce(b.speedlimits_ib, b.speedlimits_ob) as speed_limit
+            ,b.dcfunctionalclass
+            ,b.nhstype
+            ,b.routename 
+            ,b.streetname
+            ,b.streettype
+            ,case dcfunctionalclass
+                when '11.0' then 'Interstate'
+                when '12.0' then 'Other Freeway and Expressway'
+                when '14.0' then 'Principal Arterial'
+                when '16.0' then 'Minor Arterial'
+                when '17.0' then 'Collector'
+                when '19.0' then 'Local'
+                end as dcfunctionalclass_desc
+            FROM tmp.crashes_join a
+            LEFT JOIN source_data.roadway_subblocks b ON a.subblockkey = b.subblockkey
+            ) ;
 
-    DROP TABLE IF EXISTS tmp.crash_pulsepoint_join;
-    CREATE TABLE tmp.crash_pulsepoint_join 
-    AS (SELECT * 
-    FROM (
-        SELECT DISTINCT a.* 
-        ,b.Agency_Incident_ID as pp_agency_incident_id
-        ,b.unit_status_transport as pp_total_injuries
-        ,b.transport_unit_is_amr as pp_total_minor_injuries
-        ,b.transport_unit_is_non_amr as pp_total_major_injuries
-            ,Row_Number() over (partition by a.objectid order by ST_Distance(a.geography, b.geography)) as PP_Call_Distance_Rank
-            ,Row_Number() over (partition by a.objectid order by (a.reportdate at time zone 'America/New_York')  - (b.CALL_RECEIVED_DATETIME at time zone 'America/New_York')) as PP_Call_Time_Rank
-        FROM tmp.crashes_join a
-        LEFT JOIN analysis_data.pulsepoint b on ST_DWITHIN(a.geography, b.geography, 200) 
-            AND cast(fromdate as date) =cast((call_received_datetime at time zone 'America/New_York') as date)
-            AND (b.CALL_RECEIVED_DATETIME at time zone 'America/New_York')  < (a.reportdate at time zone 'America/New_York') 
-    ) tmp WHERE PP_Call_Distance_Rank = 1
-    ) ;
-
-    CREATE INDEX IF NOT EXISTS crash_pulsepoint_join_geom_idx ON tmp.crash_pulsepoint_join USING GIST (geography);
-
-    alter table tmp.crash_pulsepoint_join drop column PP_Call_Distance_Rank;
+    CREATE INDEX IF NOT EXISTS crash_roadway_join_geom_idx ON tmp.crashes_roadway_join USING GIST (geography);
+    GRANT ALL PRIVILEGES ON tmp.crashes_roadway_join TO PUBLIC;
     """
 
     # First execute the table-specific queries
@@ -310,18 +323,18 @@ def generate_crashes_table (AWS_Credentials:dict, **kwargs):
     print("group by query complete")
     engine.execute(join_query)
     print("join query complete")
-    # engine.execute(pulsepoint_join_query)
-    # print("pulsepoint join query complete")
+    engine.execute(roadway_join_query)
+    print("roadway join query complete")
 
     # Then execute the same location-info queries (roadway, schools, neighborhoods) that apply to all analysis tables and create the final table
-    next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crashes_join', partition_by_field='objectid')
+    next_tables = add_location_info(engine=engine, target_schema='tmp', target_table='crashes_nbh_ward', from_schema='tmp', from_table='crashes_roadway_join', partition_by_field='objectid')
     print("neighborhood-ward query complete")
     next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='crashes_schools', from_schema=next_tables[0], from_table=next_tables[1])
     print("schools query complete")
     next_tables = add_walkscore_info(engine=engine, target_schema='tmp', target_table='crashes_walkscore', from_schema=next_tables[0], from_table=next_tables[1])
     print("walkscore query complete")
-    next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='crashes_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 0.001)
-    print("roadway info query complete")
+    # next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='crashes_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 0.001)
+    # print("roadway info query complete")
     next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='crashes_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 30)
     print("intersection info query complete")
     row_count = create_final_table(engine=engine, target_schema = 'analysis_data', target_table='dc_crashes_w_details', from_schema=next_tables[0], from_table=next_tables[1])

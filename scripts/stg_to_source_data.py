@@ -55,7 +55,7 @@ def stg_to_source_data (source_table:str, target_table:str, engine, mode:str, **
 
         # then select only those columns into the target table
         final_query="""
-        INSERT INTO {target_schema}.{target_table}
+        INSERT INTO {target_schema}.{target_table} ({overlapping_columns_string})
             SELECT {overlapping_columns_string} FROM {source_schema}."{source_table}";
         """.format(target_schema=target_schema, target_table=target_table, source_schema=source_schema, source_table=source_table, overlapping_columns_string = overlapping_columns_string)
     elif mode.lower()=='replace':
