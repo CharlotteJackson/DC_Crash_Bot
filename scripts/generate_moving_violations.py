@@ -13,7 +13,8 @@ def generate_moving_violations_table (engine, **kwargs):
         ,location
         ,xcoord::numeric
         ,ycoord::numeric
-        ,((issue_date::TIMESTAMP::DATE + issue_time::TIME at time zone 'America/New_York')::TIMESTAMPTZ) AS issue_datetime
+
+        ,issue_date::TIMESTAMP::DATE as issue_date
         ,issue_time
         ,issuing_agency_code
         ,issuing_agency_name
@@ -40,7 +41,10 @@ def generate_moving_violations_table (engine, **kwargs):
         ,dob_year::numeric
         ,veh_year::numeric
         ,veh_make
-        ,ST_Force2D(ST_GeomFromText(geometry, 4326))::geography AS geography
+        ,geometry as geography_raw
+        ,case when geometry is not null then ST_Force2D(ST_GeomFromText(geometry, 4326))::geography 
+            when geometry is null and latitude is not null then ST_SetSRID(ST_MakePoint(longitude::numeric, latitude::numeric),4326)::geography 
+            else null end AS geography
         FROM source_data.moving_violations
     );
     """
@@ -65,7 +69,7 @@ def generate_moving_violations_table (engine, **kwargs):
     print("temp table created")
 
     #Geocode the locations where needed
-    records = [loc for (loc,) in engine.execute("select distinct location from tmp.moving_violations_need_geo where geography is null limit 10000").fetchall()]
+    records = [loc for (loc,) in engine.execute("select distinct location from tmp.moving_violations_need_geo where geography is null limit 100").fetchall()]
     print(len(records)," records passed to geocode function")
     geocode_text(engine=engine, records_to_geocode = records, administrative_area='District of Columbia', text_type = 'Moving Violations location')
 
@@ -90,7 +94,7 @@ def generate_moving_violations_table (engine, **kwargs):
     print("neighborhood-ward query complete")
     next_tables = add_school_info(engine=engine, target_schema='tmp', target_table='moving_violations_schools', from_schema=next_tables[0], from_table=next_tables[1])
     print("schools query complete")
-    next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='moving_violations_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 50)
+    next_tables = add_roadway_info(engine=engine, target_schema='tmp', target_table='moving_violations_roadway_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 70)
     print("roadway info query complete")
     next_tables = add_intersection_info(engine=engine, target_schema='tmp', target_table='moving_violations_intersection_info', from_schema=next_tables[0], from_table=next_tables[1], partition_by_field='objectid', within_distance= 20)
     print("intersection info query complete")
