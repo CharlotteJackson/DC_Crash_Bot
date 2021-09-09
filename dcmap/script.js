@@ -1,8 +1,9 @@
-
 class DCMap {
   constructor() {
     this.map = this.initializeMap('map');
     this.addStreetData(this.map);
+    this.streetLayer;
+    this.highlightedStreet;
   }
 
   /**
@@ -22,7 +23,35 @@ class DCMap {
    * @param {L.Map} map - Leaflet map
    */
   addStreetData(map) {
-    // TODO: Use axios to load this geojson street layer: https://opendata.arcgis.com/datasets/e8299c86b4014f109fedd7e95ae20d52_61.geojson
+    // TODO: filter out roads that do not have names: https://stackoverflow.com/questions/37023790/leaflet-create-layers-from-geojson-properties
+    // TODO: See if we can find a better roads layer eventually
+    axios.get('/dcmap/street_centerlines_2013_small.geojson')
+      .then((response) => {
+        console.log("streets GeoJSON:", response);
+
+        this.streetLayer = L.geoJSON(response.data, {
+          onEachFeature: (feature, layer) => {
+            layer.on({
+              click: () => {
+                /* On Road Click */
+                // TODO: Highlight the road that was clicked
+                console.log("Layer clicked!", layer)
+                // this.highlightedStreet = 'the layer above'
+                // this.map.removeLayer(this.streetLayer)
+              }
+            });
+          }
+        });
+
+        this.streetLayer.bindPopup((layer) => {
+          return `Street Name: ${layer.feature.properties.ST_NAME}`
+        })
+        map.addLayer(this.streetLayer);
+      })
+      .catch((error) => {
+        console.error("Error in axios promise:")
+        console.error(error);
+      })
   }
 
   /**
