@@ -44,8 +44,10 @@ class DCMap {
                 // this.map.removeLayer(this.streetLayer)
               },
               mouseover: () => {
+                // Highlights road on mouse hover
                 this.highlightStreetOnHover(layer);
               },
+              // Removes highlight when no longer hover
               mouseout: () => this.resetHighlight(layer),
             });
           },
