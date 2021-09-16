@@ -16,7 +16,7 @@ class DCMap {
   initializeMap(htmlId) {
     /* Use Leaflet to initialize a new map on the provided html div */
     /* Jacob: switched zoom to 15 for testing highlight effect*/
-    const map = L.map(htmlId).setView([38.9, -77.05], 15);
+    const map = L.map(htmlId).setView([38.9, -77.05], 11);
     this.addBaseMap(map);
     return map;
   }
