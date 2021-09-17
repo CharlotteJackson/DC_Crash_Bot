@@ -1,9 +1,11 @@
 class DCMap {
   constructor() {
-    this.map = this.initializeMap('map');
+    this.map = this.initializeMap("map");
     this.addStreetData(this.map);
     this.streetLayer;
     this.highlightedStreet;
+    this.highlightStreetOnHover;
+    this.resetHighlight;
   }
 
   /**
@@ -13,7 +15,8 @@ class DCMap {
    */
   initializeMap(htmlId) {
     /* Use Leaflet to initialize a new map on the provided html div */
-    const map = L.map(htmlId).setView([38.9, -77.05], 11);
+    /* Jacob: switched zoom to 15 for testing highlight effect*/
+    const map = L.map(htmlId).setView([38.9, -77.05], 15);
     this.addBaseMap(map);
     return map;
   }
@@ -25,7 +28,8 @@ class DCMap {
   addStreetData(map) {
     // TODO: filter out roads that do not have names: https://stackoverflow.com/questions/37023790/leaflet-create-layers-from-geojson-properties
     // TODO: See if we can find a better roads layer eventually
-    axios.get('/dcmap/street_centerlines_2013_small.geojson')
+    axios
+      .get("/dcmap/street_centerlines_2013_small.geojson")
       .then((response) => {
         console.log("streets GeoJSON:", response);
 
@@ -35,23 +39,29 @@ class DCMap {
               click: () => {
                 /* On Road Click */
                 // TODO: Highlight the road that was clicked
-                console.log("Layer clicked!", layer)
+                console.log("Layer clicked!", layer);
                 // this.highlightedStreet = 'the layer above'
                 // this.map.removeLayer(this.streetLayer)
-              }
+              },
+              mouseover: () => {
+                // Highlights road on mouse hover
+                this.highlightStreetOnHover(layer);
+              },
+              // Removes highlight when no longer hover
+              mouseout: () => this.resetHighlight(layer),
             });
-          }
+          },
         });
 
         this.streetLayer.bindPopup((layer) => {
-          return `Street Name: ${layer.feature.properties.ST_NAME}`
-        })
+          return `Street Name: ${layer.feature.properties.ST_NAME}`;
+        });
         map.addLayer(this.streetLayer);
       })
       .catch((error) => {
-        console.error("Error in axios promise:")
+        console.error("Error in axios promise:");
         console.error(error);
-      })
+      });
   }
 
   /**
@@ -60,13 +70,34 @@ class DCMap {
    * @param {L.Map} map - Leaflet map
    */
   addBaseMap(map) {
-    const Esri_WorldGrayCanvas = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-      maxZoom: 16
-    });
+    const Esri_WorldGrayCanvas = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+        maxZoom: 16,
+      }
+    );
     Esri_WorldGrayCanvas.addTo(map);
   }
 
+  highlightStreetOnHover(layer) {
+    layer.setStyle({
+      stroke: true,
+      weight: 8,
+      dasharray: "",
+      opacity: 0.7,
+      color: "#ff5733",
+    });
+  }
+
+  resetHighlight(layer) {
+    layer.setStyle({
+      weight: 5,
+      color: "#3388ff",
+      dashArray: "",
+      fillOpacity: 1,
+    });
+  }
 }
 
 new DCMap();
