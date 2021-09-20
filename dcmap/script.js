@@ -18,7 +18,7 @@ class DCMap {
    */
   initializeMap(htmlId) {
     /* Use Leaflet to initialize a new map on the provided html div */
-    const map = L.map(htmlId).setView([38.9, -77.05], 15);
+    const map = L.map(htmlId).setView([38.9, -77.05], 11);
     this.addBaseMap(map);
     return map;
   }
@@ -33,6 +33,7 @@ class DCMap {
       .get("/dcmap/street_centerlines_2013_small.geojson")
       .then((response) => {
         this.streetLayer = L.geoJSON(response.data, {
+          // returns true only for streets that have names
           filter: this.onlyStreetsWithNamesFilter,
           onEachFeature: (feature, layer) => {
             layer.on({
