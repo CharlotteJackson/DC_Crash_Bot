@@ -6,6 +6,8 @@ class DCMap {
     this.highlightedStreet;
     this.highlightStreetOnHover;
     this.resetHighlight;
+    // Variable will store highlighted layer
+    this.highlightedLayer = "";
   }
 
   /**
@@ -37,7 +39,7 @@ class DCMap {
           onEachFeature: (feature, layer) => {
             layer.on({
               click: () => {
-                this.highlightStreetOnClick(layer)
+                this.highlightStreetOnClick(layer);
               },
               mouseover: () => {
                 // Highlights road on mouse hover
@@ -84,27 +86,41 @@ class DCMap {
       opacity: 0.7,
       color: "#f3e726",
     });
+    if (this.highlightedLayer) {
+      this.highlightedLayer.setStyle({
+        weight: 5,
+        color: "#3388ff",
+        dashArray: "",
+        fillOpacity: 1,
+      });
+      this.highlightedLayer = layer;
+    } else {
+      this.highlightedLayer = layer;
+    }
+    console.log(this.highlightedLayer);
   }
 
   highlightStreetOnHover(layer) {
-    layer.setStyle({
-      stroke: true,
-      weight: 8,
-      dasharray: "",
-      opacity: 0.7,
-      color: "#ff5733",
-    });
+    layer.options.color == "#3388ff" &&
+      layer.setStyle({
+        stroke: true,
+        weight: 8,
+        dasharray: "",
+        opacity: 0.7,
+        color: "#ff5733",
+      });
   }
 
   resetHighlight(layer) {
-    console.log(L.Path.setStyle({color: "#ffffff"}))
-    layer.options.color == "#ff5733" && layer.setStyle({
-      weight: 5,
-      color: "#3388ff",
-      dashArray: "",
-      fillOpacity: 1,
-    })
+    layer.options.color == "#ff5733" &&
+      layer.setStyle({
+        weight: 5,
+        color: "#3388ff",
+        dashArray: "",
+        fillOpacity: 1,
+      });
   }
 }
+// Builds a function that updates a variable storing the layer details
 
 new DCMap();
