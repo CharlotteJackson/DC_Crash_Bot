@@ -33,7 +33,6 @@ class DCMap {
     axios
       .get("/dcmap/street_centerlines_2013_small.geojson")
       .then((response) => {
-        console.log("streets GeoJSON:", response);
 
         this.streetLayer = L.geoJSON(response.data, {
           onEachFeature: (feature, layer) => {
@@ -86,6 +85,7 @@ class DCMap {
       opacity: 0.7,
       color: "#f3e726",
     });
+
     if (this.highlightedLayer) {
       this.highlightedLayer.setStyle({
         weight: 5,
@@ -97,7 +97,6 @@ class DCMap {
     } else {
       this.highlightedLayer = layer;
     }
-    console.log(this.highlightedLayer);
   }
 
   highlightStreetOnHover(layer) {
