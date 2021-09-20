@@ -6,8 +6,9 @@ class DCMap {
     this.highlightedStreet;
     this.highlightStreetOnHover;
     this.resetHighlight;
-    // Variable will store highlighted layer
+    // stores highlighted layer
     this.highlightedLayer = "";
+    this.onlyStreetsWithNamesFilter;
   }
 
   /**
@@ -17,8 +18,7 @@ class DCMap {
    */
   initializeMap(htmlId) {
     /* Use Leaflet to initialize a new map on the provided html div */
-    /* Jacob: switched zoom to 15 for testing highlight effect*/
-    const map = L.map(htmlId).setView([38.9, -77.05], 16);
+    const map = L.map(htmlId).setView([38.9, -77.05], 15);
     this.addBaseMap(map);
     return map;
   }
@@ -28,13 +28,12 @@ class DCMap {
    * @param {L.Map} map - Leaflet map
    */
   addStreetData(map) {
-    // TODO: filter out roads that do not have names: https://stackoverflow.com/questions/37023790/leaflet-create-layers-from-geojson-properties
     // TODO: See if we can find a better roads layer eventually
     axios
       .get("/dcmap/street_centerlines_2013_small.geojson")
       .then((response) => {
-
         this.streetLayer = L.geoJSON(response.data, {
+          filter: this.onlyStreetsWithNamesFilter,
           onEachFeature: (feature, layer) => {
             layer.on({
               click: () => {
@@ -77,6 +76,10 @@ class DCMap {
     Esri_WorldGrayCanvas.addTo(map);
   }
 
+  onlyStreetsWithNamesFilter(feature) {
+    if (!!feature.properties.ST_NAME) return true;
+  }
+
   highlightStreetOnClick(layer) {
     layer.setStyle({
       stroke: true,
@@ -85,7 +88,9 @@ class DCMap {
       opacity: 0.7,
       color: "#f3e726",
     });
-
+    /**
+     * Stores clicked street layer to later be reset to normal color after another street is clicked
+     * **/
     if (this.highlightedLayer) {
       this.highlightedLayer.setStyle({
         weight: 5,
@@ -100,6 +105,7 @@ class DCMap {
   }
 
   highlightStreetOnHover(layer) {
+    // If street layer is normal color, highlight street
     layer.options.color == "#3388ff" &&
       layer.setStyle({
         stroke: true,
@@ -111,6 +117,7 @@ class DCMap {
   }
 
   resetHighlight(layer) {
+    // if street layer is highlighted, return layer to normal color
     layer.options.color == "#ff5733" &&
       layer.setStyle({
         weight: 5,
@@ -120,6 +127,5 @@ class DCMap {
       });
   }
 }
-// Builds a function that updates a variable storing the layer details
 
 new DCMap();
