@@ -16,7 +16,7 @@ class DCMap {
   initializeMap(htmlId) {
     /* Use Leaflet to initialize a new map on the provided html div */
     /* Jacob: switched zoom to 15 for testing highlight effect*/
-    const map = L.map(htmlId).setView([38.9, -77.05], 11);
+    const map = L.map(htmlId).setView([38.9, -77.05], 16);
     this.addBaseMap(map);
     return map;
   }
@@ -37,11 +37,7 @@ class DCMap {
           onEachFeature: (feature, layer) => {
             layer.on({
               click: () => {
-                /* On Road Click */
-                // TODO: Highlight the road that was clicked
-                console.log("Layer clicked!", layer);
-                // this.highlightedStreet = 'the layer above'
-                // this.map.removeLayer(this.streetLayer)
+                this.highlightStreetOnClick(layer)
               },
               mouseover: () => {
                 // Highlights road on mouse hover
@@ -80,6 +76,16 @@ class DCMap {
     Esri_WorldGrayCanvas.addTo(map);
   }
 
+  highlightStreetOnClick(layer) {
+    layer.setStyle({
+      stroke: true,
+      weight: 6,
+      dasharray: "",
+      opacity: 0.7,
+      color: "#f3e726",
+    });
+  }
+
   highlightStreetOnHover(layer) {
     layer.setStyle({
       stroke: true,
@@ -91,12 +97,13 @@ class DCMap {
   }
 
   resetHighlight(layer) {
-    layer.setStyle({
+    console.log(L.Path.setStyle({color: "#ffffff"}))
+    layer.options.color == "#ff5733" && layer.setStyle({
       weight: 5,
       color: "#3388ff",
       dashArray: "",
       fillOpacity: 1,
-    });
+    })
   }
 }
 
