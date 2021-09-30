@@ -9,6 +9,7 @@ class DCMap {
     // stores highlighted layer
     this.highlightedLayer = "";
     this.onlyStreetsWithNamesFilter;
+    this.streetLookup = new Map()
   }
 
   /**
@@ -18,7 +19,7 @@ class DCMap {
    */
   initializeMap(htmlId) {
     /* Use Leaflet to initialize a new map on the provided html div */
-    const map = L.map(htmlId).setView([38.9, -77.05], 11);
+    const map = L.map(htmlId).setView([38.9, -77.05], 15);
     this.addBaseMap(map);
     return map;
   }
@@ -32,28 +33,51 @@ class DCMap {
     axios
       .get("/dcmap/street_centerlines_2013_small.geojson")
       .then((response) => {
-        this.streetLayer = L.geoJSON(response.data, {
-          // returns true only for streets that have names
-          filter: this.onlyStreetsWithNamesFilter,
-          onEachFeature: (feature, layer) => {
-            layer.on({
-              click: () => {
-                this.highlightStreetOnClick(layer);
-              },
-              mouseover: () => {
-                // Highlights road on mouse hover
-                this.highlightStreetOnHover(layer);
-              },
-              // Removes highlight when no longer hover
-              mouseout: () => this.resetHighlight(layer),
-            });
-          },
-        });
+        let tempStreets = L.geoJSON(response.data, {filter: this.onlyStreetsWithNamesFilter})
 
-        this.streetLayer.bindPopup((layer) => {
-          return `Street Name: ${layer.feature.properties.ST_NAME}`;
-        });
-        map.addLayer(this.streetLayer);
+        tempStreets.eachLayer((layer) => {
+          // Checks streetLookup for presence of STCODE key
+          if (!this.streetLookup.has(layer.feature.properties.STCODE)){
+            this.streetLookup.set(layer.feature.properties.STCODE, L.featureGroup([]))
+          }
+          this.streetLookup.get(layer.feature.properties.STCODE).addLayer(layer)
+        })
+
+        this.streetLookup.forEach((street) => {
+          street.on("click", (event) => {
+            console.log(event.layer)
+            this.highlightStreetOnClick(this.streetLookup.get(event.layer.feature.properties.STCODE))
+
+          })
+          street.bindPopup((layer) => {
+            return `Street Name: ${layer.feature.properties.ST_NAME}`;
+          });
+          this.map.addLayer(street)
+        })
+
+        // this.streetLayer = L.geoJSON(response.data, {
+
+        //   // returns true only for streets that have names
+        //   filter: this.onlyStreetsWithNamesFilter,
+        //   onEachFeature: (feature, layer) => {
+        //     layer.on({
+        //       click: () => {
+        //         this.highlightStreetOnClick(layer);
+        //       },
+        //       mouseover: () => {
+        //         // Highlights road on mouse hover
+        //         this.highlightStreetOnHover(layer);
+        //       },
+        //       // Removes highlight when no longer hover
+        //       mouseout: () => this.resetHighlight(layer),
+        //     });
+        //   },
+        // });
+
+        // this.streetLayer.bindPopup((layer) => {
+        //   return `Street Name: ${layer.feature.properties.ST_NAME}`;
+        // });
+        // map.addLayer(this.streetLayer);
       })
       .catch((error) => {
         console.error("Error in axios promise:");
