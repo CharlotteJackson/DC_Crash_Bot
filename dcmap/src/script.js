@@ -2,13 +2,7 @@ class DCMap {
   constructor() {
     this.map = this.initializeMap("map");
     this.addStreetData(this.map);
-    this.streetLayer;
-    this.highlightedStreet;
-    this.highlightStreetOnHover;
-    this.resetHighlight;
-    // stores highlighted layer
     this.highlightedLayer = "";
-    this.onlyStreetsWithNamesFilter;
     this.streetLookup = new Map();
   }
 
