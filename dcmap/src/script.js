@@ -17,6 +17,7 @@ class DCMap {
    * @param {string} htmlId - HTML div ID to attach the map to
    * @returns L.Map (Leaflet Map)
    */
+
   initializeMap(htmlId) {
     /* Use Leaflet to initialize a new map on the provided html div */
     const map = L.map(htmlId).setView([38.9, -77.05], 15);
@@ -33,23 +34,27 @@ class DCMap {
     axios
       .get("/dcmap/street_centerlines_2013_small.geojson")
       .then((response) => {
+
         let tempStreets = L.geoJSON(response.data, {
           filter: this.onlyStreetsWithNamesFilter,
         });
 
         /*
-          Populate streetLookup with collections of street segments by STCODE
+          Populate streetLookup with collections of street segments organized by STCODE
         */
         tempStreets.eachLayer((layer) => {
+          // Get street code from layer
+          const streetCode = layer.feature.properties.STCODE
           // Checks streetLookup for presence of STCODE key
-          if (!this.streetLookup.has(layer.feature.properties.STCODE)) {
+          if (!this.streetLookup.has(streetCode)) {
             this.streetLookup.set(
-              layer.feature.properties.STCODE,
+              streetCode,
               L.featureGroup([])
             );
           }
+          // Sets the value at key (STCODE) to the current layer
           this.streetLookup
-            .get(layer.feature.properties.STCODE)
+            .get(streetCode)
             .addLayer(layer);
         });
 
