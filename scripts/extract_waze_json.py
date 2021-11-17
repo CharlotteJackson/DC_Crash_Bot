@@ -11,8 +11,8 @@ def extract_waze_users_json (target_schema:str, source_table:str, target_table:s
 
     # extract the json info
     users_query ="""
-    DROP TABLE IF EXISTS tmp.waze_users;
-    CREATE TABLE tmp.waze_users 
+    DROP TABLE IF EXISTS tmp.waze_users_stream;
+    CREATE TABLE tmp.waze_users_stream
     AS ( 
         
 		WITH results AS 
@@ -46,10 +46,10 @@ def extract_waze_users_json (target_schema:str, source_table:str, target_table:s
     """.format(source_schema=source_schema, source_table=source_table)
 
     users_final_query="""
-    CREATE TABLE IF NOT EXISTS {0}.{1} (LIKE tmp.waze_users);
+    CREATE TABLE IF NOT EXISTS {0}.{1} (LIKE tmp.waze_users_stream);
 
     INSERT INTO {0}.{1} 
-        SELECT * FROM tmp.waze_users;
+        SELECT * FROM tmp.waze_users_stream;
 
     GRANT ALL PRIVILEGES ON {0}.{1} TO PUBLIC;
     """.format(target_schema, target_table)
