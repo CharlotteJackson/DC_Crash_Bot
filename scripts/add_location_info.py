@@ -440,7 +440,7 @@ def add_roadway_info(engine, from_schema:str, from_table:str, target_schema:str,
                 when '19.0' then 'Local'
                 end as dcfunctionalclass_desc
             FROM {2}.{3} a
-            LEFT JOIN source_data.roadway_subblocks b on ST_DWithin(b.geography, a.geography,{5})
+            LEFT JOIN (select * from source_data.roadway_subblocks where roadtype = '1') b on ST_DWithin(b.geography, a.geography,{5})
         ) ;
         DELETE FROM {0}.{1} WHERE row_num >1;
 
