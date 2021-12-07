@@ -127,7 +127,7 @@ def refresh_test_db(env:str):
         COMMIT;
     """.format(prod_db_name=prod_db_name, prod_db_host=prod_db_host)
 
-    engine.execute(create_fdw_query)
+    # engine.execute(create_fdw_query)
 
     #  create user mappings
     for user_pwd in db_users:
@@ -140,7 +140,7 @@ def refresh_test_db(env:str):
             OPTIONS (user '{user}', password '{pwd}');
         """.format(user=user, pwd=pwd)
 
-        engine.execute(map_user_query)
+        # engine.execute(map_user_query)
 
     # pull the schemas off the viz copy of the prod database
     get_schemas_query = """
@@ -163,7 +163,7 @@ def refresh_test_db(env:str):
             INTO {destination_schema};
         """.format(source_schema=source_schema, destination_schema=destination_schema)
 
-        engine.execute(create_schema_query)
+        # engine.execute(create_schema_query)
 
     # pull all the tables from prod db
     get_schemas_tables_query = """
@@ -189,7 +189,10 @@ def refresh_test_db(env:str):
         """.format(schema=schema, table=table)
 
         print(create_populate_tables_query)
-        engine.execute(create_populate_tables_query)
+        # try:
+        #     engine.execute(create_populate_tables_query)
+        # except:
+        #     continue
 
     # create all the indexes
     get_indexes_tables_query = """
@@ -203,8 +206,12 @@ def refresh_test_db(env:str):
     #  create and populate tables
     for indexdef in indexes:
         print(indexdef)
-        engine.execute(indexdef)
+        try:
+            engine.execute(indexdef)
+        except:
+            continue
 
 if __name__ == "__main__":
-    create_test_db(env='DEV', test_db_name='postgres_dev')
-    refresh_test_db(env='DEV')
+    # create_test_db(env='DDS_OLD_DATA', test_db_name='dc_crash_bot')
+    refresh_test_db(env='DDS_OLD_DATA')
+

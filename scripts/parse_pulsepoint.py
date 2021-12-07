@@ -130,7 +130,7 @@ def parse_pulsepoint(file_name:str, api_response:dict):
                     try:
                         col_names['Unit_Status_Transport'].append(unit_status_is_transport(record['Unit']))
                     except KeyError:
-                        print("transport status key error for record ",record['ID'])
+                        # print("transport status key error for record ",record['ID'])
                         col_names['Unit_Status_Transport'].append(0)
                     try:
                         col_names['Transport_Unit_Is_AMR'].append(transport_unit_is_amr(record['Unit']))
