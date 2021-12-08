@@ -5,6 +5,8 @@ import os
 from connect_to_rds import get_connection_strings
 import datetime
 from datetime import timezone
+import pandas as pd
+from tqdm import tqdm
 
 # set up S3 connection
 AWS_Credentials = get_connection_strings("AWS_DEV")
@@ -16,6 +18,10 @@ region= AWS_Credentials['region']
 prefix = 'source-data/pulsepoint/unparsed/'
 metadata = {'target_schema':'tmp', "dataset_info":"https://docs.google.com/document/pub?id=1qMdahl1E9eE4Rox52bmTA2BliR1ve1rjTYAbhtMeinI#id.q4mai5x52vi6"}
 dataset = 'pulsepoint'
+
+# open csv of agency IDs
+df = pd.read_csv('existing_agency_ids.csv')
+agencies_list = df['Agency_ID'].tolist()
 
 def main(agency:str):
 
@@ -32,7 +38,8 @@ def main(agency:str):
     record_status_types = [i for i in data['incidents'].keys() if i != 'alerts']
 
     for status in record_status_types:
-        data['incidents'][status] = [i for i in data['incidents'][status]]
+        if data['incidents'][status] is not None:
+            data['incidents'][status] = [i for i in data['incidents'][status]]
 
     # create file key variable
     s3_key = prefix+dataset+current_time+agency+'.json'
@@ -41,7 +48,6 @@ def main(agency:str):
     s3_resource.Bucket(bucket_name).put_object(Key=s3_key, Body=upload, Metadata =metadata)
 
 if __name__ == "__main__":
-    main('EMS1205')
-    main('05900')
-    main('16000')
+    for agency in tqdm(agencies_list):
+        main(str(agency))
 
