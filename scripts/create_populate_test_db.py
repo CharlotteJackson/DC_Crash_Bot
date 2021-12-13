@@ -5,41 +5,41 @@ import argparse
 import os
 
 
-def create_test_db(env:str,test_db_name:str):
-    # connect to the prod db 
-    engine = create_postgres_engine(destination="AWS_PostGIS", env="PROD")
+def create_new_db(target_env:str,target_db_name:str, copy_from_env:str):
+    # connect to the db that will be copied from
+    engine = create_postgres_engine(destination="AWS_PostGIS", env=copy_from_env.upper())
     db_credentials = get_connection_strings("AWS_PostGIS")
     # get prod master credentials
-    prod_db_host =db_credentials['PROD']['HOST']
-    prod_db_port = db_credentials['PROD']['PORT']
-    prod_db_name = db_credentials['PROD']['DB']
-    prod_db_uid =db_credentials['PROD']['UID']
-    prod_db_pwd = db_credentials['PROD']['PWD']
+    prod_db_host =db_credentials[copy_from_env.upper()]['HOST']
+    prod_db_port = db_credentials[copy_from_env.upper()]['PORT']
+    prod_db_name = db_credentials[copy_from_env.upper()]['DB']
+    prod_db_uid =db_credentials[copy_from_env.upper()]['UID']
+    prod_db_pwd = db_credentials[copy_from_env.upper()]['PWD']
     # get testdb credentials
-    test_db_host =db_credentials[env.upper()]['HOST']
-    test_db_port = db_credentials[env.upper()]['PORT']
-    test_db_name = db_credentials[env.upper()]['DB']
-    test_db_uid =db_credentials[env.upper()]['UID']
-    test_db_pwd = db_credentials[env.upper()]['PWD']
-    test_db_users = db_credentials[env.upper()]['USERS']
+    test_db_host =db_credentials[target_env.upper()]['HOST']
+    test_db_port = db_credentials[target_env.upper()]['PORT']
+    test_db_name = db_credentials[target_env.upper()]['DB']
+    test_db_uid =db_credentials[target_env.upper()]['UID']
+    test_db_pwd = db_credentials[target_env.upper()]['PWD']
+    test_db_users = db_credentials[target_env.upper()]['USERS']
 
     kill_db_query="""
     SELECT	pg_terminate_backend (pid)
     FROM	pg_stat_activity
     WHERE	pg_stat_activity.datname = '{0}';
-    """.format(test_db_name)
+    """.format(target_db_name)
 
     # kill
-    engine.execute(kill_db_query)
+    # engine.execute(kill_db_query)
 
     # drop
-    command = 'DROP DATABASE IF EXISTS {}'.format(test_db_name)
+    command = 'DROP DATABASE IF EXISTS {}'.format(target_db_name)
     os_system_arg='PGPASSWORD=\'{}\' psql --host={} --port={} --username={} --dbname={} --no-password --command=\"{}\"'.format(prod_db_pwd,prod_db_host, prod_db_port, prod_db_uid, prod_db_name, command)
     os.system(os_system_arg)     
 
     # create
-    command = 'CREATE DATABASE {}'.format(test_db_name)
-    os_system_arg='PGPASSWORD=\'{}\' psql --host={} --port={} --username={} --dbname={} --no-password --command=\"{}\"'.format(prod_db_pwd,prod_db_host, prod_db_port, prod_db_uid, prod_db_name, command)
+    command = 'CREATE DATABASE {}'.format(target_db_name)
+    os_system_arg='PGPASSWORD=\'{}\' psql --host={} --port={} --username={} --dbname={} --no-password --command=\"{}\"'.format(test_db_pwd,test_db_host, test_db_port, test_db_uid, 'postgres',command)
     os.system(os_system_arg)   
 
     # create users on new db
@@ -98,7 +98,7 @@ def create_test_db(env:str,test_db_name:str):
     print(schemas)
 
     # create engine on test db
-    test_engine = create_postgres_engine(destination="AWS_PostGIS", env=env.upper())
+    test_engine = create_postgres_engine(destination="AWS_PostGIS", env=target_env.upper())
 
     # create schemas
     for schema in schemas:
@@ -110,14 +110,16 @@ def create_test_db(env:str,test_db_name:str):
         test_engine.execute(create_schema_query)
 
 
-def refresh_test_db(env:str):
+def refresh_db(env:str, from_env:str):
     engine = create_postgres_engine(destination="AWS_PostGIS", env=env.upper())
     db_credentials = get_connection_strings("AWS_PostGIS")
-    db_users = db_credentials[env.upper()]['USERS']
-    prod_db_host =db_credentials['PROD']['HOST']
-    prod_db_port = db_credentials['PROD']['PORT']
-    prod_db_name = db_credentials['PROD']['DB']
-    prod_engine = create_postgres_engine(destination="AWS_PostGIS", env="PROD")
+    # db_users = db_credentials[env.upper()]['USERS']
+    prod_db_host =db_credentials[from_env.upper()]['HOST']
+    prod_db_uid =db_credentials[from_env.upper()]['UID']
+    prod_db_pwd =db_credentials[from_env.upper()]['PWD']
+    prod_db_port = db_credentials[from_env.upper()]['PORT']
+    prod_db_name = db_credentials[from_env.upper()]['DB']
+    prod_engine = create_postgres_engine(destination="AWS_PostGIS", env=from_env.upper())
 
     create_fdw_query = """
         BEGIN;
@@ -127,20 +129,16 @@ def refresh_test_db(env:str):
         COMMIT;
     """.format(prod_db_name=prod_db_name, prod_db_host=prod_db_host)
 
-    # engine.execute(create_fdw_query)
+    engine.execute(create_fdw_query)
 
     #  create user mappings
-    for user_pwd in db_users:
-        user=list(user_pwd.keys())[0]
+    map_user_query = """
+    CREATE USER MAPPING FOR PUBLIC
+        SERVER prod
+        OPTIONS (user '{user}', password '{pwd}');
+    """.format(user=prod_db_uid, pwd=prod_db_pwd)
 
-        pwd=user_pwd[user]
-        map_user_query = """
-        CREATE USER MAPPING FOR {user}
-            SERVER prod
-            OPTIONS (user '{user}', password '{pwd}');
-        """.format(user=user, pwd=pwd)
-
-        # engine.execute(map_user_query)
+    engine.execute(map_user_query)
 
     # pull the schemas off the viz copy of the prod database
     get_schemas_query = """
@@ -163,7 +161,7 @@ def refresh_test_db(env:str):
             INTO {destination_schema};
         """.format(source_schema=source_schema, destination_schema=destination_schema)
 
-        # engine.execute(create_schema_query)
+        engine.execute(create_schema_query)
 
     # pull all the tables from prod db
     get_schemas_tables_query = """
@@ -189,10 +187,7 @@ def refresh_test_db(env:str):
         """.format(schema=schema, table=table)
 
         print(create_populate_tables_query)
-        # try:
-        #     engine.execute(create_populate_tables_query)
-        # except:
-        #     continue
+        engine.execute(create_populate_tables_query)
 
     # create all the indexes
     get_indexes_tables_query = """
@@ -212,6 +207,12 @@ def refresh_test_db(env:str):
             continue
 
 if __name__ == "__main__":
-    # create_test_db(env='DDS_OLD_DATA', test_db_name='dc_crash_bot')
-    refresh_test_db(env='DDS_OLD_DATA')
+    # first create new prod db
+    # create_new_db(target_db_name='postgres', target_env='PROD', copy_from_env='PROD_OLD')
+    # refresh_db(env='PROD', from_env='PROD_OLD')
+    # print("new DB copied from old DB")
+    # then create new test db
+    # create_new_db(target_db_name='postgres_dev', target_env='DEV', copy_from_env='DEV_OLD')
+    refresh_db(env='DEV', from_env='DEV_OLD')
+    print("new test DB created")
 
