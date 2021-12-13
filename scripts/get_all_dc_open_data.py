@@ -1,4 +1,4 @@
-import geopandas as gpd
+# import geopandas as gpd
 import pandas as pd
 import boto3
 import os
@@ -7,7 +7,7 @@ from connect_to_rds import get_connection_strings
 import argparse 
 import datetime
 from datetime import timezone
-import requests
+# import requests
 import json
 import sys
 import csv
@@ -57,6 +57,11 @@ def get_dc_open_dataset(dataset:str, AWS_Credentials:dict, formats:list, input_u
             'url': [('complete','https://opendata.arcgis.com/datasets/fcfbf29074e549d8aff9b9c708179291_1.geojson')]
             ,'prefix' :'source-data/dc-open-data/anc_boundaries/'
             ,'metadata' :{'target_schema':'source_data', 'target_table': 'anc_boundaries',"dataset_info":"https://opendata.dc.gov/datasets/advisory-neighborhood-commissions-from-2013"}
+        }
+        ,'basic_business_licenses' : {
+            'url': [('complete','https://opendata.arcgis.com/datasets/85bf98d3915f412c8a4de706f2d13513_0.geojson')]
+            ,'prefix' :'source-data/dc-open-data/bbl/'
+            ,'metadata' :{'target_schema':'source_data', 'target_table': 'basic_business_license',"dataset_info":"https://opendata.dc.gov/datasets/basic-business-licenses/"}
         }
         ,'bike_trails' : {
             'url': [('complete','https://opendata.arcgis.com/datasets/e8c2b7ef54fb43d9a2ed1b0b75d0a14d_4.geojson')]

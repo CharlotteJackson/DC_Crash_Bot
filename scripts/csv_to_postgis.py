@@ -62,6 +62,11 @@ def csv_to_postGIS (folder_to_load:str, AWS_Credentials:dict, **kwargs):
             if 'Records' in event:
                 file_str = ''.join(event['Records']['Payload'].decode('utf-8')).lower()
                 columns_list = file_str.split(',')
+                for column in columns_list:
+                    print(column)
+                    if column is None or column == '':
+                        column = 'empty_col'
+
 
         # and then make a column create string out of them
         create_columns_statement = ''
