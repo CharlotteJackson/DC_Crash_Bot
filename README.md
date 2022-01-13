@@ -30,6 +30,17 @@ Our PostGIS database currently has Open Data DC datasets on 311/Vision Zero requ
 
 We need people with interests or skills in front-end, machine learning/NLP, data engineering, and geographic data. If that sounds like you, join us at an upcoming [Code for DC Meetup](https://www.meetup.com/Code-for-DC/)! 
 
+#### Finding your way around
+
+This repository contains multiple projects, which are run locally in different ways depending on their architecture. Check them out:
+
+- [`/dcmap`](/dcmap) is the DC map front-end being worked on in [#90](https://github.com/CharlotteJackson/DC_Crash_Bot/issues/90)
+- [`/frontend`](/frontend) is a map front-end, but isn’t actively being worked on at the moment.
+- [`/data`](/data) contains exports from our main PostgreSQL database — feel free to poke around.
+- [`/notebooks`](/notebooks) contain different analysis projects in the form of Jupyter Notebooks.
+- [`/scripts`](/scripts) are miscellaneous data cleaning and collection python scripts.
+- [`/SQL`](/SQL) contain miscellaneous SQL queries against our main PostgreSQL database.
+
 ### Sample query
 
 ```SQL
