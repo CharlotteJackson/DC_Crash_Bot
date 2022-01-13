@@ -1,7 +1,7 @@
 class DCMap {
   constructor() {
     this.map = this.initializeMap("map");
-    this.addStreetData(this.map);
+    this.addStreetData();
     this.highlightedLayer = "";
     this.streetLookup = new Map();
   }
@@ -23,7 +23,7 @@ class DCMap {
    * Add street data to the map
    * @param {L.Map} map - Leaflet map
    */
-  addStreetData(map) {
+  addStreetData() {
     // TODO: See if we can find a better roads layer eventually
     axios
       .get("/dcmap/street_centerlines_2013_small.geojson")
