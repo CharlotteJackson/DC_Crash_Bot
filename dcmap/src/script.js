@@ -1,7 +1,7 @@
 class DCMap {
   constructor() {
     this.map = this.initializeMap("map");
-    this.addStreetData(this.map);
+    this.addStreetData();
     this.highlightedLayer = "";
     this.streetLookup = new Map();
   }
@@ -23,7 +23,7 @@ class DCMap {
    * Add street data to the map
    * @param {L.Map} map - Leaflet map
    */
-  addStreetData(map) {
+  addStreetData() {
     // TODO: See if we can find a better roads layer eventually
     axios
       .get("/dcmap/street_centerlines_2013_small.geojson")
@@ -72,7 +72,11 @@ class DCMap {
 
           // Shows a popup of street name upon click
           street.bindPopup((layer) => {
-            return `Street Name: ${layer.feature.properties.ST_NAME}`;
+            const props = layer.feature.properties;
+            return `
+              Street Name: ${props.ST_NAME} ${props.QUADRANT}<br>
+              Chance of accident: ${Math.floor(Math.random() * 100) / 10} (fake number!)
+            `;
           });
           this.map.addLayer(street);
         });
