@@ -72,7 +72,11 @@ class DCMap {
 
           // Shows a popup of street name upon click
           street.bindPopup((layer) => {
-            return `Street Name: ${layer.feature.properties.ST_NAME}`;
+            const props = layer.feature.properties;
+            return `
+              Street Name: ${props.ST_NAME} ${props.QUADRANT}<br>
+              Chance of accident: ${Math.floor(Math.random() * 100) / 10} (fake number!)
+            `;
           });
           this.map.addLayer(street);
         });
